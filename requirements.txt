@@ -1,3 +1,5 @@
 quart
 hypercorn
 flask-limiter
+snowflake.py
+python-dotenv
