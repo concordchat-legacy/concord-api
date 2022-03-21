@@ -6,7 +6,7 @@ from ..authorization import check_session
 
 factions = Blueprint('factions', __name__)
 
-@factions.post('', strict_slashes=False)
+@factions.post('/create', strict_slashes=False)
 async def create_faction():
     creator = await check_session()
 
