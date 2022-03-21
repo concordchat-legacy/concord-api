@@ -23,7 +23,8 @@ async def create_faction():
         'description': d.get('description', ''),
         'owner_id': creator['_id'],
         'banner_url': d.get('banner_url'),
-        'member_only_posting': d.get('member_only_posting', False)
+        'member_only_posting': d.get('member_only_posting', False),
+        'nsfw': bool(d.get('nsfw', False))
     }
 
     faction = await make_faction(**data)
