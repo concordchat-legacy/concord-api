@@ -3,3 +3,5 @@ hypercorn
 flask-limiter
 snowflake.py
 python-dotenv
+motor
+pymongo[srv]
