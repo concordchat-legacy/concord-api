@@ -29,6 +29,7 @@ async def create_faction(
     user.pop('email')
     user.pop('password')
     user.pop('session_ids')
+    user.pop('blocked_users')
 
     member = {
         'id': user['_id'],
@@ -49,4 +50,3 @@ async def create_faction(
     }
 
     return ret
-
