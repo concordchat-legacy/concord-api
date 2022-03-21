@@ -42,7 +42,10 @@ async def create_invite_code():
 
 @app.after_request
 async def after_request(resp: quart.Response):
-    msg = f'Responded to {quart.request.remote_addr} with {await resp.get_json()}'
+    try:
+        msg = f'Responded to {quart.request.remote_addr} with {await resp.get_data()}'
+    except TypeError:
+        msg = f'Responded to {quart.request.remote_addr}'
     print(f'DEBUG:core:{msg}')
     return resp
 
