@@ -6,7 +6,7 @@ from ..authorization import check_session
 
 factions = Blueprint('factions', __name__)
 
-@factions.post('', strict_slashes=False)
+@factions.route('', strict_slashes=False, methods=['POST'])
 async def create_faction():
     creator = await check_session()
 
@@ -32,7 +32,7 @@ async def create_faction():
 
     return Response(json.dumps(faction), 201)
 
-@factions.get('/<faction>', strict_slashes=False)
+@factions.route('/<faction>', strict_slashes=False, methods=['GET'])
 async def get_faction(faction):
     fact = re.compile(f'^{faction}', re.IGNORECASE)
     f = await db.find_one({'_id': fact})

@@ -7,7 +7,7 @@ from ..ratelimiter import limiter
 
 users = Blueprint('users', __name__)
 
-@users.post('', strict_slashes=False)
+@users.route('', strict_slashes=False, methods=['POST'])
 @limiter.limit('3/hour')
 async def create_user():
     req = await request.get_json(True)
