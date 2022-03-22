@@ -1,4 +1,4 @@
-import json
+import orjson as json
 
 class Error(Exception):
     status_code = 500

@@ -1,4 +1,4 @@
-import json
+import orjson as json
 import re
 from quart import Blueprint, request, Response, abort
 from ..models import create_faction as make_faction, factions as db
@@ -6,7 +6,7 @@ from ..authorization import check_session
 
 factions = Blueprint('factions', __name__)
 
-@factions.post('/create', strict_slashes=False)
+@factions.post('', strict_slashes=False)
 async def create_faction():
     creator = await check_session()
 

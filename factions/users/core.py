@@ -1,4 +1,4 @@
-import json
+import orjson as json
 from quart import Response, Blueprint, request
 from ..db import users as db
 from ..randoms import hashed, snowflake

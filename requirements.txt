@@ -5,3 +5,5 @@ snowflake.py
 python-dotenv
 motor
 pymongo[srv]
+uvloop
+orjson

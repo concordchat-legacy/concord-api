@@ -1,4 +1,4 @@
-import json
+import orjson as json
 import quart
 import logging
 import os
@@ -9,6 +9,12 @@ from .ratelimiter import limiter
 from .faction.core import factions
 from .users.core import users
 from .randoms import snowflake, code
+
+try:
+    import uvloop # type: ignore
+    uvloop.install()
+except(ImportError, ModuleNotFoundError):
+    pass
 
 app = quart.Quart(__name__)
 app.config['debug'] = True
