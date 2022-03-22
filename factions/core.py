@@ -34,9 +34,13 @@ async def not_found(*_):
     return json.dumps({'message': '404: Not Found', 'code': 0})
 
 @app.errorhandler(500)
-async def internal_server_error(err):
-    print(err)
+async def internal_server_error(err: Exception):
+    print(err.with_traceback(None))
     return json.dumps({'message': '500: Internal Server Error', 'code': 0})
+
+@app.errorhandler(405)
+async def invalid_method(err):
+    return json.dumps({'message': '405: Invalid Method', 'code': 0})
 
 @app.get('/codes/snowflake')
 async def create_snowflake():
