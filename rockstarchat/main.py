@@ -6,6 +6,12 @@ from flask import Flask, Response
 from .ratelimiter import limiter
 from .randoms import _id, code
 
+try:
+    import uvloop # type: ignore
+    uvloop.install()
+except:
+    pass
+
 app = Flask(__name__)
 limiter.init_app(app)
 logging.basicConfig(level=logging.DEBUG)
