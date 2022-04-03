@@ -1,8 +1,8 @@
-flask
 uvloop
 orjson
 peewee
 waitress
+flask[async]
 snowflake-py
 flask-limiter
 python-dotenv

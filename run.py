@@ -20,6 +20,4 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-time.sleep(10)
-
 os.system(f'python -m waitress --port={os.getenv("PORT")} --backlog=20000 --ident=Rockstar --threads=500 rockstarchat.main:app')
