@@ -25,7 +25,7 @@ async def ping():
 async def uuid():
     return orjson.dumps({'id': _id()})
 
-@app.route('/__development/s-id')
+@app.route('/__development/u-id')
 async def s_id():
     return orjson.dumps({'id': code()})
 
