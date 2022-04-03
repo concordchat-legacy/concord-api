@@ -16,10 +16,11 @@
 # ⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠈⠉⠉⠉⠁
 import os
 import platform
+import sys
 from dotenv import load_dotenv
 
 load_dotenv()
 
-print(f'DEBUG: Starting on {platform.system()}')
+print(f'DEBUG: Starting on {platform.system()}', file=sys.stderr)
 
 os.system(f'python -m waitress --port={os.getenv("PORT")} --backlog=20000 --ident=Rockstar --threads=500 rockstarchat.main:app')

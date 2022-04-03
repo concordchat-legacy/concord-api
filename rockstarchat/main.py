@@ -2,6 +2,7 @@ import multiprocessing
 import threading
 import orjson
 import logging
+import sys
 from flask import Flask, Response
 from .ratelimiter import limiter
 from .randoms import _id, code
@@ -44,7 +45,7 @@ async def _ratelimited(*args):
 async def _after_request(resp: Response):
     resp.headers['content_type'] = 'application/json'
     resp.headers.remove('Retry-After')
-    print(resp.status, resp.get_data(), threading.current_thread().ident, multiprocessing.current_process().ident)
+    print(resp.status, resp.get_data(), threading.current_thread().ident, multiprocessing.current_process().ident, file=sys.stderr)
     return resp
 
 if __name__ == '__main___':
