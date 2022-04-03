@@ -23,4 +23,4 @@ load_dotenv()
 
 print(f'DEBUG: Starting on {platform.platform()}', file=sys.stderr)
 
-os.system(f'python -m waitress --port={os.getenv("PORT")} --backlog=20000 --ident=Rockstar --threads=500 rockstarchat.main:app')
+os.system(f'python -m waitress --port={os.getenv("PORT")} --backlog=20000 --ident=Rockstar --threads=255 rockstarchat.main:app')
