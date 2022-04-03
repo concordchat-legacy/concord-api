@@ -1,4 +1,3 @@
-from time import time
 import dotenv
 import base64
 import re
@@ -9,9 +8,9 @@ from random import choice
 from hashlib import sha384
 
 dotenv.load_dotenv()
-_generator_flake = snowflake.Generator(1648953594118, os.getpid(), threading.current_thread().ident)
 
 def _id() -> str:
+    _generator_flake = snowflake.Generator(1417276802000, os.getpid(), threading.current_thread().ident)
     result = _generator_flake.generate()
     return str(result)
 
