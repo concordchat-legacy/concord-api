@@ -1,3 +1,4 @@
+redis
 uvloop
 orjson
 peewee
