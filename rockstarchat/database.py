@@ -1,11 +1,13 @@
 import peewee
 import os
+from typing import List
 from dotenv import load_dotenv
-from playhouse import cockroachdb, shortcuts
+from playhouse import cockroachdb, shortcuts, migrate
 
 load_dotenv()
 
 _client = cockroachdb.CockroachDatabase(os.getenv('DB_URI'))
+_migrator = migrate.CockroachDBMigrator(_client)
 
 class Modal(peewee.Model):
     class __private:
@@ -26,10 +28,22 @@ class User(Modal):
     email = cockroachdb.TextField(primary_key=True)
     password = cockroachdb.TextField()
     settings = cockroachdb.ForeignKeyField(UserSettings)
+    session_ids = cockroachdb.ArrayField(cockroachdb.TextField)
 
 def to_dict(model: Modal):
     return shortcuts.model_to_dict(model)
 
 _client.connect()
 
-_client.create_tables([UserSettings, DirectMessageSettings, User])
+tables: List[Modal] = [User, UserSettings, DirectMessageSettings]
+session_ids = cockroachdb.ArrayField(cockroachdb.TextField)
+
+"""
+for t in tables:
+    if not t.table_exists():
+        _client.create_tables([t])"""
+"""
+migrate.migrate(
+    _migrator.add_column('User', 'session_ids', session_ids),
+)
+"""

@@ -1,9 +1,10 @@
 import multiprocessing
+import os
 import threading
 import orjson
 import logging
 import sys
-from flask import Flask, Response
+from flask import Flask, Response, send_from_directory, send_file
 from .ratelimiter import limiter
 from .randoms import _id, code
 
@@ -29,6 +30,10 @@ async def uuid():
 async def s_id():
     return orjson.dumps({'id': code()})
 
+@app.route('/favicon.ico')
+async def _get_icon():
+    return send_file(os.path.join(app.root_path, 'static', 'favicon.ico'), 'image/vnd.microsoft.icon')
+
 @app.errorhandler(404)
 async def _not_found(*args):
     return orjson.dumps({'code': 0, 'message': '404: Not Found'})
@@ -45,7 +50,10 @@ async def _ratelimited(*args):
 async def _after_request(resp: Response):
     resp.headers['content_type'] = 'application/json'
     resp.headers.remove('Retry-After')
-    print(resp.status, resp.get_data(), threading.current_thread().ident, multiprocessing.current_process().ident, file=sys.stderr)
+    try:
+        print(resp.status, resp.get_data(), threading.current_thread().ident, multiprocessing.current_process().ident, file=sys.stderr)
+    except:
+        pass
     return resp
 
 if __name__ == '__main___':
