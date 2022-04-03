@@ -1,1 +1,1 @@
-web: python run.py
+web: python -m waitress --port=$PORT --backlog=20000 --ident=Rockstar --threads=200 rockstarchat.main:app
