@@ -19,4 +19,4 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-os.system(f'hypercorn --bind 0.0.0.0:{os.getenv("PORT")} factions.core:app')
+os.system(f'python -m waitress --port={os.getenv("PORT")} --backlog=20000 --ident=Rockstar --threads=10000 rockstarchat.main:app')

@@ -1,9 +1,8 @@
-quart
-hypercorn
-flask-limiter
-snowflake.py
-python-dotenv
-motor
-pymongo[srv]
+flask
 uvloop
 orjson
+peewee
+waitress
+snowflake-py
+flask-limiter
+python-dotenv
