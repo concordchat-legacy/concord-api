@@ -162,7 +162,8 @@ def _initiate_all():
     m.create_index([('user_id', pymongo.ASCENDING)])
     m.create_index('guild_id')
 
-    i.create_index(['owner_id', 'vanity_url'])
+    i.create_index('owner_id')
+    i.create_index('vanity_url')
 
     p.create_index('bot')
 
