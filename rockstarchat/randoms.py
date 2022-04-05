@@ -1,31 +1,37 @@
 import dotenv
-import base64
+import random
 import re
 import os
 import threading
 import snowflake
+import secrets
 from random import choice
 from hashlib import sha384
 
+EPOCH = 1417276802000
+BUCKET_SIZE = 1000 * 60 * 60 * 24 * 10
 dotenv.load_dotenv()
 
-def _id() -> str:
-    _generator_flake = snowflake.Generator(1417276802000, os.getpid(), threading.current_thread().ident)
+def _id() -> int:
+    _generator_flake = snowflake.Generator(EPOCH, os.getpid(), threading.current_thread().ident)
     result = _generator_flake.generate()
-    return str(result)
+    return result._flake
 
 def _code():
-    return _id()[:5].encode()
+    return str(_id())[13:].encode()
 
 def code():
-    _u = re.sub(r"\/|\+|\-|\_", "", base64.b64encode(_code()).decode('ascii').strip('==='))
+    _u = re.sub(r"\/|\+|\-|\_", "", secrets.token_urlsafe(random.randint(4, 6)))
     return ''.join(choice((str.upper, str.lower))(c) for c in _u)
 
 def hashed(string: str):
-    return sha384(string.encode()).hexdigest()
+    return sha384(string.encode(), usedforsecurity=True).hexdigest()
+
+def get_bucket(sf: int):
+    timestamp = snowflake.Snowflake(EPOCH, sf).timestamp
+    return int(timestamp / BUCKET_SIZE)
 
 if __name__ == '__main__':
-    print(code())
-    print(hashed(code()))
-    while True:
-        print(_id())
+    id = _id()
+    #while True:
+        #print(get_bucket(id))

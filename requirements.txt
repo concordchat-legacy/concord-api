@@ -1,9 +1,9 @@
 redis
 uvloop
 orjson
-peewee
 waitress
 flask[async]
+pymongo[srv]
 snowflake-py
 flask-limiter
 python-dotenv

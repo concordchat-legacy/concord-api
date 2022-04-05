@@ -4,9 +4,11 @@ import threading
 import orjson
 import logging
 import sys
-from flask import Flask, Response, send_from_directory, send_file
-from .ratelimiter import limiter
-from .randoms import _id, code
+from flask import Flask, Response, send_file
+from rockstarchat.ratelimiter import limiter
+from rockstarchat.randoms import _id, code
+from rockstarchat.errors import Err, BadData
+from rockstarchat.admin._user_management import bp as admin_users
 
 try:
     import uvloop # type: ignore
@@ -24,7 +26,7 @@ async def ping():
 
 @app.route('/__development/uuid')
 async def uuid():
-    return orjson.dumps({'id': _id()})
+    return orjson.dumps({'id': str(_id())})
 
 @app.route('/__development/u-id')
 async def s_id():
@@ -46,6 +48,15 @@ async def _internal_error(*args):
 async def _ratelimited(*args):
     return orjson.dumps({'code': 0, 'message': '429: Too Many Requests'})
 
+@app.errorhandler(KeyError)
+async def _bad_data(*args):
+    b = BadData()
+    return b._to_json(), 403
+
+@app.errorhandler(Err)
+async def _default_error_handler(err: Err):
+    return err._to_json(), err.resp_type
+
 @app.after_request
 async def _after_request(resp: Response):
     resp.headers['content_type'] = 'application/json'
@@ -55,6 +66,13 @@ async def _after_request(resp: Response):
     except:
         pass
     return resp
+
+bps = {
+    admin_users: '/__development/admin/users',
+}
+
+for bp, url in bps.items():
+    app.register_blueprint(bp, url_prefix=url)
 
 if __name__ == '__main___':
     app.run(debug=True)
