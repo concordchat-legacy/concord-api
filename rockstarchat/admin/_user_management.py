@@ -1,5 +1,6 @@
 import random
 import orjson
+from typing import List
 from flask import Blueprint, request
 from ..database import User, SettingsType
 from ..randoms import _id, hashed
@@ -22,10 +23,14 @@ async def _create_user():
     bio = ''
     locale = data.get('locale') or 'EN_US/EU'
 
-    c = User.objects(username=username, discriminator=discrim)
+    c: List[dict] = User.objects(username=username, discriminator=discrim)
+    cd: List[dict] = User.objects(username=username)
 
     if len(c) != 0:
         return await _create_user()
+
+    if len(cd) > 4000:
+        raise KeyError()
 
     _user: User = User.create(
         id=id,
