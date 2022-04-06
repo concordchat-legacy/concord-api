@@ -22,6 +22,11 @@ async def _create_user():
     bio = ''
     locale = data.get('locale') or 'EN_US/EU'
 
+    c = User.objects(username=username, discriminator=discrim)
+
+    if len(c) != 0:
+        return await _create_user()
+
     _user: User = User.create(
         id=id,
         username=username,
