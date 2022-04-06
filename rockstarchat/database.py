@@ -37,6 +37,7 @@ class User(models.Model):
     session_ids = columns.List(columns.Text)
     verified = columns.Boolean(default=False)
     system = columns.Boolean(default=False)
+    early_supporter_benefiter = columns.Boolean(default=True, index=True)
 
 class UserType(usertype.UserType):
     id = columns.BigInt()
