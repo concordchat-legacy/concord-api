@@ -1,174 +1,86 @@
-import os
-import pymongo
-import uuid
 import datetime
-from dotenv import load_dotenv
-from typing import Any, Union
+import os
+import dotenv
+from cassandra.cqlengine import connection, models, columns, usertype, management
+from cassandra.auth import PlainTextAuthProvider
 
-load_dotenv()
+dotenv.load_dotenv()
 
-mongodb = pymongo.MongoClient(os.getenv('mongo_uri'))
+cloud = {
+    'secure_connect_bundle': os.getcwd() + '\\rockstarchat\\static\\bundle.zip'
+}
+auth_provider = PlainTextAuthProvider(os.getenv('client_id'), os.getenv('client_secret'))
 
-def create_user(
-    id: int,
-    username: str,
-    discriminator: int,
-    email: str,
-    password: str,
-    system: bool = False,
-    verified: bool = False,
-    locale: str = 'EN_US/EU',
-    flags: int = 1 << 0,
-    avatar: str = '',
-    banner: str = '',
-    bot: bool = False,
-    bio: str = '',
-    settings: dict = {'accept_friend_requests': True, 'accept_dms': True},
-    joined_at: str = datetime.datetime.now().isoformat()
-):
-    kwargs = {}
-    kwargs['_id'] = id
-    kwargs['username'] = username
-    kwargs['discriminator'] = discriminator
-    kwargs['bio'] = bio
-    kwargs['email'] = email
-    kwargs['password'] = password
-    kwargs['joined_at'] = joined_at
-    kwargs['system'] = system
-    kwargs['verified'] = verified
-    kwargs['locale'] = locale
-    kwargs['flags'] = flags
-    kwargs['avatar'] = avatar
-    kwargs['banner'] = banner
-    kwargs['bot'] = bot
-    kwargs['session_ids'] = [uuid.uuid1()]
-    kwargs['settings'] = settings
-    mongodb.get_database('users').get_collection('profiles').insert_one(kwargs)
-    return kwargs
+connection.setup([], 'rockstar', cloud=cloud, auth_provider=auth_provider, metrics_enabled=True)
 
-def get_user_by(key: Union[int, str]):
-    if isinstance(key, int):
-        result = mongodb.get_database('users').get_collection('profiles').find_one({'_id': key})
-        result['id'] = result.pop('_id')
-        return result
-    elif isinstance(key, str):
-        result = mongodb.get_database('users').get_collection('profiles').find_one({'session_ids': key})
-        result['id'] = result.pop('_id')
+def _get_date():
+    return datetime.datetime.now(datetime.timezone.utc)
 
-def migrate(db: str, col: str, key: str, value: Any = None, delete: bool = False):
-    query = mongodb.get_database(db).get_collection(col).find()
-    for doc in query:
-        if delete:
-            if doc.get('key') is not None:
-                mongodb.get_database(db).get_collection(col).update_many({}, {'$unset': key})
-        else:
-            mongodb.get_database(db).get_collection(col).update_many({}, {key: value})
+class SettingsType(usertype.UserType):
+    accept_friend_requests = columns.Boolean()
+    accept_direct_messages = columns.Boolean()
 
-# TODO: Change default permission
-def create_guild(
-    id: int,
-    name: str,
-    owner_id: int,
-    nsfw: bool = False,
-    large: bool = False,
-    perferred_locale: str = 'EN_US/EU',
-    permissions: str = 0,
-    vanity_url: str = None,
-    splash: str = '',
-    icon: str = '',
-    banner: str = '',
-    description: str = '',
-):
-    kwargs = {}
-    kwargs['_id'] = id
-    kwargs['name'] = name
-    kwargs['description'] = description
-    kwargs['vanity_url'] = vanity_url
-    kwargs['icon'] = icon
-    kwargs['banner'] = banner
-    kwargs['owner_id'] = owner_id
-    kwargs['nsfw'] = nsfw
-    kwargs['large'] = large
-    kwargs['perferred_locale'] = perferred_locale
-    kwargs['permissions'] = permissions
-    kwargs['splash'] = splash
-    mongodb.get_database('guilds').get_collection('information').insert_one(kwargs)
-    return kwargs
+class User(models.Model):
+    __table_name__ = 'users'
+    id = columns.BigInt(primary_key=True, partition_key=False, clustering_order='ASC')
+    username = columns.Text(max_length=40, partition_key=True)
+    discriminator = columns.Integer(index=True, partition_key=True)
+    email = columns.Text(max_length=100)
+    password = columns.Text()
+    flags = columns.Integer()
+    avatar = columns.Text(default='')
+    banner = columns.Text(default='')
+    locale = columns.Text(default='EN_US/EU')
+    joined_at = columns.DateTime(default=_get_date)
+    bio = columns.Text(max_length=4000)
+    settings = columns.UserDefinedType(SettingsType)
+    session_ids = columns.List(columns.Text)
+    verified = columns.Boolean(default=False)
+    system = columns.Boolean(default=False)
 
-def get_guild(id: int):
-    result = mongodb.get_database('guilds').get_collection('information').find_one({'_id': id})
-    result['id'] = result.pop('_id')
-    return result
+class UserType(usertype.UserType):
+    id = columns.BigInt()
+    username = columns.Text()
+    discriminator = columns.Integer()
+    email = columns.Text()
+    password = columns.Text()
+    flags = columns.Integer()
+    avatar = columns.Text()
+    banner = columns.Text()
+    locale = columns.Text()
+    joined_at = columns.DateTime()
+    bio = columns.Text()
+    settings = columns.UserDefinedType(SettingsType)
+    session_ids = columns.List(columns.Text)
+    verified = columns.Boolean()
+    system = columns.Boolean()
 
-def create_member(user: dict, guild_id: int):
-    kwargs = {}
-    kwargs['_id'] = uuid.uuid1()
-    kwargs['user_id'] = user['id']
-    kwargs['user'] = user
-    kwargs['guild_id'] = guild_id
-    kwargs['joined_at'] = datetime.datetime.now(datetime.timezone.utc).isoformat()
-    kwargs['roles'] = []
-    kwargs['nick'] = ''
-    kwargs['permissions'] = 0
-    kwargs['custom_color'] = 0
-    kwargs['avatar'] = ''
-    kwargs['banner'] = ''
-    mongodb.get_database('guilds').get_collection('members').insert_one(kwargs)
-    return kwargs
+class Guild(models.Model):
+    __table_name__ = 'guilds'
+    id = columns.BigInt(primary_key=True, partition_key=True)
+    name = columns.Text(partition_key=True, max_length=30)
+    description = columns.Text(max_length=4000)
+    vanity_url = columns.Text(default=None, index=True)
+    icon = columns.Text(default='')
+    banner = columns.Text(default='')
+    owner_id = columns.BigInt(primary_key=True, partition_key=True)
+    nsfw = columns.Boolean(default=False)
+    large = columns.Boolean(primary_key=True)
+    perferred_locale = columns.Text(default='EN_US/EU')
+    permissions = columns.BigInt(default=0)
+    splash = columns.Text(default='')
 
-def get_member(user_id: int, guild_id: int) -> dict:
-    result = mongodb.get_database('guilds').get_collection('members').find_one({'user_id': user_id, 'guild_id': guild_id})
-    result.pop('_id')
-    return result
+class Member(models.Model):
+    __table_name__ = 'members'
+    id = columns.BigInt(primary_key=True, partition_key=True)
+    guild_id = columns.BigInt(primary_key=True, partition_key=True)
+    user = columns.UserDefinedType(UserType)
+    avatar = columns.Text(default='')
+    banner = columns.Text(default='')
+    joined_at = columns.DateTime(default=_get_date)
+    roles = columns.List(columns.BigInt)
+    nick = columns.Text(default='')
 
-def create_role(
-    id: int,
-    guild_id: int,
-    name: str,
-    position: int,
-    color: int = 0,
-    hoist: bool = False,
-    icon: str = '',
-    permissions: int = 0,
-    mentionable: bool = False,
-):
-    kwargs = {}
-    kwargs['_id'] = id
-    kwargs['guild_id'] = guild_id
-    kwargs['name'] = name
-    kwargs['position'] = position
-    kwargs['color'] = color
-    kwargs['hoist'] = hoist
-    kwargs['icon'] = icon
-    kwargs['permissions'] = permissions
-    kwargs['mentionable'] = mentionable
-    kwargs['created_at'] = datetime.datetime.now(datetime.timezone.utc).isoformat()
-    mongodb.get_database('guilds').get_collection('roles').insert_one(kwargs)
-    return kwargs
-
-def get_role(id: int):
-    result = mongodb.get_database('guilds').get_collection('roles').find_one({'_id': id})
-    result['id'] = result.pop('_id')
-    return result
-
-def _initiate_all():
-    g = mongodb.get_database('guilds')
-    u = mongodb.get_database('users')
-    p = u.get_collection('profiles')
-    m = g.get_collection('members')
-    r = g.get_collection('roles')
-    i = g.get_collection('information')
-
-    m.create_index([('user_id', pymongo.ASCENDING)])
-    m.create_index('guild_id')
-
-    i.create_index('owner_id')
-    i.create_index('vanity_url')
-
-    p.create_index('bot')
-
-    r.create_index('user_id')
-    r.create_index('guild_id')
-
-if __name__ == '__main__':
-    _initiate_all()
+management.sync_table(User)
+management.sync_table(Guild)
+management.sync_table(Member)

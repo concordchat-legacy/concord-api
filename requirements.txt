@@ -1,6 +1,7 @@
 redis
 uvloop
 orjson
+scales
 waitress
 flask[async]
 pymongo[srv]

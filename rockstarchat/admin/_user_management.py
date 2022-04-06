@@ -1,8 +1,7 @@
 import random
-import datetime
 import orjson
 from flask import Blueprint, request
-from ..database import create_user
+from ..database import User, SettingsType
 from ..randoms import _id, hashed
 from ..errors import Forbidden
 
@@ -20,24 +19,25 @@ async def _create_user():
     email = data['email']
     password = hashed(data.pop('password'))
     flags = 1 << 0
-    avatar_url = ''
-    banner_url = ''
     bio = ''
-    _default_settings = {'accept_friend_requests': True, 'accept_dms': True}
+    locale = data.get('locale') or 'EN_US/EU'
 
-    user = create_user(
+    _user: User = User.create(
         id=id,
         username=username,
         discriminator=discrim,
         email=email,
         password=password,
         flags=flags,
-        avatar=avatar_url,
-        banner=banner_url,
         bio=bio,
-        settings=_default_settings
+        locale=locale,
+        settings=SettingsType(
+            accept_friend_requests=True,
+            accept_direct_messages=True,
+        )
     )
+    user = dict(_user.items())
 
-    user['id'] = user.pop('_id')
+    user['settings'] = dict(user['settings'].items())
 
     return orjson.dumps(dict(user))
