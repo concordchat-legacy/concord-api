@@ -8,7 +8,7 @@ import secrets
 from random import choice
 from hashlib import sha384
 
-EPOCH = 1417276802000
+EPOCH = 1649325271415
 BUCKET_SIZE = 1000 * 60 * 60 * 24 * 10
 dotenv.load_dotenv()
 
@@ -33,5 +33,6 @@ def get_bucket(sf: int):
 
 if __name__ == '__main__':
     id = _id()
+    print(id)
     #while True:
         #print(get_bucket(id))

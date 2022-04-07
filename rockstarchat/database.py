@@ -85,3 +85,5 @@ class Member(models.Model):
 management.sync_table(User)
 management.sync_table(Guild)
 management.sync_table(Member)
+management.sync_type('settings', SettingsType)
+management.sync_type('partial_user', UserType)
