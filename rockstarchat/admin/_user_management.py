@@ -24,7 +24,7 @@ async def _create_user():
     locale = data.get('locale') or 'EN_US/EU'
 
     c: List[dict] = User.objects(username=username, discriminator=discrim)
-    cd: List[dict] = User.objects(username=username)
+    cd: List[dict] = User.objects(username=username).allow_filtering()
 
     if len(c) != 0:
         return await _create_user()
@@ -49,5 +49,7 @@ async def _create_user():
     user = dict(_user.items())
 
     user['settings'] = dict(user['settings'].items())
+
+    user['id'] = str(user['id'])
 
     return orjson.dumps(dict(user))
