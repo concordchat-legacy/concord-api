@@ -2,8 +2,10 @@ import datetime
 import os
 import dotenv
 import hashlib
+from typing import Any
 from cassandra.cqlengine import connection, models, columns, usertype, management
 from cassandra.auth import PlainTextAuthProvider
+from cassandra.cluster import Cluster
 
 dotenv.load_dotenv()
 
@@ -12,7 +14,31 @@ cloud = {
 }
 auth_provider = PlainTextAuthProvider(os.getenv('client_id'), os.getenv('client_secret'))
 
-connection.setup([], 'rockstar', cloud=cloud, auth_provider=auth_provider, metrics_enabled=True)
+connection.setup([], 'scales', cloud=cloud, auth_provider=auth_provider, metrics_enabled=True, connect_timeout=100)
+
+default_options = {
+    # NOTE: Only let tombstones live for 3 days
+    'gc_grace_seconds': 259200,
+    'compaction': {
+        'bucket_high': 2,
+        'bucket_low': 1,
+        'max_threshold': 100000,
+        'min_threshold': 6,
+        'tombstone_threshold': 0.3
+    }
+}
+default_permissions = (
+    1 << 0
+    | 1 << 6
+    | 1 << 10
+    | 1 << 11
+    | 1 << 12
+    | 1 << 14
+    | 1 << 15
+    | 1 << 16
+    | 1 << 18
+    | 1 << 25
+)
 
 def _get_date():
     return datetime.datetime.now(datetime.timezone.utc)
@@ -20,12 +46,14 @@ def _get_date():
 def _session_id_defaults():
     return [hashlib.sha1(os.urandom(128)).hexdigest()]
 
+# NOTE: Users
 class SettingsType(usertype.UserType):
     accept_friend_requests = columns.Boolean()
     accept_direct_messages = columns.Boolean()
 
 class User(models.Model):
     __table_name__ = 'users'
+    __options__ = default_options
     id = columns.BigInt(primary_key=True, partition_key=False, clustering_order='ASC')
     username = columns.Text(max_length=40, partition_key=True)
     discriminator = columns.Integer(index=True, partition_key=True)
@@ -42,6 +70,7 @@ class User(models.Model):
     verified = columns.Boolean(default=False)
     system = columns.Boolean(default=False)
     early_supporter_benefiter = columns.Boolean(default=True, index=True)
+    bot = columns.Boolean(default=False)
 
 class UserType(usertype.UserType):
     id = columns.BigInt()
@@ -59,24 +88,48 @@ class UserType(usertype.UserType):
     session_ids = columns.List(columns.Text)
     verified = columns.Boolean()
     system = columns.Boolean()
+    early_supporter_benefiter = columns.Boolean()
+    bot = columns.Boolean(default=False)
+
+# NOTE: Guilds
+class Role(usertype.UserType):
+    id = columns.BigInt()
+    name = columns.Text(max_length=100)
+    color = columns.Integer()
+    hoist = columns.Boolean()
+    icon = columns.Text()
+    position = columns.Integer()
+    permissions = columns.BigInt()
+    mentionable = columns.Boolean()
 
 class Guild(models.Model):
     __table_name__ = 'guilds'
-    id = columns.BigInt(primary_key=True, partition_key=True)
-    name = columns.Text(partition_key=True, max_length=30)
+    __options__ = default_options
+    id = columns.BigInt(primary_key=True, partition_key=False)
+    name = columns.Text(partition_key=True, max_length=40)
     description = columns.Text(max_length=4000)
     vanity_url = columns.Text(default=None, index=True)
     icon = columns.Text(default='')
     banner = columns.Text(default='')
     owner_id = columns.BigInt(primary_key=True, partition_key=True)
     nsfw = columns.Boolean(default=False)
-    large = columns.Boolean(primary_key=True)
+    large = columns.Boolean(primary_key=True, default=False)
     perferred_locale = columns.Text(default='EN_US/EU')
-    permissions = columns.BigInt(default=0)
+    permissions = columns.BigInt(default=default_permissions)
     splash = columns.Text(default='')
+    roles = columns.Set(columns.UserDefinedType(Role))
+
+class GuildInvite(models.Model):
+    __table_name__ = 'guild_invites'
+    __options__ = default_options
+    id = columns.Text(primary_key=True, partition_key=False)
+    guild_id = columns.BigInt(primary_key=True, partition_key=True)
+    created_by = columns.UserDefinedType(UserType)
+    created_at = columns.DateTime(default=_get_date)
 
 class Member(models.Model):
     __table_name__ = 'members'
+    __options__ = default_options
     id = columns.BigInt(primary_key=True, partition_key=True)
     guild_id = columns.BigInt(primary_key=True, partition_key=True)
     user = columns.UserDefinedType(UserType)
@@ -86,8 +139,138 @@ class Member(models.Model):
     roles = columns.List(columns.BigInt)
     nick = columns.Text(default='')
 
-management.sync_table(User)
-management.sync_table(Guild)
-management.sync_table(Member)
-management.sync_type('rockstar', SettingsType)
-management.sync_type('rockstar', UserType)
+## NOTE: Channels/Messages, etc
+
+class PermissionOverWrites(usertype.UserType):
+    id = columns.BigInt()
+    type = columns.Integer(default=0)
+    allow = columns.BigInt()
+    deny = columns.BigInt()
+
+class Channel(models.Model):
+    __table_name__ = 'channels'
+    __options__ = default_options
+    id = columns.BigInt(primary_key=True, partition_key=False)
+    guild_id = columns.BigInt(primary_key=True, partition_key=True)
+    type = columns.Integer(default=0)
+    position = columns.Integer()
+    permission_overwrites = columns.UserDefinedType(PermissionOverWrites)
+    name = columns.Text(max_length=30)
+    topic = columns.Text(max_length=1024)
+    slowmode_timeout = columns.Integer()
+    recipients = columns.List(columns.UserDefinedType(UserType))
+    owner_id = columns.BigInt()
+    parent_id = columns.BigInt()
+    # NOTE: Store empty buckets to make sure we never go over them
+    # NOTE: Maybe store this somewhere else? this could impact read perf
+    empty_buckets = columns.Set(columns.Integer)
+
+class EmbedField(usertype.UserType):
+    name = columns.Text(max_length=100)
+    value = columns.Text()
+    inline = columns.Boolean(default=False)
+
+class EmbedAuthor(usertype.UserType):
+    name = columns.Text(max_length=100)
+    url = columns.Text(max_length=20)
+    icon_url = columns.Text(max_length=100)
+
+class EmbedVideo(usertype.UserType):
+    url = columns.Text(max_length=30)
+
+class EmbedImage(usertype.UserType):
+    url = columns.Text(max_length=30)
+
+class EmbedFooter(usertype.UserType):
+    text = columns.Text(max_length=500)
+    icon_url = columns.Text(max_length=100)
+
+class Embed(usertype.UserType):
+    title = columns.Text(default='', max_length=100)
+    description = columns.Text(max_length=4000, default='')
+    url = columns.Text(default='')
+    timestamp = columns.DateTime()
+    color = columns.Integer()
+    footer = columns.UserDefinedType(EmbedFooter)
+    image = columns.UserDefinedType(EmbedImage)
+    video = columns.UserDefinedType(EmbedVideo)
+    author = columns.UserDefinedType(EmbedAuthor)
+    fields = columns.List(columns.UserDefinedType(EmbedField))
+
+class Reaction(usertype.UserType):
+    count = columns.Integer()
+    # TODO: Implement Emojis
+    emoji = columns.Text(default=None)
+
+class Message(models.Model):
+    __table_name__ = 'messages'
+    __options__ = default_options
+    id = columns.BigInt(primary_key=True, partition_key=False, clustering_order='DESC')
+    channel_id = columns.BigInt(primary_key=True, partition_key=True)
+    bucket_id = columns.Integer(primary_key=True, partition_key=True)
+    guild_id = columns.BigInt(primary_key=True)
+    author = columns.UserDefinedType(UserType)
+    content = columns.Text(max_length=3000)
+    created_at = columns.DateTime(default=_get_date)
+    last_edited = columns.DateTime(default=None)
+    tts = columns.Boolean(default=False)
+    mentions_everyone = columns.Boolean(default=False)
+    mentions = columns.List(columns.UserDefinedType(UserType))
+    embeds = columns.List(columns.UserDefinedType(Embed))
+    reactions = columns.List(columns.UserDefinedType(Reaction))
+    pinned = columns.Boolean(default=False)
+    referenced_message_id = columns.BigInt(default=None)
+
+def to_dict(model: models.Model) -> dict:
+    initial: dict[str, Any] = model.items()
+    ret = dict(initial)
+
+    for name, value in initial:
+        if isinstance(value, usertype.UserType) or isinstance(value, models.Model) or isinstance(value, columns.UserDefinedType):
+            # embeds go 3 layers deep here.
+            value = dict(value)
+            for k, v in value.items():
+                if isinstance(v, usertype.UserType):
+                    value[k] = dict(v)
+                # for deep for user settings
+                try:
+                    for k_, v_ in v.items():
+                        if isinstance(v_, usertype.UserType):
+                            v[k_] = dict(v_)
+                except:
+                    pass
+            ret[name] = value
+        if name == 'id' or name.endswith('_id') and len(str(value)) > 14:
+            ret[name] = str(value)
+        if name == 'permissions':
+            ret[name] = str(value)
+        if isinstance(value, set):
+            value = list(value)
+            ret[name] = value
+
+    return ret
+
+if __name__ == '__main__':
+    import logging
+    logging.basicConfig(level=logging.DEBUG)
+    # migrate old data
+
+    # NOTE: Types
+    management.sync_type('scales', SettingsType)
+    management.sync_type('scales', UserType)
+    management.sync_type('scales', PermissionOverWrites)
+    management.sync_type('scales', EmbedAuthor)
+    management.sync_type('scales', EmbedField)
+    management.sync_type('scales', EmbedFooter)
+    management.sync_type('scales', EmbedImage)
+    management.sync_type('scales', EmbedVideo)
+    management.sync_type('scales', Embed)
+    management.sync_type('scales', Reaction)
+
+    # NOTE: Tables
+    management.sync_table(User)
+    management.sync_table(Guild)
+    management.sync_table(GuildInvite)
+    management.sync_table(Member)
+    management.sync_table(Channel)
+    management.sync_table(Message)

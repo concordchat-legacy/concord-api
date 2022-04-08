@@ -1,18 +1,16 @@
 import random
 import orjson
 from typing import List
-from flask import Blueprint, request
-from ..database import User, SettingsType
+from flask import request
+from ..database import User, SettingsType, to_dict
 from ..randoms import _id, hashed
 from ..errors import Forbidden
 
-bp = Blueprint('_user_management', __name__)
-
-@bp.route('', methods=['POST', 'PUT'], strict_slashes=False)
 async def _create_user():
     data: dict = request.get_json(True)
     if data.get('_admin_auth', '') != '972226479407022080':
         raise Forbidden()
+    
     id = _id()
 
     username = data['username']
@@ -32,7 +30,7 @@ async def _create_user():
     if len(cd) > 4000:
         raise KeyError()
 
-    _user: User = User.create(
+    user: User = User.create(
         id=id,
         username=username,
         discriminator=discrim,
@@ -46,10 +44,5 @@ async def _create_user():
             accept_direct_messages=True,
         )
     )
-    user = dict(_user.items())
 
-    user['settings'] = dict(user['settings'].items())
-
-    user['id'] = str(user['id'])
-
-    return orjson.dumps(dict(user))
+    return orjson.dumps(to_dict(user))

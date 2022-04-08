@@ -35,5 +35,6 @@ if __name__ == '__main__':
     id = _id()
     print(get_bucket(id))
     print(id)
+    print(len(str(id)))
     #while True:
         #print(get_bucket(id))

@@ -14,3 +14,11 @@ class Forbidden(Err):
 class BadData(Err):
     resp_type = 400
     resp_message = 'Bad Request'
+
+class Unauthorized(Err):
+    resp_type = 401
+    resp_message = 'Unauthorized'
+
+class NotFound(Err):
+    resp_type = 404
+    resp_message = 'Not Found'
