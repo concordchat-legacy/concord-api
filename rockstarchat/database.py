@@ -1,6 +1,7 @@
 import datetime
 import os
 import dotenv
+import hashlib
 from cassandra.cqlengine import connection, models, columns, usertype, management
 from cassandra.auth import PlainTextAuthProvider
 
@@ -15,6 +16,9 @@ connection.setup([], 'rockstar', cloud=cloud, auth_provider=auth_provider, metri
 
 def _get_date():
     return datetime.datetime.now(datetime.timezone.utc)
+
+def _session_id_defaults():
+    return [hashlib.sha1(os.urandom(128)).hexdigest()]
 
 class SettingsType(usertype.UserType):
     accept_friend_requests = columns.Boolean()
@@ -34,7 +38,7 @@ class User(models.Model):
     joined_at = columns.DateTime(default=_get_date)
     bio = columns.Text(max_length=4000)
     settings = columns.UserDefinedType(SettingsType)
-    session_ids = columns.List(columns.Text)
+    session_ids = columns.List(columns.Text, default=_session_id_defaults)
     verified = columns.Boolean(default=False)
     system = columns.Boolean(default=False)
     early_supporter_benefiter = columns.Boolean(default=True, index=True)
@@ -85,5 +89,5 @@ class Member(models.Model):
 management.sync_table(User)
 management.sync_table(Guild)
 management.sync_table(Member)
-management.sync_type('settings', SettingsType)
-management.sync_type('partial_user', UserType)
+management.sync_type('rockstar', SettingsType)
+management.sync_type('rockstar', UserType)
