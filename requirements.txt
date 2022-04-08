@@ -4,7 +4,6 @@ orjson
 scales
 waitress
 flask[async]
-pymongo[srv]
 snowflake-py
 flask-limiter
 python-dotenv
