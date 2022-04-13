@@ -14,6 +14,7 @@ async def _create_user():
     id = _id()
 
     username = data['username']
+    # TODO: Implement this better
     discrim = random.randint(1000, 9999)
     email = data['email']
     password = hashed(data.pop('password'))
@@ -21,10 +22,11 @@ async def _create_user():
     bio = ''
     locale = data.get('locale') or 'EN_US/EU'
 
-    c: List[dict] = User.objects(username=username, discriminator=discrim)
+    c: List[dict] = User.objects(username=username, discriminator=discrim).allow_filtering()
     cd: List[dict] = User.objects(username=username).allow_filtering()
 
     if len(c) != 0:
+        # NOTE: Could be ineffiicent
         return await _create_user()
 
     if len(cd) > 4000:

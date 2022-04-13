@@ -1,9 +1,7 @@
 redis
-uvloop
 orjson
-scales
-waitress
 flask[async]
 snowflake-py
 flask-limiter
 python-dotenv
+uvicorn[standard]

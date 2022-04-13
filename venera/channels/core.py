@@ -10,7 +10,7 @@ from ..redis_manager import guild_event
 def create_channel(guild_id):
     guild_id = int(guild_id)
 
-    guild: Guild = Guild.objects(Guild.id == guild_id).allow_filtering().first()
+    guild: Guild = Guild.objects(Guild.id == guild_id).first()
 
     if guild == None:
         raise NotFound()

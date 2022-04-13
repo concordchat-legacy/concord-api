@@ -4,14 +4,15 @@ import threading
 import orjson
 import logging
 import sys
+import flask_limiter
 from flask import Flask, Response, send_file
-from rockstarchat.ratelimiter import limiter
-from rockstarchat.randoms import _id, code
-from rockstarchat.errors import Err, BadData
-from rockstarchat.admin import bp as admin_users
-from rockstarchat.users import bp as users
-from rockstarchat.guilds import bp as guilds
-from rockstarchat.channels import bp as channels
+from venera.ratelimiter import limiter
+from venera.randoms import _id, code
+from venera.errors import Err, BadData
+from venera.admin import bp as admin_users
+from venera.users import bp as users
+from venera.guilds import bp as guilds
+from venera.channels import bp as channels
 
 try:
     import uvloop # type: ignore
@@ -19,7 +20,7 @@ try:
 except:
     pass
 
-app = Flask('Scales')
+app = Flask('Venera')
 limiter.init_app(app)
 logging.basicConfig(level=logging.DEBUG)
 
@@ -54,10 +55,10 @@ async def _internal_error(*args):
 async def _ratelimited(*args):
     return orjson.dumps({'code': 0, 'message': '429: Too Many Requests'})
 
-#@app.errorhandler(KeyError)
-#async def _bad_data(*args):
-    #b = BadData()
-    #return b._to_json(), 403
+@app.errorhandler(KeyError)
+async def _bad_data(*args):
+    b = BadData()
+    return b._to_json(), 403
 
 @app.errorhandler(Err)
 async def _default_error_handler(err: Err):

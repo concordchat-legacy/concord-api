@@ -12,7 +12,7 @@ def create_guild():
     if me['bot']:
         raise Forbidden()
 
-    guilds = Member.objects(Member.id == me['id']).allow_filtering().all()
+    guilds = Member.objects(Member.id == me['id']).all()
 
     if len(guilds) == 200:
         raise BadData()

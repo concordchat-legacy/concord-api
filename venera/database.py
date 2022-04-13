@@ -5,19 +5,19 @@ import hashlib
 from typing import Any
 from cassandra.cqlengine import connection, models, columns, usertype, management
 from cassandra.auth import PlainTextAuthProvider
-from cassandra.cluster import Cluster
 
 dotenv.load_dotenv()
 
 cloud = {
-    'secure_connect_bundle': os.getcwd() + '\\rockstarchat\\static\\bundle.zip'
+    'secure_connect_bundle': os.getcwd() + '\\scales\\static\\bundle.zip'
 }
 auth_provider = PlainTextAuthProvider(os.getenv('client_id'), os.getenv('client_secret'))
 
-connection.setup([], 'scales', cloud=cloud, auth_provider=auth_provider, metrics_enabled=True, connect_timeout=100)
+connection.setup([], 'scales', cloud=cloud, auth_provider=auth_provider, connect_timeout=100)
 
 default_options = {
     # NOTE: Only let tombstones live for 3 days
+    # TODO: Maybe lower this to 1 day, to free up clutter but to keep mem usage low
     'gc_grace_seconds': 259200,
     'compaction': {
         'bucket_high': 2,
@@ -40,6 +40,7 @@ default_permissions = (
     | 1 << 25
 )
 
+# this makes giving the current date just easier, as cassandra-driver accepts non-async functions
 def _get_date():
     return datetime.datetime.now(datetime.timezone.utc)
 
@@ -54,9 +55,9 @@ class SettingsType(usertype.UserType):
 class User(models.Model):
     __table_name__ = 'users'
     __options__ = default_options
-    id = columns.BigInt(primary_key=True, partition_key=False, clustering_order='ASC')
-    username = columns.Text(max_length=40, partition_key=True)
-    discriminator = columns.Integer(index=True, partition_key=True)
+    id = columns.BigInt(primary_key=True, partition_key=False)
+    username = columns.Text(max_length=40)
+    discriminator = columns.Integer(index=True)
     email = columns.Text(max_length=100)
     password = columns.Text()
     flags = columns.Integer()
@@ -66,10 +67,12 @@ class User(models.Model):
     joined_at = columns.DateTime(default=_get_date)
     bio = columns.Text(max_length=4000)
     settings = columns.UserDefinedType(SettingsType)
+
+    # NOTE: Searching session ids are still gonna be slow... any solutions?
     session_ids = columns.List(columns.Text, default=_session_id_defaults)
     verified = columns.Boolean(default=False)
     system = columns.Boolean(default=False)
-    early_supporter_benefiter = columns.Boolean(default=True, index=True)
+    early_supporter_benefiter = columns.Boolean(default=True)
     bot = columns.Boolean(default=False)
 
 class UserType(usertype.UserType):
@@ -105,13 +108,13 @@ class Role(usertype.UserType):
 class Guild(models.Model):
     __table_name__ = 'guilds'
     __options__ = default_options
-    id = columns.BigInt(primary_key=True, partition_key=False)
-    name = columns.Text(partition_key=True, max_length=40)
+    id = columns.BigInt(primary_key=True, partition_key=True)
+    name = columns.Text(max_length=40)
     description = columns.Text(max_length=4000)
-    vanity_url = columns.Text(default=None, index=True)
+    vanity_url = columns.Text(default='')
     icon = columns.Text(default='')
     banner = columns.Text(default='')
-    owner_id = columns.BigInt(primary_key=True, partition_key=True)
+    owner_id = columns.BigInt(primary_key=True)
     nsfw = columns.Boolean(default=False)
     large = columns.Boolean(primary_key=True, default=False)
     perferred_locale = columns.Text(default='EN_US/EU')
@@ -123,7 +126,7 @@ class GuildInvite(models.Model):
     __table_name__ = 'guild_invites'
     __options__ = default_options
     id = columns.Text(primary_key=True, partition_key=False)
-    guild_id = columns.BigInt(primary_key=True, partition_key=True)
+    guild_id = columns.BigInt(primary_key=True)
     created_by = columns.UserDefinedType(UserType)
     created_at = columns.DateTime(default=_get_date)
 
@@ -131,7 +134,7 @@ class Member(models.Model):
     __table_name__ = 'members'
     __options__ = default_options
     id = columns.BigInt(primary_key=True, partition_key=True)
-    guild_id = columns.BigInt(primary_key=True, partition_key=True)
+    guild_id = columns.BigInt(primary_key=True)
     user = columns.UserDefinedType(UserType)
     avatar = columns.Text(default='')
     banner = columns.Text(default='')
@@ -150,8 +153,8 @@ class PermissionOverWrites(usertype.UserType):
 class Channel(models.Model):
     __table_name__ = 'channels'
     __options__ = default_options
-    id = columns.BigInt(primary_key=True, partition_key=False)
-    guild_id = columns.BigInt(primary_key=True, partition_key=True)
+    id = columns.BigInt(primary_key=True, partition_key=True)
+    guild_id = columns.BigInt(primary_key=True)
     type = columns.Integer(default=0)
     position = columns.Integer()
     permission_overwrites = columns.UserDefinedType(PermissionOverWrites)
@@ -200,7 +203,7 @@ class Embed(usertype.UserType):
 class Reaction(usertype.UserType):
     count = columns.Integer()
     # TODO: Implement Emojis
-    emoji = columns.Text(default=None)
+    emoji = columns.Text()
 
 class Message(models.Model):
     __table_name__ = 'messages'
@@ -212,14 +215,14 @@ class Message(models.Model):
     author = columns.UserDefinedType(UserType)
     content = columns.Text(max_length=3000)
     created_at = columns.DateTime(default=_get_date)
-    last_edited = columns.DateTime(default=None)
+    last_edited = columns.DateTime()
     tts = columns.Boolean(default=False)
     mentions_everyone = columns.Boolean(default=False)
     mentions = columns.List(columns.UserDefinedType(UserType))
     embeds = columns.List(columns.UserDefinedType(Embed))
     reactions = columns.List(columns.UserDefinedType(Reaction))
     pinned = columns.Boolean(default=False)
-    referenced_message_id = columns.BigInt(default=None)
+    referenced_message_id = columns.BigInt()
 
 def to_dict(model: models.Model) -> dict:
     initial: dict[str, Any] = model.items()
@@ -232,7 +235,7 @@ def to_dict(model: models.Model) -> dict:
             for k, v in value.items():
                 if isinstance(v, usertype.UserType):
                     value[k] = dict(v)
-                # for deep for user settings
+                # 4 deep for user settings
                 try:
                     for k_, v_ in v.items():
                         if isinstance(v_, usertype.UserType):

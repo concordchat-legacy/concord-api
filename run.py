@@ -23,4 +23,5 @@ load_dotenv()
 
 print(f'DEBUG: Starting on {platform.platform()}', file=sys.stderr)
 
-os.system(f'python -m waitress --port={os.getenv("PORT", 5000)} --backlog=20000 --ident=Scales --threads=200 main:app')
+# TODO: Use gunicorn instead for linux-based systems
+os.system(f'uvicorn --host 0.0.0.0 --port {os.getenv("PORT", 5000)} --backlog 20000 --no-server-header --workers 200 --use-colors --access-log --log-level debug main:app')
