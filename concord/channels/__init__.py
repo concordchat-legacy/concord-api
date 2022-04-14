@@ -1,4 +1,4 @@
-from flask import Blueprint
+from quart import Blueprint
 from .core import create_channel
 
 bp = Blueprint('channels', __name__)

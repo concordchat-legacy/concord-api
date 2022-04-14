@@ -1,16 +1,16 @@
 import random
 import orjson
 from typing import List
-from flask import request
+from quart import request
 from ..database import User, SettingsType, to_dict
 from ..randoms import snowflake, hashed
 from ..errors import Forbidden, BadData
+from ..checks import validate_admin
 
 async def _create_user():
     data: dict = request.get_json(True)
 
-    if data.get('_admin_auth', '') != '972226479407022080':
-        raise Forbidden()
+    validate_admin(request.headers.get('Authorization'))
     
     id = snowflake()
 

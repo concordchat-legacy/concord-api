@@ -1,9 +1,10 @@
 import orjson
-import logging
 import time
-from flask import Flask, Response, jsonify
+import secrets
+from quart import Quart, Response, jsonify, abort
 from concord.ratelimiter import limiter
 from concord.randoms import snowflake
+from concord.database import connect
 from concord.errors import Err, BadData
 from concord.admin import bp as admin_users
 from concord.users import bp as users
@@ -31,15 +32,19 @@ class ORJSONEncoder:
     def encode(self, obj):
         return orjson.dumps(obj).decode('utf-8')
 
-app = Flask('concore')
+app = Quart('concore')
 app.json_encoder = ORJSONEncoder
 app.json_decoder = ORJSONDecoder
 limiter.init_app(app)
-logging.basicConfig(level=logging.DEBUG)
+connect()
 
-@app.route('/auth/fingerprint?version=1')
+@app.route('/auth/fingerprint')
 async def uuid():
-    return jsonify({'id': str(snowflake())})
+    return jsonify({'fingerprint': str(snowflake()) + '.' + secrets.token_urlsafe(16)})
+
+@app.route('/favicon.ico')
+async def favicon():
+    return abort(404)
 
 @app.errorhandler(404)
 async def _not_found(*args):
@@ -51,7 +56,11 @@ async def _internal_error(*args):
 
 @app.errorhandler(429)
 async def _ratelimited(*args):
-    return jsonify({'code': 0, 'message': '429: Too Many Requests'})
+    return jsonify({'retry_after': time.time() - limiter.current_limit.reset_at, 'message': '429: Too Many Requests'})
+
+@app.errorhandler(405)
+async def method_not_allowed(*args):
+    return jsonify({'code': 0, 'message': '405: Method Not Allowed'})
 
 @app.errorhandler(KeyError)
 async def _bad_data(*args):

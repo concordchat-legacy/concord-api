@@ -1,4 +1,4 @@
-from flask import Blueprint
+from quart import Blueprint
 from .users import _create_user
 
 bp = Blueprint('admin', __name__)

@@ -1,13 +1,13 @@
-from flask import request, jsonify
+from quart import request, jsonify
 from ..randoms import snowflake
 from ..checks import validate_user
 from ..database import Guild, Member, UserType, to_dict
 from ..errors import BadData, Forbidden
 from ..redis_manager import guild_event
 
-def create_guild():
+async def create_guild():
     # TODO: Generate a channel: "general" and category: "General" with a welcome message
-    me = validate_user(str(request.headers.get('Authorization', '1')))
+    me = validate_user(request.headers.get('Authorization', '1'))
 
     if me['bot']:
         raise Forbidden()

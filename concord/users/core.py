@@ -1,4 +1,4 @@
-from flask import request, jsonify
+from quart import request, jsonify
 from cassandra.cqlengine import query
 from ..errors import NotFound
 from ..database import User, to_dict

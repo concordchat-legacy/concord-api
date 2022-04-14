@@ -1,4 +1,4 @@
-from flask import Blueprint
+from quart import Blueprint
 from .core import create_guild
 
 bp = Blueprint('guilds', __name__)

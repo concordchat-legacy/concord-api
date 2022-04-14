@@ -5,7 +5,6 @@ import hashlib
 from typing import Any
 from cassandra.cqlengine import connection, models, columns, usertype, management
 from cassandra.auth import PlainTextAuthProvider
-from concord.flags import GuildPermissions, UserFlags
 
 dotenv.load_dotenv()
 
@@ -14,18 +13,16 @@ cloud = {
 }
 auth_provider = PlainTextAuthProvider(os.getenv('client_id'), os.getenv('client_secret'))
 
-connection.setup([], 'concord', cloud=cloud, auth_provider=auth_provider, connect_timeout=100)
+def connect():
+    try:
+        connection.setup([], 'concord', cloud=cloud, auth_provider=auth_provider, connect_timeout=100)
+    except:
+        # Just try again
+        connect()
 
 default_options = {
     # NOTE: Only let tombstones live for a day
     'gc_grace_seconds': 86400,
-    'compaction': {
-        'bucket_high': 2,
-        'bucket_low': 1,
-        'max_threshold': 100000,
-        'min_threshold': 6,
-        'tombstone_threshold': 0.3
-    }
 }
 
 default_permissions = (
@@ -47,21 +44,6 @@ def _get_date():
 
 def _session_id_defaults():
     return [hashlib.sha1(os.urandom(128)).hexdigest()]
-
-class Flags(columns.BigInt):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.type = kwargs.get('type')
-
-    def to_python(self, value):
-        as_integer = super().to_python(value)
-
-        if self.type == 'user':
-            return UserFlags(as_integer)
-        elif self.type == 'guild':
-            return GuildPermissions(as_integer)
-        else:
-            raise ValueError('Invalid Flag Type')
 
 # NOTE: Users
 class SettingsType(usertype.UserType):
@@ -290,6 +272,8 @@ def to_dict(model: models.Model) -> dict:
 if __name__ == '__main__':
     import logging
     logging.basicConfig(level=logging.DEBUG)
+    connect()
+
     # migrate old data
 
     # NOTE: Types

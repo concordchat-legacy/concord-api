@@ -1,6 +1,6 @@
+quart
 redis
 orjson
-flask[async]
 snowflake-py
 flask-limiter
 python-dotenv

@@ -1,4 +1,4 @@
-from flask import jsonify
+from quart import jsonify
 
 class Err(Exception):
     resp_type = 500

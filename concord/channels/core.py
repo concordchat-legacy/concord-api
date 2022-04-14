@@ -1,4 +1,4 @@
-from flask import request, jsonify
+from quart import request, jsonify
 from ..database import Channel, Guild, to_dict
 from ..checks import validate_member
 from ..flags import GuildPermissions
@@ -6,7 +6,7 @@ from ..errors import Forbidden, BadData, NotFound
 from ..randoms import snowflake
 from ..redis_manager import guild_event
 
-def create_channel(guild_id):
+async def create_channel(guild_id):
     guild_id = int(guild_id)
 
     guild: Guild = Guild.objects(Guild.id == guild_id).first()
@@ -14,7 +14,7 @@ def create_channel(guild_id):
     if guild == None:
         raise NotFound()
 
-    member, me = validate_member(str(request.headers.get('Authorization', '1')), guild_id)
+    member, me = validate_member(request.headers.get('Authorization', '1'), guild_id)
     me = to_dict(me)
     me.pop('email')
     me.pop('password')

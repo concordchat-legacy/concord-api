@@ -1,3 +1,4 @@
+import quart.flask_patch
 import flask_limiter
 import flask_limiter.util
 from .randoms import snowflake

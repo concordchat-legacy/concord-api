@@ -1,4 +1,4 @@
-from flask import Blueprint
+from quart import Blueprint
 from .core import get_me, get_user
 
 bp = Blueprint('users', __name__)
