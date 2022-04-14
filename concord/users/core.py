@@ -1,5 +1,4 @@
-import orjson
-from flask import request
+from flask import request, jsonify
 from cassandra.cqlengine import query
 from ..errors import NotFound
 from ..database import User, to_dict
@@ -10,26 +9,23 @@ async def get_me():
 
     me = to_dict(me)
 
-    me.pop('session_ids')
     me.pop('password')
 
-    return orjson.dumps(me)
+    return jsonify(me)
 
 async def get_user(user_id):
     user_id = int(user_id)
     validate_user(str(request.headers.get('Authorization', '1')))
 
     try:
-        filtration: User = User.objects().allow_filtering()
-        user = filtration.get(id=user_id)
+        user: User = User.objects(User.id == user_id).get()
     except(query.DoesNotExist):
         raise NotFound()
 
     ret = to_dict(user)
 
-    ret.pop('session_ids')
     ret.pop('password')
     ret.pop('email')
     ret.pop('settings')
 
-    return orjson.dumps(ret)
+    return jsonify(ret)

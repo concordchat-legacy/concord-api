@@ -1,5 +1,5 @@
 from flask import Blueprint
-from ._user_management import _create_user
+from .users import _create_user
 
 bp = Blueprint('admin', __name__)
 

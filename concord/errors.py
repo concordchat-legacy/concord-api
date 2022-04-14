@@ -1,11 +1,11 @@
-import orjson
+from flask import jsonify
 
 class Err(Exception):
     resp_type = 500
     resp_message = 'Internal Server Error'
 
     def _to_json(self):
-        return orjson.dumps({'code': 0, 'message': f'{self.resp_type}: {self.resp_message}'})
+        return jsonify({'code': 0, 'message': f'{self.resp_type}: {self.resp_message}'})
 
 class Forbidden(Err):
     resp_type = 403

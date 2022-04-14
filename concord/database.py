@@ -5,20 +5,20 @@ import hashlib
 from typing import Any
 from cassandra.cqlengine import connection, models, columns, usertype, management
 from cassandra.auth import PlainTextAuthProvider
+from concord.flags import GuildPermissions, UserFlags
 
 dotenv.load_dotenv()
 
 cloud = {
-    'secure_connect_bundle': os.getcwd() + '\\scales\\static\\bundle.zip'
+    'secure_connect_bundle': os.getcwd() + '\\concord\\static\\bundle.zip'
 }
 auth_provider = PlainTextAuthProvider(os.getenv('client_id'), os.getenv('client_secret'))
 
-connection.setup([], 'scales', cloud=cloud, auth_provider=auth_provider, connect_timeout=100)
+connection.setup([], 'concord', cloud=cloud, auth_provider=auth_provider, connect_timeout=100)
 
 default_options = {
-    # NOTE: Only let tombstones live for 3 days
-    # TODO: Maybe lower this to 1 day, to free up clutter but to keep mem usage low
-    'gc_grace_seconds': 259200,
+    # NOTE: Only let tombstones live for a day
+    'gc_grace_seconds': 86400,
     'compaction': {
         'bucket_high': 2,
         'bucket_low': 1,
@@ -27,6 +27,7 @@ default_options = {
         'tombstone_threshold': 0.3
     }
 }
+
 default_permissions = (
     1 << 0
     | 1 << 6
@@ -46,6 +47,21 @@ def _get_date():
 
 def _session_id_defaults():
     return [hashlib.sha1(os.urandom(128)).hexdigest()]
+
+class Flags(columns.BigInt):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.type = kwargs.get('type')
+
+    def to_python(self, value):
+        as_integer = super().to_python(value)
+
+        if self.type == 'user':
+            return UserFlags(as_integer)
+        elif self.type == 'guild':
+            return GuildPermissions(as_integer)
+        else:
+            raise ValueError('Invalid Flag Type')
 
 # NOTE: Users
 class SettingsType(usertype.UserType):
@@ -67,13 +83,11 @@ class User(models.Model):
     joined_at = columns.DateTime(default=_get_date)
     bio = columns.Text(max_length=4000)
     settings = columns.UserDefinedType(SettingsType)
-
-    # NOTE: Searching session ids are still gonna be slow... any solutions?
-    session_ids = columns.List(columns.Text, default=_session_id_defaults)
     verified = columns.Boolean(default=False)
     system = columns.Boolean(default=False)
     early_supporter_benefiter = columns.Boolean(default=True)
     bot = columns.Boolean(default=False)
+    last_action = columns.DateTime(default=_get_date)
 
 class UserType(usertype.UserType):
     id = columns.BigInt()
@@ -88,11 +102,11 @@ class UserType(usertype.UserType):
     joined_at = columns.DateTime()
     bio = columns.Text()
     settings = columns.UserDefinedType(SettingsType)
-    session_ids = columns.List(columns.Text)
     verified = columns.Boolean()
     system = columns.Boolean()
     early_supporter_benefiter = columns.Boolean()
     bot = columns.Boolean(default=False)
+    last_action = columns.DateTime(default=_get_date)
 
 # NOTE: Guilds
 class Role(usertype.UserType):
@@ -224,6 +238,26 @@ class Message(models.Model):
     pinned = columns.Boolean(default=False)
     referenced_message_id = columns.BigInt()
 
+class Button(usertype.UserType):
+    label = columns.Text()
+    url = columns.Text()
+
+class Activity(usertype.UserType):
+    name = columns.Text()
+    type = columns.Integer()
+    url = columns.Text(default=None)
+    created_at = columns.DateTime()
+    emoji = columns.Text()
+    buttons = columns.List(columns.UserDefinedType(Button))
+
+class Presence(models.Model):
+    id = columns.BigInt(primary_key=True)
+    since = columns.Integer(default=None)
+    activity = columns.UserDefinedType(Activity)
+    status = columns.Text(default='offline')
+    afk = columns.Boolean(default=False)
+    no_online = columns.Boolean(default=False)
+
 def to_dict(model: models.Model) -> dict:
     initial: dict[str, Any] = model.items()
     ret = dict(initial)
@@ -259,16 +293,16 @@ if __name__ == '__main__':
     # migrate old data
 
     # NOTE: Types
-    management.sync_type('scales', SettingsType)
-    management.sync_type('scales', UserType)
-    management.sync_type('scales', PermissionOverWrites)
-    management.sync_type('scales', EmbedAuthor)
-    management.sync_type('scales', EmbedField)
-    management.sync_type('scales', EmbedFooter)
-    management.sync_type('scales', EmbedImage)
-    management.sync_type('scales', EmbedVideo)
-    management.sync_type('scales', Embed)
-    management.sync_type('scales', Reaction)
+    management.sync_type('concord', SettingsType)
+    management.sync_type('concord', UserType)
+    management.sync_type('concord', PermissionOverWrites)
+    management.sync_type('concord', EmbedAuthor)
+    management.sync_type('concord', EmbedField)
+    management.sync_type('concord', EmbedFooter)
+    management.sync_type('concord', EmbedImage)
+    management.sync_type('concord', EmbedVideo)
+    management.sync_type('concord', Embed)
+    management.sync_type('concord', Reaction)
 
     # NOTE: Tables
     management.sync_table(User)

@@ -3,8 +3,8 @@ import random
 import re
 import os
 import threading
-import snowflake
 import secrets
+import snowflake as winter
 from random import choice
 from hashlib import sha384
 
@@ -13,13 +13,10 @@ EPOCH = 1649325271415 # Epoch is in GMT +8
 BUCKET_SIZE = 1000 * 60 * 60 * 24 * 5
 dotenv.load_dotenv()
 
-def _id() -> int:
-    _generator_flake = snowflake.Generator(EPOCH, os.getpid(), threading.current_thread().ident)
+def snowflake() -> int:
+    _generator_flake = winter.Generator(EPOCH, os.getpid(), threading.current_thread().ident)
     result = _generator_flake.generate()
     return result._flake
-
-def _code():
-    return str(_id())[13:].encode()
 
 def code():
     # Generate a random, url-safe, maybe-unique token
@@ -42,7 +39,7 @@ if __name__ == '__main__':
     # looks good
     '2124005656035328'
 
-    id = _id()
+    id = snowflake()
     print(get_bucket(id))
     print(id)
     print(len(str(id)))

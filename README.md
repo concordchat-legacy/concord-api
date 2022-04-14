@@ -1,2 +1,2 @@
-# Scales
-Privacy-focused, scalable, and fast backend API for scales.
+# Concord
+Privacy-focused, scalable, and fast backend API for concord.

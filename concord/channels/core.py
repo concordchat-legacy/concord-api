@@ -1,10 +1,9 @@
-import orjson
-from flask import request
-from ..database import Channel, Message, Guild, to_dict
+from flask import request, jsonify
+from ..database import Channel, Guild, to_dict
 from ..checks import validate_member
 from ..flags import GuildPermissions
 from ..errors import Forbidden, BadData, NotFound
-from ..randoms import _id, get_bucket
+from ..randoms import snowflake
 from ..redis_manager import guild_event
 
 def create_channel(guild_id):
@@ -20,7 +19,6 @@ def create_channel(guild_id):
     me.pop('email')
     me.pop('password')
     me.pop('settings')
-    me.pop('session_ids')
 
     permissions = None
 
@@ -57,7 +55,7 @@ def create_channel(guild_id):
         pid = None
 
     kwargs = {
-        'id': _id(),
+        'id': snowflake(),
         'guild_id': guild_id,
         'name': str(data['name'])[:30].lower(),
         'topic': str(data.get('topic', ''))[:1024],
@@ -73,4 +71,4 @@ def create_channel(guild_id):
 
     guild_event('CHANNEL_CREATE', d=d)
 
-    return orjson.dumps(d)
+    return jsonify(d)

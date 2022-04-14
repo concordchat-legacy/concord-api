@@ -3,15 +3,16 @@ import orjson
 from typing import List
 from flask import request
 from ..database import User, SettingsType, to_dict
-from ..randoms import _id, hashed
-from ..errors import Forbidden
+from ..randoms import snowflake, hashed
+from ..errors import Forbidden, BadData
 
 async def _create_user():
     data: dict = request.get_json(True)
+
     if data.get('_admin_auth', '') != '972226479407022080':
         raise Forbidden()
     
-    id = _id()
+    id = snowflake()
 
     username = data['username']
     # TODO: Implement this better
@@ -26,14 +27,13 @@ async def _create_user():
     cd: List[dict] = User.objects(username=username).allow_filtering()
 
     if len(c) != 0:
-        # NOTE: Could be ineffiicent
-        return await _create_user()
+        raise BadData()
 
     if len(cd) > 4000:
         raise KeyError()
 
     user: User = User.create(
-        id=id,
+        id=snowflake(),
         username=username,
         discriminator=discrim,
         email=email,

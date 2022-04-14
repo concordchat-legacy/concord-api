@@ -1,12 +1,12 @@
-import orjson
-from flask import request
-from ..randoms import _id
+from flask import request, jsonify
+from ..randoms import snowflake
 from ..checks import validate_user
 from ..database import Guild, Member, UserType, to_dict
 from ..errors import BadData, Forbidden
 from ..redis_manager import guild_event
 
 def create_guild():
+    # TODO: Generate a channel: "general" and category: "General" with a welcome message
     me = validate_user(str(request.headers.get('Authorization', '1')))
 
     if me['bot']:
@@ -18,7 +18,7 @@ def create_guild():
         raise BadData()
     
     data: dict = request.get_json(True)
-    guild_id = _id()
+    guild_id = snowflake()
 
     inserted_data = {
         'id': guild_id,
@@ -46,13 +46,13 @@ def create_guild():
 
     """
     first_message = Message.create(
-        id=_id(),
+        id=snowflake(),
         channel_id=channel.id,
         bucket_id=get_bucket(channel.id),
         guild_id=guild.id,
         author=UserType(**me),
-        content=f'Welcome <@{me["id"]}> to your new scales guild!\nYou can customize it to your hearts content, invite your friends and more!'
+        content=f'Welcome <@{me["id"]}> to your new concord guild!\nYou can customize it to your hearts content, invite your friends and more!'
     )
     """
 
-    return orjson.dumps(guild)
+    return jsonify(guild)
