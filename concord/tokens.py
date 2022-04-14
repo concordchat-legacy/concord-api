@@ -10,7 +10,7 @@ def create_token(user_id: Union[int, str], user_password: str):
     user_id = str(user_id)
     user_id = base64.b64encode(user_id.encode())
 
-    return signer.sign(user_id).decode
+    return signer.sign(user_id).decode()
 
 def verify_token(token: str):
     if token.startswith('ConcordBot '):
