@@ -1,7 +1,9 @@
 import functools
 
+
 def _has_flag(v: int, f: int) -> bool:
     return True if v & f else False
+
 
 class UserFlags:
     def __init__(self, __v: int):
@@ -12,8 +14,8 @@ class UserFlags:
         self.verified = has(1 << 2)
         self.likely_scammer = has(1 << 3)
 
+
 class GuildPermissions:
-    
     @classmethod
     def default(self):
         return (
@@ -41,7 +43,7 @@ class GuildPermissions:
         self.add_reactions = has(1 << 6)
         # TODO: Audit Log
         # self.view_audit_log = has(1 << 7)
-        
+
         # NOTE: Voice, although not out yet.
         # self.priority_speaker = has(1 << 8)
         # self.stream = has(1 << 9)
@@ -73,6 +75,7 @@ class GuildPermissions:
 
         # NOTE: Is this feature actually possible?
         # self.manage_events = has(1 << 30)
+
 
 if __name__ == '__main__':
     print(GuildPermissions.default())

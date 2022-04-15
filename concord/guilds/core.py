@@ -1,10 +1,15 @@
-from quart import request, jsonify
-from ..randoms import snowflake
+from quart import Blueprint, jsonify, request
+
 from ..checks import validate_user
 from ..database import Guild, Member, UserType, to_dict
 from ..errors import BadData, Forbidden
+from ..randoms import snowflake
 from ..redis_manager import guild_event
 
+bp = Blueprint('guilds', __name__)
+
+
+@bp.route('', strict_slashes=False, methods=['POST'])
 async def create_guild():
     # TODO: Generate a channel: "general" and category: "General" with a welcome message
     me = validate_user(request.headers.get('Authorization', '1'))
@@ -16,7 +21,7 @@ async def create_guild():
 
     if len(guilds) == 200:
         raise BadData()
-    
+
     data: dict = request.get_json(True)
     guild_id = snowflake()
 

@@ -1,11 +1,16 @@
-from quart import request, jsonify
-from ..database import Channel, Guild, to_dict
+from quart import Blueprint, jsonify, request
+
 from ..checks import validate_member
+from ..database import Channel, Guild, to_dict
+from ..errors import BadData, Forbidden, NotFound
 from ..flags import GuildPermissions
-from ..errors import Forbidden, BadData, NotFound
 from ..randoms import snowflake
 from ..redis_manager import guild_event
 
+bp = Blueprint('channels', __name__)
+
+
+@bp.route('/guilds/<guild_id>/channels', strict_slashes=False, methods=['POST'])
 async def create_channel(guild_id):
     guild_id = int(guild_id)
 
@@ -33,12 +38,16 @@ async def create_channel(guild_id):
                 break
 
     assert permissions is not None
-    
+
     calc = GuildPermissions(permissions)
 
-    if not calc.manage_channels and member.id != guild.owner_id and not calc.administator:
+    if (
+        not calc.manage_channels
+        and member.id != guild.owner_id
+        and not calc.administator
+    ):
         raise Forbidden()
-    
+
     data: dict = request.get_json(True)
 
     slowmode = 0
@@ -48,7 +57,7 @@ async def create_channel(guild_id):
             raise BadData()
         else:
             slowmode = round(int(data.pop('slowmode_timeout')))
-    
+
     if data.get('parent_id'):
         pid = int(data.pop('parent_id'))
     else:
@@ -61,7 +70,7 @@ async def create_channel(guild_id):
         'topic': str(data.get('topic', ''))[:1024],
         'slowmode_timeout': slowmode,
         'type': int(data.get('type', 1)),
-        'parent_id': pid
+        'parent_id': pid,
     }
 
     channel: Channel = Channel.create(**kwargs)

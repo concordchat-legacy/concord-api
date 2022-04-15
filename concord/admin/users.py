@@ -1,29 +1,36 @@
 import random
-import orjson
 from typing import List
-from quart import request
-from ..database import User, SettingsType, to_dict
-from ..randoms import snowflake, hashed
-from ..errors import Forbidden, BadData
-from ..checks import validate_admin
 
+from quart import Blueprint, request, jsonify
+
+from ..checks import validate_admin
+from ..database import SettingsType, User, to_dict
+from ..errors import BadData
+from ..randoms import snowflake
+from ..tokens import create_token, hash_string
+
+bp = Blueprint('admin', __name__)
+
+
+@bp.route('', methods=['POST', 'PUT'], strict_slashes=False)
 async def _create_user():
     data: dict = request.get_json(True)
 
     validate_admin(request.headers.get('Authorization'))
-    
-    id = snowflake()
 
     username = data['username']
     # TODO: Implement this better
-    discrim = random.randint(1000, 9999)
+    discrim = random.randint(1, 9999)
+    discrim = int('%04d' % discrim)
     email = data['email']
-    password = hashed(data.pop('password'))
-    flags = 1 << 0
-    bio = ''
+    password = await hash_string(data.pop('password'))
+    flags = data.get('flags') or 1 << 0
+    bio = data.get('bio') or ''
     locale = data.get('locale') or 'EN_US/EU'
 
-    c: List[dict] = User.objects(username=username, discriminator=discrim).allow_filtering()
+    c: List[dict] = User.objects(
+        username=username, discriminator=discrim
+    ).allow_filtering()
     cd: List[dict] = User.objects(username=username).allow_filtering()
 
     if len(c) != 0:
@@ -44,7 +51,10 @@ async def _create_user():
         settings=SettingsType(
             accept_friend_requests=True,
             accept_direct_messages=True,
-        )
+        ),
     )
 
-    return orjson.dumps(to_dict(user))
+    resp = to_dict(user)
+    resp['token'] = create_token(user_id=user.id, user_password=password)
+
+    return jsonify(resp)

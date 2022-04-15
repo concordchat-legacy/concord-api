@@ -1,24 +1,28 @@
 import datetime
 import os
-import dotenv
-import hashlib
 from typing import Any
-from cassandra.cqlengine import connection, models, columns, usertype, management
+
+import dotenv
 from cassandra.auth import PlainTextAuthProvider
+from cassandra.cqlengine import columns, connection, management, models, usertype
 
 dotenv.load_dotenv()
 
-cloud = {
-    'secure_connect_bundle': os.getcwd() + '\\concord\\static\\bundle.zip'
-}
-auth_provider = PlainTextAuthProvider(os.getenv('client_id'), os.getenv('client_secret'))
+cloud = {'secure_connect_bundle': os.getcwd() + '\\concord\\static\\bundle.zip'}
+auth_provider = PlainTextAuthProvider(
+    os.getenv('client_id'), os.getenv('client_secret')
+)
+
 
 def connect():
     try:
-        connection.setup([], 'concord', cloud=cloud, auth_provider=auth_provider, connect_timeout=100)
+        connection.setup(
+            [], 'concord', cloud=cloud, auth_provider=auth_provider, connect_timeout=100
+        )
     except:
         # Just try again
         connect()
+
 
 default_options = {
     # NOTE: Only let tombstones live for a day
@@ -42,13 +46,12 @@ default_permissions = (
 def _get_date():
     return datetime.datetime.now(datetime.timezone.utc)
 
-def _session_id_defaults():
-    return [hashlib.sha1(os.urandom(128)).hexdigest()]
 
 # NOTE: Users
 class SettingsType(usertype.UserType):
     accept_friend_requests = columns.Boolean()
     accept_direct_messages = columns.Boolean()
+
 
 class User(models.Model):
     __table_name__ = 'users'
@@ -71,6 +74,7 @@ class User(models.Model):
     bot = columns.Boolean(default=False)
     last_action = columns.DateTime(default=_get_date)
 
+
 class UserType(usertype.UserType):
     id = columns.BigInt()
     username = columns.Text()
@@ -90,6 +94,7 @@ class UserType(usertype.UserType):
     bot = columns.Boolean(default=False)
     last_action = columns.DateTime(default=_get_date)
 
+
 # NOTE: Guilds
 class Role(usertype.UserType):
     id = columns.BigInt()
@@ -100,6 +105,7 @@ class Role(usertype.UserType):
     position = columns.Integer()
     permissions = columns.BigInt()
     mentionable = columns.Boolean()
+
 
 class Guild(models.Model):
     __table_name__ = 'guilds'
@@ -117,6 +123,8 @@ class Guild(models.Model):
     permissions = columns.BigInt(default=default_permissions)
     splash = columns.Text(default='')
     roles = columns.Set(columns.UserDefinedType(Role))
+    features = columns.Set(columns.Text)
+
 
 class GuildInvite(models.Model):
     __table_name__ = 'guild_invites'
@@ -125,6 +133,7 @@ class GuildInvite(models.Model):
     guild_id = columns.BigInt(primary_key=True)
     created_by = columns.UserDefinedType(UserType)
     created_at = columns.DateTime(default=_get_date)
+
 
 class Member(models.Model):
     __table_name__ = 'members'
@@ -138,13 +147,16 @@ class Member(models.Model):
     roles = columns.List(columns.BigInt)
     nick = columns.Text(default='')
 
+
 ## NOTE: Channels/Messages, etc
+
 
 class PermissionOverWrites(usertype.UserType):
     id = columns.BigInt()
     type = columns.Integer(default=0)
     allow = columns.BigInt()
     deny = columns.BigInt()
+
 
 class Channel(models.Model):
     __table_name__ = 'channels'
@@ -164,25 +176,31 @@ class Channel(models.Model):
     # NOTE: Maybe store this somewhere else? this could impact read perf
     empty_buckets = columns.Set(columns.Integer)
 
+
 class EmbedField(usertype.UserType):
     name = columns.Text(max_length=100)
     value = columns.Text()
     inline = columns.Boolean(default=False)
+
 
 class EmbedAuthor(usertype.UserType):
     name = columns.Text(max_length=100)
     url = columns.Text(max_length=20)
     icon_url = columns.Text(max_length=100)
 
+
 class EmbedVideo(usertype.UserType):
     url = columns.Text(max_length=30)
+
 
 class EmbedImage(usertype.UserType):
     url = columns.Text(max_length=30)
 
+
 class EmbedFooter(usertype.UserType):
     text = columns.Text(max_length=500)
     icon_url = columns.Text(max_length=100)
+
 
 class Embed(usertype.UserType):
     title = columns.Text(default='', max_length=100)
@@ -196,10 +214,12 @@ class Embed(usertype.UserType):
     author = columns.UserDefinedType(EmbedAuthor)
     fields = columns.List(columns.UserDefinedType(EmbedField))
 
+
 class Reaction(usertype.UserType):
     count = columns.Integer()
     # TODO: Implement Emojis
     emoji = columns.Text()
+
 
 class Message(models.Model):
     __table_name__ = 'messages'
@@ -220,9 +240,11 @@ class Message(models.Model):
     pinned = columns.Boolean(default=False)
     referenced_message_id = columns.BigInt()
 
+
 class Button(usertype.UserType):
     label = columns.Text()
     url = columns.Text()
+
 
 class Activity(usertype.UserType):
     name = columns.Text()
@@ -232,20 +254,27 @@ class Activity(usertype.UserType):
     emoji = columns.Text()
     buttons = columns.List(columns.UserDefinedType(Button))
 
+
 class Presence(models.Model):
+    __table_name__ = 'presences'
     id = columns.BigInt(primary_key=True)
     since = columns.Integer(default=None)
-    activity = columns.UserDefinedType(Activity)
+    activitys = columns.Set(columns.UserDefinedType(Activity))
     status = columns.Text(default='offline')
     afk = columns.Boolean(default=False)
     no_online = columns.Boolean(default=False)
+
 
 def to_dict(model: models.Model) -> dict:
     initial: dict[str, Any] = model.items()
     ret = dict(initial)
 
     for name, value in initial:
-        if isinstance(value, usertype.UserType) or isinstance(value, models.Model) or isinstance(value, columns.UserDefinedType):
+        if (
+            isinstance(value, usertype.UserType)
+            or isinstance(value, models.Model)
+            or isinstance(value, columns.UserDefinedType)
+        ):
             # embeds go 3 layers deep here.
             value = dict(value)
             for k, v in value.items():
@@ -269,8 +298,10 @@ def to_dict(model: models.Model) -> dict:
 
     return ret
 
+
 if __name__ == '__main__':
     import logging
+
     logging.basicConfig(level=logging.DEBUG)
     connect()
 
@@ -287,6 +318,8 @@ if __name__ == '__main__':
     management.sync_type('concord', EmbedVideo)
     management.sync_type('concord', Embed)
     management.sync_type('concord', Reaction)
+    management.sync_type('concord', Button)
+    management.sync_type('concord', Activity)
 
     # NOTE: Tables
     management.sync_table(User)
@@ -295,3 +328,4 @@ if __name__ == '__main__':
     management.sync_table(Member)
     management.sync_table(Channel)
     management.sync_table(Message)
+    management.sync_table(Presence)
