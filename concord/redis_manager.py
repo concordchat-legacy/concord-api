@@ -2,7 +2,7 @@ import os
 
 import dotenv
 import orjson
-import redis
+import aioredis as redis
 
 dotenv.load_dotenv()
 
@@ -16,24 +16,25 @@ pool = redis.ConnectionPool(
 manager = redis.Redis(connection_pool=pool)
 
 
-def _guild_event(*, name: str, data: dict, member=None, presence=False):
+async def _guild_event(*, name: str, data: dict, member=None, presence=False):
+    # TODO: Redo this data structure, it's honestly messsy asf
     _raw_data = {
         't': name.upper(),
         'd': data,
         'member_id': member,
         'presence': presence,
     }
-    manager.publish(channel='GUILD_EVENTS', message=orjson.dumps(_raw_data).decode())
+    await manager.publish(channel='GUILD_EVENTS', message=orjson.dumps(_raw_data).decode())
 
 
-def _user_event(*, name: str, data: dict):
+async def _user_event(*, name: str, data: dict):
     _raw_data = {'t': name.upper(), 'd': data}
-    manager.publish(channel='USER_EVENTS', message=orjson.dumps(_raw_data).decode())
+    await manager.publish(channel='USER_EVENTS', message=orjson.dumps(_raw_data).decode())
 
 
-def guild_event(name: str, /, *, d: dict, m: bool = False, p: bool = False) -> None:
-    _guild_event(name=name, data=d, member=m, presence=p)
+async def guild_event(name: str, /, *, d: dict, m: bool = False, p: bool = False) -> None:
+    await _guild_event(name=name, data=d, member=m, presence=p)
 
 
-def user_event(name: str, /, *, d: dict) -> None:
-    _user_event(name=name, data=d)
+async def user_event(name: str, /, *, d: dict) -> None:
+    await _user_event(name=name, data=d)

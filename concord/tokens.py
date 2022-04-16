@@ -1,12 +1,10 @@
-import asyncio
 import base64
 import binascii
 from typing import Union
 
-import bcrypt
 import itsdangerous
 
-from .database import User, _get_date
+from .database import User
 from .errors import Forbidden, Unauthorized
 
 
@@ -43,18 +41,6 @@ def verify_token(token: str):
     try:
         signer.unsign(token)
 
-        user.last_action = _get_date()
-
-        user.save()
-
         return user
     except (itsdangerous.BadSignature):
         raise Forbidden()
-
-async def hash_string(to_hash: str) -> str:
-    buf = to_hash.encode()
-    loop = asyncio.get_running_loop()
-
-    hashed = await loop.run_in_executor(None, bcrypt.hashpw, buf, bcrypt.gensalt(14))
-
-    return hashed.decode()

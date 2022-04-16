@@ -64,7 +64,7 @@ class User(models.Model):
     flags = columns.Integer()
     avatar = columns.Text(default='')
     banner = columns.Text(default='')
-    locale = columns.Text(default='EN_US/EU')
+    locale = columns.Text(default='EN_US')
     joined_at = columns.DateTime(default=_get_date)
     bio = columns.Text(max_length=4000)
     settings = columns.UserDefinedType(SettingsType)
@@ -72,7 +72,6 @@ class User(models.Model):
     system = columns.Boolean(default=False)
     early_supporter_benefiter = columns.Boolean(default=True)
     bot = columns.Boolean(default=False)
-    last_action = columns.DateTime(default=_get_date)
 
 
 class UserType(usertype.UserType):
@@ -131,7 +130,7 @@ class GuildInvite(models.Model):
     __options__ = default_options
     id = columns.Text(primary_key=True, partition_key=False)
     guild_id = columns.BigInt(primary_key=True)
-    created_by = columns.UserDefinedType(UserType)
+    creator_id = columns.BigInt(primary_key=True)
     created_at = columns.DateTime(default=_get_date)
 
 
@@ -264,6 +263,12 @@ class Presence(models.Model):
     afk = columns.Boolean(default=False)
     no_online = columns.Boolean(default=False)
 
+
+class ReadState(models.Model):
+    __table_name__ = 'readstates'
+    channel_id = columns.BigInt()
+    user_id = columns.BigInt()
+    last_message_id = columns.BigInt()
 
 def to_dict(model: models.Model) -> dict:
     initial: dict[str, Any] = model.items()
