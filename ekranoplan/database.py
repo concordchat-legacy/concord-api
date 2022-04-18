@@ -8,7 +8,7 @@ from cassandra.cqlengine import columns, connection, management, models, usertyp
 
 dotenv.load_dotenv()
 
-cloud = {'secure_connect_bundle': os.getcwd() + '\\concord\\static\\bundle.zip'}
+cloud = {'secure_connect_bundle': os.getcwd() + '\\ekranoplan\\static\\bundle.zip'}
 auth_provider = PlainTextAuthProvider(
     os.getenv('client_id'), os.getenv('client_secret')
 )
@@ -16,9 +16,14 @@ auth_provider = PlainTextAuthProvider(
 
 def connect():
     try:
-        connection.setup(
-            [], 'concord', cloud=cloud, auth_provider=auth_provider, connect_timeout=100
-        )
+        if os.getenv('safe', 'false') == 'true':
+            connection.setup(
+                [], 'concord', cloud=cloud, auth_provider=auth_provider, connect_timeout=100
+            )
+        else:
+            connection.setup(
+                [], 'concord', auth_provider=auth_provider, connect_timeout=100
+            )
     except:
         # Just try again
         connect()
