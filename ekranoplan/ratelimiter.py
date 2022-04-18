@@ -1,6 +1,6 @@
+import quart.flask_patch  # noqa: ignore # type: ignore
 import flask_limiter
 import flask_limiter.util
-import quart.flask_patch  # noqa: ignore # type: ignore
 
 from .randoms import snowflake
 
