@@ -92,6 +92,7 @@ class UserType(usertype.UserType):
     early_supporter_benefiter = columns.Boolean()
     bot = columns.Boolean(default=False)
 
+
 # NOTE: Guilds
 class Role(usertype.UserType):
     id = columns.BigInt()
@@ -237,23 +238,20 @@ class Message(models.Model):
     pinned = columns.Boolean(default=False)
     referenced_message_id = columns.BigInt()
 
+
 class ReadState(models.Model):
     __table_name__ = 'readstates'
     channel_id = columns.BigInt(primary_key=True, partition_key=True)
     user_id = columns.BigInt(primary_key=True, partition_key=True)
     last_message_id = columns.BigInt()
 
+
 def to_dict(model: models.Model) -> dict:
     initial: dict[str, Any] = model.items()
     ret = dict(initial)
 
     for name, value in initial:
-        if isinstance(
-            value,
-            (
-                usertype.UserType,
-                models.Model
-            )):
+        if isinstance(value, (usertype.UserType, models.Model)):
             # things like member objects or embeds can have usertypes 3/4 times deep
             # there shouldnt be a recursion problem though
             value = dict(value.items())
@@ -274,7 +272,7 @@ def to_dict(model: models.Model) -> dict:
                     set_values.append(to_dict(v.items()))
                 else:
                     set_values.append(v)
-            
+
             ret[name] = set_values
 
         if name == 'id' or name.endswith('_id') and len(str(value)) > 14:

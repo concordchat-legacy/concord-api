@@ -10,7 +10,7 @@ def valid_session(token: str) -> tuple[bool, User]:
     return verify_token(token=token)
 
 
-def validate_user(token: str) -> User:
+def validate_user(token: str, stop_bots: bool = False) -> User:
     user = valid_session(token=token)
 
     return user

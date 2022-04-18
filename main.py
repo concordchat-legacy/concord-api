@@ -1,19 +1,18 @@
 import secrets
 import time
 
-import orjson
-import aiohttp
 import dotenv
-from quart import Quart, Response, abort, jsonify, request
+import orjson
+from quart import Quart, Response, abort, jsonify
 
-from concord.admin import admin_users
-from concord.channels import channels
-from concord.database import connect
-from concord.errors import BadData, Err
-from concord.guilds import guilds
-from concord.randoms import snowflake
-from concord.ratelimiter import limiter
-from concord.users import users
+from ekranoplan.admin import admin_users
+from ekranoplan.channels import channels
+from ekranoplan.database import connect
+from ekranoplan.errors import BadData, Err
+from ekranoplan.guilds import guilds
+from ekranoplan.randoms import snowflake
+from ekranoplan.ratelimiter import limiter
+from ekranoplan.users import users
 
 try:
     import uvloop  # type: ignore
@@ -39,7 +38,7 @@ class ORJSONEncoder:
         return orjson.dumps(obj).decode('utf-8')
 
 
-app = Quart('concord')
+app = Quart('Ekranoplan')
 app.config['MAX_CONTENT_LENGTH'] = 10 * 1000 * 1000
 app.json_encoder = ORJSONEncoder
 app.json_decoder = ORJSONDecoder

@@ -1,9 +1,9 @@
+import hashlib
 import os
 import random
 import re
 import secrets
 import threading
-import hashlib
 from random import choice
 
 import dotenv
@@ -17,9 +17,7 @@ dotenv.load_dotenv()
 
 def snowflake() -> int:
     _generator_flake = winter.Generator(
-        EPOCH,
-        os.getpid(),
-        threading.current_thread().ident
+        EPOCH, os.getpid(), threading.current_thread().ident
     )
     result = _generator_flake.generate()
     return result._flake
@@ -31,8 +29,10 @@ def code():
     _u = re.sub(r"\/|\+|\-|\_", "", secrets.token_urlsafe(random.randint(4, 6)))
     return ''.join(choice((str.upper, str.lower))(c) for c in _u)
 
+
 def get_hash(string: str):
     return hashlib.sha512(string=string.encode(), usedforsecurity=True).hexdigest()
+
 
 def get_bucket(sf: int):
     timestamp = sf >> 22

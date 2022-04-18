@@ -12,7 +12,7 @@ bp = Blueprint('guilds', __name__)
 @bp.route('', strict_slashes=False, methods=['POST'])
 async def create_guild():
     # TODO: Generate a channel: "general" and category: "General" with a welcome message
-    me = validate_user(request.headers.get('Authorization', '1'))
+    me = validate_user(request.headers.get('Authorization', '1'), True)
 
     if me['bot']:
         raise Forbidden()

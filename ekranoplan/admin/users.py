@@ -1,12 +1,12 @@
 import random
 from typing import List
 
-from quart import Blueprint, request, jsonify
+from quart import Blueprint, jsonify, request
 
 from ..checks import validate_admin
 from ..database import SettingsType, User, to_dict
 from ..errors import BadData
-from ..randoms import snowflake, get_hash
+from ..randoms import get_hash, snowflake
 from ..tokens import create_token
 
 bp = Blueprint('admin', __name__)
