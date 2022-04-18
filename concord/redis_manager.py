@@ -13,28 +13,47 @@ pool = redis.ConnectionPool(
     db=int(os.getenv('redis_db', 0)),
     retry_on_timeout=True,
 )
+
+if os.name != 'nt':
+    pool.connection_class = redis.UnixDomainSocketConnection
+
 manager = redis.Redis(connection_pool=pool)
 
+# Possible Types
+# 1: User(s)
+# 2: Guild(s)
+# 3: Channel(s) (Special Since we need to make sure the user has access to the channel)
+# 4: ???
+# 5: Friend Request(s)
+# 6: Member(s)
+# 7: Presence
 
-async def _guild_event(*, name: str, data: dict, member=None, presence=False):
-    # TODO: Redo this data structure, it's honestly messsy asf
-    _raw_data = {
-        't': name.upper(),
-        'd': data,
-        'member_id': member,
-        'presence': presence,
-    }
-    await manager.publish(channel='GUILD_EVENTS', message=orjson.dumps(_raw_data).decode())
+async def user_event(name: str, user_id: int, data: dict):
+    d = {'type': 1, 'name': name, 'user_id': user_id, 'data': data}
 
+    await manager.publish('gateway', orjson.dumps(d))
 
-async def _user_event(*, name: str, data: dict):
-    _raw_data = {'t': name.upper(), 'd': data}
-    await manager.publish(channel='USER_EVENTS', message=orjson.dumps(_raw_data).decode())
+async def guild_event(name: str, guild_id: int, data: dict, user_id: int = None):
+    d = {'type': 2, 'name': name, 'guild_id': guild_id, 'user_id': user_id, 'data': data}
 
+    await manager.publish('gateway', orjson.dumps(d))
 
-async def guild_event(name: str, /, *, d: dict, m: bool = False, p: bool = False) -> None:
-    await _guild_event(name=name, data=d, member=m, presence=p)
+async def channel_event(name: str, channel_id: int, data: dict, guild_id: int = None):
+    d = {'type': 3, 'name': name, 'channel_id': channel_id, 'guild_id': guild_id, 'data': data}
 
+    await manager.publish('gateway', orjson.dumps(d))
 
-async def user_event(name: str, /, *, d: dict) -> None:
-    await _user_event(name=name, data=d)
+async def friend_request_event(name: str, user_id: int, data: dict):
+    d = {'type': 5, 'name': name, 'requester_id': user_id, 'data': data}
+
+    await manager.publish('gateway', orjson.dumps(d))
+
+async def member_event(name: str, member_id: int, data: dict):
+    d = {'type': 6, 'name': name, 'member_id': member_id, 'data': data}
+
+    await manager.publish('gateway', orjson.dumps(d))
+
+async def presence_event(name: str, user_id: int, data: dict):
+    d = {'type': 7, 'name': name, 'user_id': user_id, 'data': data}
+
+    await manager.publish('gateway', orjson.dumps(d))

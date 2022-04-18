@@ -6,8 +6,8 @@ from quart import Blueprint, request, jsonify
 from ..checks import validate_admin
 from ..database import SettingsType, User, to_dict
 from ..errors import BadData
-from ..randoms import snowflake
-from ..tokens import create_token, hash_string
+from ..randoms import snowflake, get_hash
+from ..tokens import create_token
 
 bp = Blueprint('admin', __name__)
 
@@ -23,7 +23,7 @@ async def _create_user():
     discrim = random.randint(1, 9999)
     discrim = int('%04d' % discrim)
     email = data['email']
-    password = await hash_string(data.pop('password'))
+    password = get_hash(data.pop('password'))
     flags = data.get('flags') or 1 << 0
     bio = data.get('bio') or ''
     locale = data.get('locale') or 'EN_US/EU'
@@ -55,6 +55,6 @@ async def _create_user():
     )
 
     resp = to_dict(user)
-    resp['token'] = create_token(user_id=user.id, user_password=password)
+    resp['token'] = create_token(user_id=user.id, user_password=user.password)
 
     return jsonify(resp)

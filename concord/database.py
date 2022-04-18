@@ -91,8 +91,6 @@ class UserType(usertype.UserType):
     system = columns.Boolean()
     early_supporter_benefiter = columns.Boolean()
     bot = columns.Boolean(default=False)
-    last_action = columns.DateTime(default=_get_date)
-
 
 # NOTE: Guilds
 class Role(usertype.UserType):
@@ -239,35 +237,10 @@ class Message(models.Model):
     pinned = columns.Boolean(default=False)
     referenced_message_id = columns.BigInt()
 
-
-class Button(usertype.UserType):
-    label = columns.Text()
-    url = columns.Text()
-
-
-class Activity(usertype.UserType):
-    name = columns.Text()
-    type = columns.Integer()
-    url = columns.Text(default=None)
-    created_at = columns.DateTime()
-    emoji = columns.Text()
-    buttons = columns.List(columns.UserDefinedType(Button))
-
-
-class Presence(models.Model):
-    __table_name__ = 'presences'
-    id = columns.BigInt(primary_key=True)
-    since = columns.Integer(default=None)
-    activitys = columns.Set(columns.UserDefinedType(Activity))
-    status = columns.Text(default='offline')
-    afk = columns.Boolean(default=False)
-    no_online = columns.Boolean(default=False)
-
-
 class ReadState(models.Model):
     __table_name__ = 'readstates'
-    channel_id = columns.BigInt()
-    user_id = columns.BigInt()
+    channel_id = columns.BigInt(primary_key=True, partition_key=True)
+    user_id = columns.BigInt(primary_key=True, partition_key=True)
     last_message_id = columns.BigInt()
 
 def to_dict(model: models.Model) -> dict:
@@ -275,31 +248,39 @@ def to_dict(model: models.Model) -> dict:
     ret = dict(initial)
 
     for name, value in initial:
-        if (
-            isinstance(value, usertype.UserType)
-            or isinstance(value, models.Model)
-            or isinstance(value, columns.UserDefinedType)
-        ):
-            # embeds go 3 layers deep here.
-            value = dict(value)
+        if isinstance(
+            value,
+            (
+                usertype.UserType,
+                models.Model
+            )):
+            # things like member objects or embeds can have usertypes 3/4 times deep
+            # there shouldnt be a recursion problem though
+            value = dict(value.items())
             for k, v in value.items():
                 if isinstance(v, usertype.UserType):
-                    value[k] = dict(v)
-                # 4 deep for user settings
-                try:
-                    for k_, v_ in v.items():
-                        if isinstance(v_, usertype.UserType):
-                            v[k_] = dict(v_)
-                except:
-                    pass
+                    value[k] = to_dict(v)
             ret[name] = value
+
+        # some values are lists of usertypes
+        elif isinstance(value, (list, set)):
+            if isinstance(value, set):
+                value = list(value)
+
+            set_values = []
+
+            for v in value:
+                if isinstance(v, usertype.UserType):
+                    set_values.append(to_dict(v.items()))
+                else:
+                    set_values.append(v)
+            
+            ret[name] = set_values
+
         if name == 'id' or name.endswith('_id') and len(str(value)) > 14:
             ret[name] = str(value)
         if name == 'permissions':
             ret[name] = str(value)
-        if isinstance(value, set):
-            value = list(value)
-            ret[name] = value
 
     return ret
 
@@ -323,8 +304,6 @@ if __name__ == '__main__':
     management.sync_type('concord', EmbedVideo)
     management.sync_type('concord', Embed)
     management.sync_type('concord', Reaction)
-    management.sync_type('concord', Button)
-    management.sync_type('concord', Activity)
 
     # NOTE: Tables
     management.sync_table(User)
@@ -333,4 +312,4 @@ if __name__ == '__main__':
     management.sync_table(Member)
     management.sync_table(Channel)
     management.sync_table(Message)
-    management.sync_table(Presence)
+    management.sync_table(ReadState)

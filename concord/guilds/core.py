@@ -47,7 +47,7 @@ async def create_guild():
 
     guild['owner'] = member
 
-    guild_event('GUILD_CREATE', d=guild)
+    await guild_event('CREATE', guild_id=guild['id'], data=guild, user_id=member['id'])
 
     """
     first_message = Message.create(

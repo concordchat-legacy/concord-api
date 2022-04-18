@@ -78,6 +78,6 @@ async def create_channel(guild_id):
 
     d.pop('empty_buckets')
 
-    guild_event('CHANNEL_CREATE', d=d)
+    await guild_event('CHANNEL_CREATE', d=d)
 
     return jsonify(d)

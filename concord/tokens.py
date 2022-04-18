@@ -20,7 +20,7 @@ def verify_token(token: str):
     if token.startswith('ConcordBot '):
         token = token.replace('ConcordBot ', '')
     elif token.startswith('ConcordUser '):
-        token = token.replace('ConcordUser', '')
+        token = token.replace('ConcordUser ', '')
 
     fragmented = token.split('.')
     user_id = fragmented[0]

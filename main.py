@@ -2,7 +2,9 @@ import secrets
 import time
 
 import orjson
-from quart import Quart, Response, abort, jsonify
+import aiohttp
+import dotenv
+from quart import Quart, Response, abort, jsonify, request
 
 from concord.admin import admin_users
 from concord.channels import channels
@@ -38,9 +40,11 @@ class ORJSONEncoder:
 
 
 app = Quart('concord')
+app.config['MAX_CONTENT_LENGTH'] = 10 * 1000 * 1000
 app.json_encoder = ORJSONEncoder
 app.json_decoder = ORJSONDecoder
 limiter.init_app(app)
+dotenv.load_dotenv()
 connect()
 
 
@@ -68,7 +72,7 @@ async def _internal_error(*args):
 async def _ratelimited(*args):
     return jsonify(
         {
-            'retry_after': time.time() - limiter.current_limit.reset_at,
+            'retry_after': limiter.current_limit.reset_at - time.time(),
             'message': '429: Too Many Requests',
         }
     )
@@ -97,9 +101,8 @@ async def _after_request(resp: Response):
         resp.headers.add('X-RateLimit-Remaining', limiter.current_limit.remaining)
         resp.headers.add('X-RateLimit-Reset', limiter.current_limit.reset_at)
         resp.headers.add(
-            'X-RateLimit-Reset-After', int(time.time()) - limiter.current_limit.reset_at
+            'X-RateLimit-Reset-After', limiter.current_limit.reset_at - int(time.time())
         )
-        resp.headers.add('X-RateLimit-Bucket', limiter._key_func())
     return resp
 
 
