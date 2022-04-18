@@ -149,6 +149,7 @@ class Member(models.Model):
     joined_at = columns.DateTime(default=_get_date)
     roles = columns.List(columns.BigInt)
     nick = columns.Text(default='')
+    owner = columns.Boolean(default=False)
 
 
 ## NOTE: Channels/Messages, etc
@@ -175,9 +176,6 @@ class Channel(models.Model):
     recipients = columns.List(columns.UserDefinedType(UserType))
     owner_id = columns.BigInt()
     parent_id = columns.BigInt()
-    # NOTE: Store empty buckets to make sure we never go over them
-    # NOTE: Maybe store this somewhere else? this could impact read perf
-    empty_buckets = columns.Set(columns.Integer)
 
 
 class EmbedField(usertype.UserType):
@@ -246,8 +244,8 @@ class Message(models.Model):
 
 class ReadState(models.Model):
     __table_name__ = 'readstates'
-    channel_id = columns.BigInt(primary_key=True, partition_key=True)
-    user_id = columns.BigInt(primary_key=True, partition_key=True)
+    id = columns.BigInt(primary_key=True, partition_key=True)
+    channel_id = columns.BigInt(primary_key=True, partition_key=False)
     last_message_id = columns.BigInt()
 
 

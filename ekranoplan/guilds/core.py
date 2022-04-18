@@ -37,6 +37,7 @@ async def create_guild():
     original_member = {
         'id': me['id'],
         'guild_id': guild_id,
+        'owner': True
     }
 
     guild = Guild.create(**inserted_data)

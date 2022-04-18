@@ -10,8 +10,8 @@ import dotenv
 import snowflake as winter
 
 EPOCH = 1649325271415  # Epoch is in GMT +8
-# A bucket only lasts for 5 days, which lets us have partitions that are small and efficient
-BUCKET_SIZE = 1000 * 60 * 60 * 24 * 5
+# A bucket only lasts for 10 days, which lets us have partitions that are small and efficient
+BUCKET_SIZE = 1000 * 60 * 60 * 24 * 10
 dotenv.load_dotenv()
 
 
@@ -52,5 +52,3 @@ if __name__ == '__main__':
     print(get_bucket(id))
     print(id)
     print(len(str(id)))
-    # while True:
-    # print(get_bucket(id))

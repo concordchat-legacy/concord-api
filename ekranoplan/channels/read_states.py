@@ -41,7 +41,7 @@ async def ack_message(channel_id: int, message_id: int):
 
 
 @bp.route('/channels/<int:channel_id>')
-async def get_channel_read_states(channel_id: int):
+async def get_channel_read_state(channel_id: int):
     user_id = validate_user(request.headers.get('Authorization'), stop_bots=True).id
 
     try:
@@ -57,3 +57,17 @@ async def get_channel_read_states(channel_id: int):
         raise NotFound()
 
     return jsonify(to_dict(obj))
+
+
+@bp.route('/readstates')
+async def get_readstates():
+    me = validate_user(request.headers.get('Authorization'), stop_bots=True)
+
+    _readstates = ReadState.objects(ReadState.user_id == me.id).all()
+
+    readstates = []
+
+    for readstate in _readstates:
+        readstates.append(to_dict(readstate))
+
+    return jsonify(readstates)
