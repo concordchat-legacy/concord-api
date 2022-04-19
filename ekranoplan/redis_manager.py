@@ -47,11 +47,11 @@ async def guild_event(name: str, guild_id: int, data: dict, user_id: int = None)
     await manager.publish('gateway', orjson.dumps(d))
 
 
-async def channel_event(name: str, channel_id: int, data: dict, guild_id: int = None):
+async def channel_event(name: str, channel: dict, data: dict, guild_id: int = None):
     d = {
         'type': 3,
         'name': name,
-        'channel_id': channel_id,
+        'channel': channel,
         'guild_id': guild_id,
         'data': data,
     }
