@@ -18,9 +18,11 @@ to try and avoid DDOS Attacks we recommend using [cloudflare](https://cloudflare
     and add the bundle as `bundle.zip` in `ekranoplan/static`.
 
 - Development
+    
     While doing development please only run `main.py`
 
 - Production
+    
     When you deploy in production we recommend:
     
     - Using Kubernetes or Docker
