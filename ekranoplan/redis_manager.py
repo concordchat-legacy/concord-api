@@ -22,7 +22,7 @@ manager = redis.Redis(connection_pool=pool)
 # Possible Types
 # 1: User(s)
 # 2: Guild(s)
-# 3: Channel(s) (Special Since we need to make sure the user has access to the channel)
+# 3: Channel(s)
 # 4: ???
 # 5: Friend Request(s)
 # 6: Member(s)
@@ -47,13 +47,14 @@ async def guild_event(name: str, guild_id: int, data: dict, user_id: int = None)
     await manager.publish('gateway', orjson.dumps(d))
 
 
-async def channel_event(name: str, channel: dict, data: dict, guild_id: int = None):
+async def channel_event(name: str, channel: dict, data: dict, guild_id: int = None, is_message: bool = False):
     d = {
         'type': 3,
         'name': name,
         'channel': channel,
         'guild_id': guild_id,
         'data': data,
+        'is_message': is_message
     }
 
     await manager.publish('gateway', orjson.dumps(d))
