@@ -60,14 +60,14 @@ async def channel_event(name: str, channel: dict, data: dict, guild_id: int = No
     await manager.publish('gateway', orjson.dumps(d))
 
 
-async def friend_request_event(name: str, user_id: int, data: dict):
-    d = {'type': 5, 'name': name, 'requester_id': user_id, 'data': data}
+async def friend_request_event(name: str, user_id: int, receiver_id: int, data: dict):
+    d = {'type': 5, 'name': name, 'requester_id': user_id, 'receiver_id': receiver_id, 'data': data}
 
     await manager.publish('gateway', orjson.dumps(d))
 
 
-async def member_event(name: str, member_id: int, data: dict):
-    d = {'type': 6, 'name': name, 'member_id': member_id, 'data': data}
+async def member_event(name: str, member_id: int, guild_id: int, data: dict):
+    d = {'type': 6, 'name': name, 'member_id': member_id, 'guild_id': guild_id, 'data': data}
 
     await manager.publish('gateway', orjson.dumps(d))
 

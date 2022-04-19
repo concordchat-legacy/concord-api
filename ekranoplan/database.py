@@ -173,7 +173,7 @@ class Channel(models.Model):
     name = columns.Text(max_length=30)
     topic = columns.Text(max_length=1024)
     slowmode_timeout = columns.Integer()
-    recipients = columns.List(columns.UserDefinedType(UserType))
+    recipients = columns.Set(columns.UserDefinedType(UserType))
     owner_id = columns.BigInt()
     parent_id = columns.BigInt()
 

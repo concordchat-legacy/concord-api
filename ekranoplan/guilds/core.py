@@ -48,17 +48,6 @@ async def create_guild():
 
     guild['owner'] = member
 
-    await guild_event('CREATE', guild_id=guild['id'], data=guild, user_id=member['id'])
-
-    """
-    first_message = Message.create(
-        id=snowflake(),
-        channel_id=channel.id,
-        bucket_id=get_bucket(channel.id),
-        guild_id=guild.id,
-        author=UserType(**me),
-        content=f'Welcome <@{me["id"]}> to your new concord guild!\nYou can customize it to your hearts content, invite your friends and more!'
-    )
-    """
+    await guild_event(None, guild_id=guild['id'], data=guild, user_id=member['id'])
 
     return jsonify(guild)
