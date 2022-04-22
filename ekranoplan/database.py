@@ -75,7 +75,6 @@ class User(models.Model):
     settings = columns.UserDefinedType(SettingsType)
     verified = columns.Boolean(default=False)
     system = columns.Boolean(default=False)
-    early_supporter_benefiter = columns.Boolean(default=True)
     bot = columns.Boolean(default=False)
 
 
@@ -94,20 +93,22 @@ class UserType(usertype.UserType):
     settings = columns.UserDefinedType(SettingsType)
     verified = columns.Boolean()
     system = columns.Boolean()
-    early_supporter_benefiter = columns.Boolean()
     bot = columns.Boolean(default=False)
 
 
 # NOTE: Guilds
-class Role(usertype.UserType):
-    id = columns.BigInt()
+class Role(models.Model):
+    __table_name__ = 'roles'
+    __options__ = default_options
+    id = columns.BigInt(primary_key=True, partition_key=False)
+    guild_id = columns.BigInt(primary_key=True, partition_key=True)
     name = columns.Text(max_length=100)
-    color = columns.Integer()
-    hoist = columns.Boolean()
+    color = columns.Integer(default=0000)
+    hoist = columns.Boolean(default=False)
     icon = columns.Text()
     position = columns.Integer()
-    permissions = columns.BigInt()
-    mentionable = columns.Boolean()
+    permissions = columns.BigInt(default=0)
+    mentionable = columns.Boolean(default=False)
 
 
 class Guild(models.Model):
@@ -125,7 +126,6 @@ class Guild(models.Model):
     perferred_locale = columns.Text(default='EN_US/EU')
     permissions = columns.BigInt(default=default_permissions)
     splash = columns.Text(default='')
-    roles = columns.Set(columns.UserDefinedType(Role))
     features = columns.Set(columns.Text)
 
 
@@ -166,15 +166,23 @@ class Channel(models.Model):
     __table_name__ = 'channels'
     __options__ = default_options
     id = columns.BigInt(primary_key=True, partition_key=True)
-    guild_id = columns.BigInt(primary_key=True)
-    type = columns.Integer(default=0)
-    position = columns.Integer()
-    permission_overwrites = columns.UserDefinedType(PermissionOverWrites)
-    name = columns.Text(max_length=30)
-    topic = columns.Text(max_length=1024)
-    slowmode_timeout = columns.Integer()
+    name = columns.Text(max_length=45)
     recipients = columns.Set(columns.UserDefinedType(UserType))
     owner_id = columns.BigInt()
+
+
+class GuildChannel(models.Model):
+    __table_name__ = 'guild-channels'
+    __options__ = default_options
+    id = columns.BigInt(primary_key=True, partition_key=False)
+    guild_id = columns.BigInt(primary_key=True, partition_key=True)
+    type = columns.Integer(default=0)
+    position = columns.Integer()
+    permission_overwrites = columns.Set(columns.UserDefinedType(PermissionOverWrites))
+    name = columns.Text(max_length=45)
+    topic = columns.Text(max_length=1024, default='')
+    slowmode_timeout = columns.Integer()
+    recipients = columns.Set(columns.UserDefinedType(UserType))
     parent_id = columns.BigInt()
 
 

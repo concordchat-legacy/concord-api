@@ -1,7 +1,7 @@
 from quart import Blueprint, jsonify, request
 
-from ..checks import validate_member
-from ..database import Channel, Guild, to_dict
+from ..checks import validate_member, validate_channel, verify_parent_id, verify_channel_position
+from ..database import GuildChannel, Guild, Role, to_dict
 from ..errors import BadData, Forbidden, NotFound
 from ..flags import GuildPermissions
 from ..randoms import snowflake
@@ -10,10 +10,8 @@ from ..redis_manager import guild_event
 bp = Blueprint('channels', __name__)
 
 
-@bp.route('/guilds/<guild_id>/channels', strict_slashes=False, methods=['POST'])
-async def create_channel(guild_id):
-    guild_id = int(guild_id)
-
+@bp.route('/guilds/<int:guild_id>/channels', strict_slashes=False, methods=['POST'])
+async def create_channel(guild_id: int):
     guild: Guild = Guild.objects(Guild.id == guild_id).first()
 
     if guild == None:
@@ -32,12 +30,9 @@ async def create_channel(guild_id):
     else:
         id = member.roles[0]
 
-        for role in list(guild.roles):
-            if role.id == id:
-                permissions = role.permissions
-                break
+        role: Role = Role.objects(Role.id == id, Role.guild_id == guild_id).get()
 
-    assert permissions is not None
+        permissions = role.permissions
 
     calc = GuildPermissions(permissions)
 
@@ -58,26 +53,46 @@ async def create_channel(guild_id):
         else:
             slowmode = round(int(data.pop('slowmode_timeout')))
 
+    if int(data.get('type')) not in [0, 1]:
+        raise BadData()
+
     if data.get('parent_id'):
         pid = int(data.pop('parent_id'))
+        verify_parent_id(pid, guild_id=guild_id)
     else:
-        pid = None
+        pid = 0
+
+    position = int(data.pop('position'))
+
+    verify_channel_position(pos=position, guild_id=guild_id)
+
+    name = str(data['name'])[:30].lower().replace(' ', '-')
 
     kwargs = {
         'id': snowflake(),
         'guild_id': guild_id,
-        'name': str(data['name'])[:30].lower(),
+        'name': name,
         'topic': str(data.get('topic', ''))[:1024],
         'slowmode_timeout': slowmode,
         'type': int(data.get('type', 1)),
         'parent_id': pid,
+        'position': position
     }
 
-    channel: Channel = Channel.create(**kwargs)
+    channel: GuildChannel = GuildChannel.create(**kwargs)
     d = to_dict(channel)
-
-    d.pop('empty_buckets')
 
     await guild_event('CHANNEL_CREATE', d=d)
 
     return jsonify(d)
+
+@bp.route('/guilds/<int:guild_id>/channels/<int:channel_id>', methods=['GET'])
+async def get_guild_channel(guild_id: int, channel_id: int):
+    channel: GuildChannel = list(validate_channel(
+        token=request.headers.get('Authorization'),
+        guild_id=guild_id,
+        channel_id=channel_id,
+        permission='view_channels'
+    ))[2]
+
+    return jsonify(to_dict(channel))

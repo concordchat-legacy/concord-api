@@ -1,7 +1,7 @@
 from cassandra.cqlengine.query import DoesNotExist
 from quart import Blueprint, jsonify, request
 
-from ..checks import validate_user
+from ..checks import validate_user, search_messages
 from ..database import Channel, Message, ReadState, to_dict
 from ..errors import BadData, NotFound
 
@@ -17,14 +17,10 @@ async def ack_message(channel_id: int, message_id: int):
     except (DoesNotExist):
         raise NotFound()
 
-    try:
-        message: Message = (
-            Message.objects(Message.id == message_id, Message.channel_id == channel_id)
-            .allow_filtering()
-            .get()
-        )
-    except (DoesNotExist):
-        raise NotFound()
+    message = search_messages(channel_id=channel_id, message_id=message_id)
+
+    if message is None:
+        raise BadData()
 
     try:
         read_state: ReadState = ReadState.objects(

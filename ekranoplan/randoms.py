@@ -4,7 +4,8 @@ import random
 import re
 import secrets
 import threading
-from random import choice
+from random import choice, randint
+from typing import List
 
 import dotenv
 import snowflake as winter
@@ -22,6 +23,25 @@ def snowflake() -> int:
     result = _generator_flake.generate()
     return result._flake
 
+WELCOME_MESSAGES: List[str] = [
+    'Welcome, the one, the only <@{user_id}>',
+    "Don'/t look away yet!, <@{user_id}> just arrived!",
+    '<@{user_id}> just revived the chat :^)',
+    'Coy fish, sea stakes, and more <@{user_id}> arrived!',
+    'NYC Fried Pizza, Delivered by <@{user_id}>',
+    "Don't cause a Discord, <@{user_id}> just arrived!",
+    'I just that one game with that one character... might it be <@{user_id}>?',
+    ''
+]
+
+def get_welcome_content(user_id: int) -> str:
+    _msg = randint(0, len(WELCOME_MESSAGES))
+    print(_msg)
+    try:
+        msg = WELCOME_MESSAGES[_msg]
+    except:
+        msg = WELCOME_MESSAGES[len(WELCOME_MESSAGES) - 1]
+    return msg.format(user_id=str(user_id))
 
 def code():
     # Generate a random, url-safe, maybe-unique token
