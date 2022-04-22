@@ -1,7 +1,12 @@
 from quart import Blueprint, jsonify, request
 
-from ..checks import validate_member, validate_channel, verify_parent_id, verify_channel_position
-from ..database import GuildChannel, Guild, Role, to_dict
+from ..checks import (
+    validate_channel,
+    validate_member,
+    verify_channel_position,
+    verify_parent_id,
+)
+from ..database import Guild, GuildChannel, Role, to_dict
 from ..errors import BadData, Forbidden, NotFound
 from ..flags import GuildPermissions
 from ..randoms import snowflake
@@ -76,7 +81,7 @@ async def create_channel(guild_id: int):
         'slowmode_timeout': slowmode,
         'type': int(data.get('type', 1)),
         'parent_id': pid,
-        'position': position
+        'position': position,
     }
 
     channel: GuildChannel = GuildChannel.create(**kwargs)
@@ -86,13 +91,16 @@ async def create_channel(guild_id: int):
 
     return jsonify(d)
 
+
 @bp.route('/guilds/<int:guild_id>/channels/<int:channel_id>', methods=['GET'])
 async def get_guild_channel(guild_id: int, channel_id: int):
-    channel: GuildChannel = list(validate_channel(
-        token=request.headers.get('Authorization'),
-        guild_id=guild_id,
-        channel_id=channel_id,
-        permission='view_channels'
-    ))[2]
+    channel: GuildChannel = list(
+        validate_channel(
+            token=request.headers.get('Authorization'),
+            guild_id=guild_id,
+            channel_id=channel_id,
+            permission='view_channels',
+        )
+    )[2]
 
     return jsonify(to_dict(channel))

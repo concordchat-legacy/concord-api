@@ -1,7 +1,7 @@
 from cassandra.cqlengine.query import DoesNotExist
 from quart import Blueprint, jsonify, request
 
-from ..checks import validate_user, search_messages
+from ..checks import search_messages, validate_user
 from ..database import Channel, Message, ReadState, to_dict
 from ..errors import BadData, NotFound
 

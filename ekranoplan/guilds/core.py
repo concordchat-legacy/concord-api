@@ -1,10 +1,11 @@
 from datetime import datetime, timezone
+
 from quart import Blueprint, jsonify, request
 
 from ..checks import validate_user
-from ..database import Guild, Member, UserType, GuildChannel, Message, to_dict
+from ..database import Guild, GuildChannel, Member, Message, UserType, to_dict
 from ..errors import BadData, Forbidden
-from ..randoms import snowflake, get_bucket, get_welcome_content
+from ..randoms import get_bucket, get_welcome_content, snowflake
 from ..redis_manager import guild_event
 
 bp = Blueprint('guilds', __name__)
@@ -40,7 +41,7 @@ async def create_guild():
         'id': me['id'],
         'guild_id': guild_id,
         'owner': True,
-        'user': me_usertype
+        'user': me_usertype,
     }
 
     parent_id = snowflake()
@@ -49,7 +50,7 @@ async def create_guild():
         'guild_id': guild_id,
         'name': 'Text Channels',
         'parent_id': 0,
-        'position': 0
+        'position': 0,
     }
 
     text_channel = snowflake()
@@ -59,7 +60,7 @@ async def create_guild():
         'name': 'general',
         'parent_id': parent_id,
         'position': 1,
-        'type': 1
+        'type': 1,
     }
 
     default_message = {
@@ -70,7 +71,7 @@ async def create_guild():
         'author': me_usertype,
         'content': get_welcome_content(user_id=me.id),
         'created_at': datetime.now(timezone.utc),
-        'mentions': set([me_usertype])
+        'mentions': set([me_usertype]),
     }
 
     guild = Guild.create(**inserted_data)

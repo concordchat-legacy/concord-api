@@ -18,7 +18,11 @@ def connect():
     try:
         if os.getenv('safe', 'false') == 'true':
             connection.setup(
-                [], 'concord', cloud=cloud, auth_provider=auth_provider, connect_timeout=100
+                [],
+                'concord',
+                cloud=cloud,
+                auth_provider=auth_provider,
+                connect_timeout=100,
             )
         else:
             connection.setup(
