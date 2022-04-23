@@ -1,4 +1,4 @@
-import hashlib
+import asyncio
 import os
 import random
 import re
@@ -7,6 +7,7 @@ import threading
 from random import choice, randint
 from typing import List
 
+import bcrypt
 import dotenv
 import snowflake as winter
 
@@ -53,8 +54,21 @@ def code():
     return ''.join(choice((str.upper, str.lower))(c) for c in _u)
 
 
-def get_hash(string: str):
-    return hashlib.sha512(string=string.encode(), usedforsecurity=True).hexdigest()
+async def get_hash(string: str) -> str:
+    loop = asyncio.get_running_loop()
+    # make sure not to block the event loop
+    result = await loop.run_in_executor(None, bcrypt.hashpw, string.encode(), bcrypt.gensalt(14))
+    return result.decode()
+
+async def verify_hash(hashed_password: str, given_password: str) -> bool:
+    loop = asyncio.get_running_loop()
+    result = await loop.run_in_executor(
+        None,
+        bcrypt.checkpw,
+        given_password.encode(),
+        hashed_password.encode()
+    )
+    return result
 
 
 def get_bucket(sf: int):
@@ -75,3 +89,7 @@ if __name__ == '__main__':
     print(get_bucket(id))
     print(id)
     print(len(str(id)))
+    pwd = asyncio.run(get_hash('12345'))
+    print(pwd)
+    pwdd = asyncio.run(verify_hash(pwd, '12345'))
+    print(pwdd)

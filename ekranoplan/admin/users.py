@@ -23,7 +23,7 @@ async def _create_user():
     discrim = random.randint(1, 9999)
     discrim = int('%04d' % discrim)
     email = data['email']
-    password = get_hash(data.pop('password'))
+    password = await get_hash(data.pop('password'))
     flags = data.get('flags') or 1 << 0
     bio = data.get('bio') or ''
     locale = data.get('locale') or 'EN_US/EU'

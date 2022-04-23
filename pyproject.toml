@@ -1,0 +1,8 @@
+[tool.isort]
+skip = 'ratelimiter.py'
+profile = 'black'
+
+[tool.black]
+target-version = ['py10']
+skip-string-normalization = true
+line-length = 110
