@@ -6,7 +6,7 @@ from .randoms import snowflake
 
 limiter = flask_limiter.Limiter(
     headers_enabled=False,
-    default_limits=['4/second'],
+    default_limits=['35/second'],
     key_prefix=hex(int(snowflake())),
     key_func=flask_limiter.util.get_remote_address,
 )
