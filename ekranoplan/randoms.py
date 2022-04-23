@@ -4,6 +4,7 @@ import random
 import re
 import secrets
 import threading
+import time
 from random import choice, randint
 from typing import List
 
@@ -21,7 +22,7 @@ def snowflake() -> int:
     _generator_flake = winter.Generator(
         EPOCH, os.getpid(), threading.current_thread().ident
     )
-    result = _generator_flake.generate()
+    result = _generator_flake.generate(round(time.time() * 1000))
     return result._flake
 
 
@@ -93,6 +94,7 @@ if __name__ == '__main__':
     # looks good
     '2124005656035328'
     '3617899005116416'
+    '5796720099213312'
 
     id = snowflake()
     print(get_bucket(id))
