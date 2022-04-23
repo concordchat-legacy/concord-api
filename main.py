@@ -49,7 +49,13 @@ connect()
 
 @app.route('/auth/fingerprint')
 async def uuid():
-    return jsonify({'fingerprint': str(snowflake()) + '.' + secrets.token_urlsafe(16)})
+    return jsonify(
+        {
+            'fingerprint': str(snowflake())
+            + '.'
+            + secrets.token_urlsafe(16)
+        }
+    )
 
 
 @app.route('/favicon.ico')
@@ -64,14 +70,17 @@ async def _not_found(*args):
 
 @app.errorhandler(500)
 async def _internal_error(*args):
-    return jsonify({'code': 0, 'message': '500: Internal Server Error'})
+    return jsonify(
+        {'code': 0, 'message': '500: Internal Server Error'}
+    )
 
 
 @app.errorhandler(429)
 async def _ratelimited(*args):
     return jsonify(
         {
-            'retry_after': limiter.current_limit.reset_at - time.time(),
+            'retry_after': limiter.current_limit.reset_at
+            - time.time(),
             'message': '429: Too Many Requests',
         }
     )
@@ -96,11 +105,18 @@ async def _default_error_handler(err: Err):
 @app.after_request
 async def _after_request(resp: Response):
     if limiter.current_limit:
-        resp.headers.add('X-RateLimit-Limit', limiter.current_limit.limit)
-        resp.headers.add('X-RateLimit-Remaining', limiter.current_limit.remaining)
-        resp.headers.add('X-RateLimit-Reset', limiter.current_limit.reset_at)
         resp.headers.add(
-            'X-RateLimit-Reset-After', limiter.current_limit.reset_at - int(time.time())
+            'X-RateLimit-Limit', limiter.current_limit.limit
+        )
+        resp.headers.add(
+            'X-RateLimit-Remaining', limiter.current_limit.remaining
+        )
+        resp.headers.add(
+            'X-RateLimit-Reset', limiter.current_limit.reset_at
+        )
+        resp.headers.add(
+            'X-RateLimit-Reset-After',
+            limiter.current_limit.reset_at - int(time.time()),
         )
     return resp
 

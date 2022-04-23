@@ -3,7 +3,14 @@ from datetime import datetime, timezone
 from quart import Blueprint, jsonify, request
 
 from ..checks import validate_user
-from ..database import Guild, GuildChannel, Member, Message, UserType, to_dict
+from ..database import (
+    Guild,
+    GuildChannel,
+    Member,
+    Message,
+    UserType,
+    to_dict,
+)
 from ..errors import BadData, Forbidden
 from ..randoms import get_bucket, get_welcome_content, snowflake
 from ..redis_manager import guild_event
@@ -14,7 +21,9 @@ bp = Blueprint('guilds', __name__)
 @bp.route('', strict_slashes=False, methods=['POST'])
 async def create_guild():
     # TODO: Generate a channel: "general" and category: "General" with a welcome message
-    me = validate_user(request.headers.get('Authorization', '1'), True)
+    me = validate_user(
+        request.headers.get('Authorization', '1'), True
+    )
 
     if me['bot']:
         raise Forbidden()
@@ -75,11 +84,17 @@ async def create_guild():
     }
 
     guild = Guild.create(**inserted_data)
-    member = Member.create(**original_member, user=UserType(**dict(me)))
+    member = Member.create(
+        **original_member, user=UserType(**dict(me))
+    )
     channels = []
     messages = []
-    channels.append(to_dict(GuildChannel.create(**default_category_channel)))
-    channels.append(to_dict(GuildChannel.create(**default_text_channel)))
+    channels.append(
+        to_dict(GuildChannel.create(**default_category_channel))
+    )
+    channels.append(
+        to_dict(GuildChannel.create(**default_text_channel))
+    )
     messages.append(to_dict(Message.create(**default_message)))
 
     guild = to_dict(guild)
@@ -89,6 +104,8 @@ async def create_guild():
     guild['channels'] = channels
     guild['messages'] = messages
 
-    await guild_event(None, guild_id=guild['id'], data=guild, user_id=member['id'])
+    await guild_event(
+        None, guild_id=guild['id'], data=guild, user_id=member['id']
+    )
 
     return jsonify(guild)

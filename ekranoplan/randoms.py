@@ -50,23 +50,32 @@ def get_welcome_content(user_id: int) -> str:
 def code():
     # Generate a random, url-safe, maybe-unique token
     # TODO: Maybe check if this is a dup or not?
-    _u = re.sub(r"\/|\+|\-|\_", "", secrets.token_urlsafe(random.randint(4, 6)))
+    _u = re.sub(
+        r"\/|\+|\-|\_",
+        "",
+        secrets.token_urlsafe(random.randint(4, 6)),
+    )
     return ''.join(choice((str.upper, str.lower))(c) for c in _u)
 
 
 async def get_hash(string: str) -> str:
     loop = asyncio.get_running_loop()
     # make sure not to block the event loop
-    result = await loop.run_in_executor(None, bcrypt.hashpw, string.encode(), bcrypt.gensalt(14))
+    result = await loop.run_in_executor(
+        None, bcrypt.hashpw, string.encode(), bcrypt.gensalt(14)
+    )
     return result.decode()
 
-async def verify_hash(hashed_password: str, given_password: str) -> bool:
+
+async def verify_hash(
+    hashed_password: str, given_password: str
+) -> bool:
     loop = asyncio.get_running_loop()
     result = await loop.run_in_executor(
         None,
         bcrypt.checkpw,
         given_password.encode(),
-        hashed_password.encode()
+        hashed_password.encode(),
     )
     return result
 

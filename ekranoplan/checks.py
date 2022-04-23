@@ -35,7 +35,9 @@ def validate_member(
     token: str, guild_id: int, *, stop_bots: bool = False
 ) -> tuple[Member, User]:
     user = validate_user(token=token)
-    objs = Member.objects(Member.id == user.id, Member.guild_id == guild_id)
+    objs = Member.objects(
+        Member.id == user.id, Member.guild_id == guild_id
+    )
 
     try:
         member: Member = objs.get()
@@ -62,9 +64,11 @@ def validate_channel(
     channel_id: int,
     permission: str,
     *,
-    stop_bots: bool = False
+    stop_bots: bool = False,
 ) -> tuple[Member, User, GuildChannel]:
-    member, user = validate_member(token=token, guild_id=guild_id, stop_bots=stop_bots)
+    member, user = validate_member(
+        token=token, guild_id=guild_id, stop_bots=stop_bots
+    )
 
     try:
         channel: GuildChannel = GuildChannel.objects(
@@ -123,7 +127,8 @@ def search_messages(
         for bucket in range(current_bucket):
             msgs = (
                 Message.objects(
-                    Message.channel_id == channel_id, Message.bucket_id == bucket
+                    Message.channel_id == channel_id,
+                    Message.bucket_id == bucket,
                 )
                 .limit(limit)
                 .order_by('-id')

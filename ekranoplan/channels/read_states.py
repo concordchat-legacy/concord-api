@@ -8,26 +8,36 @@ from ..errors import BadData, NotFound
 bp = Blueprint('readstates', __name__)
 
 
-@bp.route('/channels/<int:channel_id>/messages/<int:message_id>/ack', methods=['POST'])
+@bp.route(
+    '/channels/<int:channel_id>/messages/<int:message_id>/ack',
+    methods=['POST'],
+)
 async def ack_message(channel_id: int, message_id: int):
-    user_id = validate_user(request.headers.get('Authorization'), stop_bots=True).id
+    user_id = validate_user(
+        request.headers.get('Authorization'), stop_bots=True
+    ).id
 
     try:
         Channel.objects(Channel.id == channel_id).get()
     except (DoesNotExist):
         raise NotFound()
 
-    message = search_messages(channel_id=channel_id, message_id=message_id)
+    message = search_messages(
+        channel_id=channel_id, message_id=message_id
+    )
 
     if message is None:
         raise BadData()
 
     try:
         read_state: ReadState = ReadState.objects(
-            ReadState.user_id == user_id, ReadState.channel_id == channel_id
+            ReadState.user_id == user_id,
+            ReadState.channel_id == channel_id,
         ).get()
     except (DoesNotExist):
-        read_state: ReadState = ReadState.create(user_id=user_id, channel_id=channel_id)
+        read_state: ReadState = ReadState.create(
+            user_id=user_id, channel_id=channel_id
+        )
 
     read_state.last_message_id = message.id
 
@@ -38,7 +48,9 @@ async def ack_message(channel_id: int, message_id: int):
 
 @bp.route('/channels/<int:channel_id>')
 async def get_channel_read_state(channel_id: int):
-    user_id = validate_user(request.headers.get('Authorization'), stop_bots=True).id
+    user_id = validate_user(
+        request.headers.get('Authorization'), stop_bots=True
+    ).id
 
     try:
         Channel.objects(Channel.id == channel_id).get()
@@ -47,7 +59,8 @@ async def get_channel_read_state(channel_id: int):
 
     try:
         obj = ReadState.objects(
-            ReadState.user_id == user_id, ReadState.channel_id == channel_id
+            ReadState.user_id == user_id,
+            ReadState.channel_id == channel_id,
         ).get()
     except (DoesNotExist):
         raise NotFound()
@@ -57,7 +70,9 @@ async def get_channel_read_state(channel_id: int):
 
 @bp.route('/readstates')
 async def get_readstates():
-    me = validate_user(request.headers.get('Authorization'), stop_bots=True)
+    me = validate_user(
+        request.headers.get('Authorization'), stop_bots=True
+    )
 
     _readstates = ReadState.objects(ReadState.user_id == me.id).all()
 

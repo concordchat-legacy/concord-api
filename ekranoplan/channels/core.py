@@ -15,14 +15,20 @@ from ..redis_manager import guild_event
 bp = Blueprint('channels', __name__)
 
 
-@bp.route('/guilds/<int:guild_id>/channels', strict_slashes=False, methods=['POST'])
+@bp.route(
+    '/guilds/<int:guild_id>/channels',
+    strict_slashes=False,
+    methods=['POST'],
+)
 async def create_channel(guild_id: int):
     guild: Guild = Guild.objects(Guild.id == guild_id).first()
 
     if guild == None:
         raise NotFound()
 
-    member, me = validate_member(request.headers.get('Authorization', '1'), guild_id)
+    member, me = validate_member(
+        request.headers.get('Authorization', '1'), guild_id
+    )
     me = to_dict(me)
     me.pop('email')
     me.pop('password')
@@ -35,7 +41,9 @@ async def create_channel(guild_id: int):
     else:
         id = member.roles[0]
 
-        role: Role = Role.objects(Role.id == id, Role.guild_id == guild_id).get()
+        role: Role = Role.objects(
+            Role.id == id, Role.guild_id == guild_id
+        ).get()
 
         permissions = role.permissions
 
@@ -53,7 +61,10 @@ async def create_channel(guild_id: int):
     slowmode = 0
 
     if data.get('slowmode_timeout'):
-        if int(data.get('slowmode_timeout')) > 21600 or data.get('slowmode') < 0:
+        if (
+            int(data.get('slowmode_timeout')) > 21600
+            or data.get('slowmode') < 0
+        ):
             raise BadData()
         else:
             slowmode = round(int(data.pop('slowmode_timeout')))
@@ -92,7 +103,10 @@ async def create_channel(guild_id: int):
     return jsonify(d)
 
 
-@bp.route('/guilds/<int:guild_id>/channels/<int:channel_id>', methods=['GET'])
+@bp.route(
+    '/guilds/<int:guild_id>/channels/<int:channel_id>',
+    methods=['GET'],
+)
 async def get_guild_channel(guild_id: int, channel_id: int):
     channel: GuildChannel = list(
         validate_channel(

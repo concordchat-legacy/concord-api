@@ -55,6 +55,8 @@ async def _create_user():
     )
 
     resp = to_dict(user)
-    resp['token'] = create_token(user_id=user.id, user_password=user.password)
+    resp['token'] = create_token(
+        user_id=user.id, user_password=user.password
+    )
 
     return jsonify(resp)

@@ -4,11 +4,20 @@ from typing import Any
 
 import dotenv
 from cassandra.auth import PlainTextAuthProvider
-from cassandra.cqlengine import columns, connection, management, models, usertype
+from cassandra.cqlengine import (
+    columns,
+    connection,
+    management,
+    models,
+    usertype,
+)
 
 dotenv.load_dotenv()
 
-cloud = {'secure_connect_bundle': os.getcwd() + '\\ekranoplan\\static\\bundle.zip'}
+cloud = {
+    'secure_connect_bundle': os.getcwd()
+    + '\\ekranoplan\\static\\bundle.zip'
+}
 auth_provider = PlainTextAuthProvider(
     os.getenv('client_id'), os.getenv('client_secret')
 )
@@ -26,7 +35,10 @@ def connect():
             )
         else:
             connection.setup(
-                [], 'concord', auth_provider=auth_provider, connect_timeout=100
+                [],
+                'concord',
+                auth_provider=auth_provider,
+                connect_timeout=100,
             )
     except:
         # Just try again
@@ -182,7 +194,9 @@ class GuildChannel(models.Model):
     guild_id = columns.BigInt(primary_key=True, partition_key=True)
     type = columns.Integer(default=0)
     position = columns.Integer()
-    permission_overwrites = columns.Set(columns.UserDefinedType(PermissionOverWrites))
+    permission_overwrites = columns.Set(
+        columns.UserDefinedType(PermissionOverWrites)
+    )
     name = columns.Text(max_length=45)
     topic = columns.Text(max_length=1024, default='')
     slowmode_timeout = columns.Integer()
@@ -237,7 +251,9 @@ class Reaction(usertype.UserType):
 class Message(models.Model):
     __table_name__ = 'messages'
     __options__ = default_options
-    id = columns.BigInt(primary_key=True, partition_key=False, clustering_order='DESC')
+    id = columns.BigInt(
+        primary_key=True, partition_key=False, clustering_order='DESC'
+    )
     channel_id = columns.BigInt(primary_key=True, partition_key=True)
     bucket_id = columns.Integer(primary_key=True, partition_key=True)
     guild_id = columns.BigInt(primary_key=True)
@@ -290,7 +306,11 @@ def to_dict(model: models.Model) -> dict:
 
             ret[name] = set_values
 
-        if name == 'id' or name.endswith('_id') and len(str(value)) > 14:
+        if (
+            name == 'id'
+            or name.endswith('_id')
+            and len(str(value)) > 14
+        ):
             ret[name] = str(value)
         if name == 'permissions':
             ret[name] = str(value)
