@@ -3,7 +3,14 @@ from datetime import datetime, timezone
 from quart import Blueprint, jsonify, request
 
 from ..checks import validate_user
-from ..database import Guild, GuildChannel, Member, Message, UserType, to_dict
+from ..database import (
+    Guild,
+    GuildChannel,
+    Member,
+    Message,
+    UserType,
+    to_dict,
+)
 from ..errors import BadData, Forbidden
 from ..randoms import get_bucket, get_welcome_content, snowflake
 from ..redis_manager import guild_event

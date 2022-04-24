@@ -12,7 +12,9 @@ to try and avoid DDOS Attacks we recommend using [cloudflare](https://cloudflare
     - A Cassandra Database
     - A Redis Database
 
-    Please run `ekranoplan/database.py` to setup the cassandra database. The redis database does not need any prior setup.
+    Please run `ekranoplan/database.py` to setup the 
+    cassandra database or scylla(make sure to have the "ekranoplan" keyspace available).
+    The redis database does not need any prior setup.
 
     If your cassandra host has a db bundle please set `safe=true` in your `.env` 
     and add the bundle as `bundle.zip` in `ekranoplan/static`.

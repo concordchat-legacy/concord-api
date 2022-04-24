@@ -4,7 +4,13 @@ from typing import Any
 
 import dotenv
 from cassandra.auth import PlainTextAuthProvider
-from cassandra.cqlengine import columns, connection, management, models, usertype
+from cassandra.cqlengine import (
+    columns,
+    connection,
+    management,
+    models,
+    usertype,
+)
 
 dotenv.load_dotenv()
 
@@ -21,21 +27,22 @@ def connect():
     try:
         if os.getenv('safe', 'false') == 'true':
             connection.setup(
-                [],
-                'concord',
+                None,
+                'ekranoplan',
                 cloud=cloud,
                 auth_provider=auth_provider,
                 connect_timeout=100,
+                retry_connect=True,
             )
         else:
             connection.setup(
-                [],
-                'concord',
+                None,
+                'ekranoplan',
                 auth_provider=auth_provider,
                 connect_timeout=100,
+                retry_connect=True,
             )
     except:
-        # Just try again
         connect()
 
 
@@ -182,7 +189,7 @@ class Channel(models.Model):
 
 
 class GuildChannel(models.Model):
-    __table_name__ = 'guild-channels'
+    __table_name__ = 'guildchannels'
     __options__ = default_options
     id = columns.BigInt(primary_key=True, partition_key=False)
     guild_id = columns.BigInt(primary_key=True, partition_key=True)
@@ -199,7 +206,7 @@ class GuildChannel(models.Model):
 
 
 class GuildChannelPin(models.Model):
-    __table_name__ = 'guild-channels-pins'
+    __table_name__ = 'guildchannelspins'
     __options__ = default_options
     channel_id = columns.BigInt(primary_key=True, partition_key=True)
     message_id = columns.BigInt()
@@ -328,16 +335,16 @@ if __name__ == '__main__':
     # migrate old data
 
     # NOTE: Types
-    management.sync_type('concord', SettingsType)
-    management.sync_type('concord', UserType)
-    management.sync_type('concord', PermissionOverWrites)
-    management.sync_type('concord', EmbedAuthor)
-    management.sync_type('concord', EmbedField)
-    management.sync_type('concord', EmbedFooter)
-    management.sync_type('concord', EmbedImage)
-    management.sync_type('concord', EmbedVideo)
-    management.sync_type('concord', Embed)
-    management.sync_type('concord', Reaction)
+    management.sync_type('ekranoplan', SettingsType)
+    management.sync_type('ekranoplan', UserType)
+    management.sync_type('ekranoplan', PermissionOverWrites)
+    management.sync_type('ekranoplan', EmbedAuthor)
+    management.sync_type('ekranoplan', EmbedField)
+    management.sync_type('ekranoplan', EmbedFooter)
+    management.sync_type('ekranoplan', EmbedImage)
+    management.sync_type('ekranoplan', EmbedVideo)
+    management.sync_type('ekranoplan', Embed)
+    management.sync_type('ekranoplan', Reaction)
 
     # NOTE: Tables
     management.sync_table(User)
@@ -345,5 +352,8 @@ if __name__ == '__main__':
     management.sync_table(GuildInvite)
     management.sync_table(Member)
     management.sync_table(Channel)
+    management.sync_table(GuildChannel)
+    management.sync_table(GuildChannelPin)
     management.sync_table(Message)
     management.sync_table(ReadState)
+    management.sync_table(Role)
