@@ -4,13 +4,7 @@ from typing import Any
 
 import dotenv
 from cassandra.auth import PlainTextAuthProvider
-from cassandra.cqlengine import (
-    columns,
-    connection,
-    management,
-    models,
-    usertype,
-)
+from cassandra.cqlengine import columns, connection, management, models, usertype
 
 dotenv.load_dotenv()
 

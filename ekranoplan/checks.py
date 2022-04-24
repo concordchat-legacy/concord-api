@@ -62,10 +62,10 @@ def validate_channel(
     token: str,
     guild_id: int,
     channel_id: int,
-    permission: str,
+    permission: Union[str, List[str]],
     *,
     stop_bots: bool = False,
-) -> tuple[Member, User, GuildChannel]:
+) -> tuple[Member, User, GuildChannel, Union[GuildPermissions, None]]:
     member, user = validate_member(
         token=token, guild_id=guild_id, stop_bots=stop_bots
     )
@@ -77,45 +77,67 @@ def validate_channel(
     except (query.DoesNotExist):
         raise NotFound()
 
-    if member.owner:
-        return member, user, channel
+    if permission is None:
 
-    user_found = False
-    for overwrite in channel.permission_overwrites:
-        assert isinstance(overwrite, PermissionOverWrites)
+        if member.owner:
+            return member, user, channel, None
 
-        if overwrite.id == user.id:
-            user_found = True
-            allow_permissions = GuildPermissions(overwrite.allow)
-            disallow_permissions = GuildPermissions(overwrite.deny)
-            break
+        user_found = False
+        for overwrite in channel.permission_overwrites:
+            assert isinstance(overwrite, PermissionOverWrites)
 
-    if not user_found:
-        if list(member.roles) == []:
-            guild: Guild = Guild.objects(Guild.id == guild_id).get()
-            permissions = GuildPermissions(guild.permissions)
+            if overwrite.id == user.id:
+                user_found = True
+                allow_permissions = GuildPermissions(overwrite.allow)
+                disallow_permissions = GuildPermissions(
+                    overwrite.deny
+                )
+                break
+
+        if not user_found:
+            if list(member.roles) == []:
+                guild: Guild = Guild.objects(
+                    Guild.id == guild_id
+                ).get()
+                permissions = GuildPermissions(guild.permissions)
+            else:
+                role_id: int = list(member.roles)[0]
+
+                role: Role = Role.objects(role_id).get()
+
+                permissions = GuildPermissions(role.permissions)
+
+            if permissions.administator:
+                return member, user, channel, permissions
+
+            if isinstance(permission, list):
+                for perm in permission:
+                    if not getattr(permissions, perm):
+                        raise Forbidden()
+            else:
+                if not getattr(permissions, perm):
+                    raise Forbidden()
+
+            return member, user, channel, permissions
         else:
-            role_id: int = list(member.roles)[0]
+            if isinstance(permission, list):
+                for perm in permission:
+                    if getattr(disallow_permissions, perm):
+                        raise Forbidden()
 
-            role: Role = Role.objects(role_id).get()
+                    if not getattr(allow_permissions, perm):
+                        raise Forbidden()
+            else:
+                if getattr(disallow_permissions, permission):
+                    raise Forbidden()
 
-            permissions = GuildPermissions(role.permissions)
+                if not getattr(allow_permissions, permission):
+                    raise Forbidden()
 
-        if permissions.administator:
-            return member, user, channel
+            return member, user, channel, permissions
 
-        if not getattr(permissions, permission):
-            raise Forbidden()
-
-        return member, user, channel
     else:
-        if getattr(disallow_permissions, permission):
-            raise Forbidden()
-
-        if not getattr(allow_permissions, permission):
-            raise Forbidden()
-
-        return member, user, channel
+        return member, user, channel, None
 
 
 def search_messages(

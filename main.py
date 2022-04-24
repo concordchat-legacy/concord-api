@@ -6,10 +6,11 @@ import orjson
 from quart import Quart, Response, abort, jsonify
 
 from ekranoplan.admin import admin_users
-from ekranoplan.channels import channels
+from ekranoplan.channels import channels, readstates
 from ekranoplan.database import connect
 from ekranoplan.errors import BadData, Err
 from ekranoplan.guilds import guilds
+from ekranoplan.messages import guild_msgs
 from ekranoplan.randoms import snowflake
 from ekranoplan.ratelimiter import limiter
 from ekranoplan.users import users
@@ -125,7 +126,9 @@ bps = {
     admin_users: '/admin/users',
     users: '/users',
     guilds: '/guilds',
+    guild_msgs: '/guilds',
     channels: -1,
+    readstates: -1
 }
 
 for bp, url in bps.items():
