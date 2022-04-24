@@ -10,7 +10,7 @@ bp = Blueprint('users', __name__)
 
 @bp.route('/@me', methods=['GET'], strict_slashes=False)
 async def get_me():
-    me = validate_user(request.headers.get('Authorization', '1'))
+    me = validate_user(request.headers.get('Authorization'))
 
     me = to_dict(me)
 
@@ -22,7 +22,7 @@ async def get_me():
 @bp.route('/<user_id>', methods=['GET'], strict_slashes=False)
 async def get_user(user_id):
     user_id = int(user_id)
-    validate_user(request.headers.get('Authorization', '1'))
+    validate_user(request.headers.get('Authorization'))
 
     try:
         user: User = User.objects(User.id == user_id).get()

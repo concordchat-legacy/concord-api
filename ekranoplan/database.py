@@ -4,13 +4,7 @@ from typing import Any
 
 import dotenv
 from cassandra.auth import PlainTextAuthProvider
-from cassandra.cqlengine import (
-    columns,
-    connection,
-    management,
-    models,
-    usertype,
-)
+from cassandra.cqlengine import columns, connection, management, models, usertype
 
 dotenv.load_dotenv()
 
@@ -149,7 +143,7 @@ class Guild(models.Model):
 class GuildInvite(models.Model):
     __table_name__ = 'guild_invites'
     __options__ = default_options
-    id = columns.Text(primary_key=True, partition_key=False)
+    id = columns.Text(primary_key=True, partition_key=True)
     guild_id = columns.BigInt(primary_key=True)
     creator_id = columns.BigInt(primary_key=True)
     created_at = columns.DateTime(default=_get_date)

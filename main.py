@@ -3,11 +3,12 @@ import time
 
 import dotenv
 import orjson
+from cassandra.cqlengine.query import DoesNotExist
 from quart import Quart, Response, abort, jsonify
 
 from ekranoplan.admin import admin_users
 from ekranoplan.channels import channels, readstates
-from ekranoplan.database import connect
+from ekranoplan.database import Guild, GuildInvite, connect, to_dict
 from ekranoplan.errors import BadData, Err
 from ekranoplan.guilds import guilds
 from ekranoplan.messages import guild_msgs
@@ -62,6 +63,20 @@ async def uuid():
 @app.route('/favicon.ico')
 async def favicon():
     return abort(404)
+
+
+@app.route('/invites/<invite_code>')
+async def get_guild_by_invite(invite_code: str):
+    try:
+        invite: GuildInvite = GuildInvite.objects(
+            GuildInvite.id == invite_code
+        ).get()
+    except (DoesNotExist):
+        return abort(404)
+
+    guild: Guild = Guild.objects(Guild.id == invite.guild_id).get()
+
+    return jsonify(to_dict(guild))
 
 
 @app.errorhandler(404)

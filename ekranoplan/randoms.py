@@ -86,10 +86,13 @@ def get_bucket(sf: int):
     timestamp = sf >> 22
     return int(timestamp / BUCKET_SIZE)
 
+
 def random_timemade():
     now = time.time_ns() // 1000000 - 1649325271415
 
-    return base64.b32encode(str(now).encode()).decode().replace('=', '')
+    return (
+        base64.b32encode(str(now).encode()).decode().replace('=', '')
+    )
 
 
 if __name__ == '__main__':

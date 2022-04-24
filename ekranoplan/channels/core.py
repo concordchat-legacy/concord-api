@@ -10,7 +10,7 @@ from ..database import Guild, GuildChannel, Role, to_dict
 from ..errors import BadData, Forbidden, NotFound
 from ..flags import GuildPermissions
 from ..randoms import snowflake
-from ..redis_manager import guild_event
+from ..redis_manager import channel_event
 
 bp = Blueprint('channels', __name__)
 
@@ -98,7 +98,13 @@ async def create_channel(guild_id: int):
     channel: GuildChannel = GuildChannel.create(**kwargs)
     d = to_dict(channel)
 
-    await guild_event('CHANNEL_CREATE', d=d)
+    await channel_event(
+        'CREATE',
+        to_dict(channel),
+        to_dict(channel),
+        guild_id=guild_id,
+        is_message=False,
+    )
 
     return jsonify(d)
 

@@ -4,6 +4,7 @@ from ..checks import search_messages, validate_channel
 from ..database import GuildChannelPin, Message, _get_date, to_dict
 from ..errors import BadData, Forbidden
 from ..randoms import get_bucket, snowflake
+from ..redis_manager import channel_event
 
 bp = Blueprint('guild-messages', __name__)
 
@@ -98,6 +99,14 @@ async def create_guild_channel_message(
 
     msg = Message.create(**data)
 
+    await channel_event(
+        'CREATE',
+        to_dict(channel),
+        to_dict(msg),
+        guild_id=guild_id,
+        is_message=True,
+    )
+
     return jsonify(to_dict(msg))
 
 
@@ -134,6 +143,14 @@ async def edit_guild_channel_message(
 
     msg = msg.save()
 
+    await channel_event(
+        'EDIT',
+        to_dict(channel),
+        to_dict(msg),
+        guild_id=guild_id,
+        is_message=True,
+    )
+
     return jsonify(to_dict(msg))
 
 
@@ -158,10 +175,40 @@ async def delete_guild_channel_message(
     if msg is None:
         raise BadData()
 
+    if msg.pinned:
+        pin: GuildChannelPin = GuildChannelPin.objects(
+            GuildChannelPin.channel_id == channel_id,
+            GuildChannelPin.message_id == message_id,
+        ).get()
+        pin.delete()
+        await channel_event(
+            'UNPIN',
+            to_dict(channel),
+            {
+                'guild_id': guild_id,
+                'channel_id': channel_id,
+                'message_id': message_id,
+            },
+            guild_id=guild_id,
+            is_message=True,
+        )
+
     msg.delete()
 
     r = jsonify([])
     r.status_code = 204
+
+    await channel_event(
+        'DELETE',
+        to_dict(channel),
+        {
+            'id': message_id,
+            'channel_id': channel_id,
+            'guild_id': guild_id,
+        },
+        guild_id=guild_id,
+        is_message=True,
+    )
 
     return r
 
@@ -207,6 +254,14 @@ async def pin_guild_channel_message(
         'message_pinned': to_dict(msg),
     }
 
+    await channel_event(
+        'PIN',
+        to_dict(channel),
+        ret,
+        guild_id=guild_id,
+        is_message=True,
+    )
+
     return jsonify(ret)
 
 
@@ -241,5 +296,17 @@ async def unpin_guild_channel_message(
 
     r = jsonify([])
     r.status_code = 204
+
+    await channel_event(
+        'UNPIN',
+        to_dict(channel),
+        {
+            'guild_id': guild_id,
+            'channel_id': channel_id,
+            'message_id': message_id,
+        },
+        guild_id=guild_id,
+        is_message=True,
+    )
 
     return jsonify(r)
