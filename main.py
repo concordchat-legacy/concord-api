@@ -128,7 +128,7 @@ bps = {
     guilds: '/guilds',
     guild_msgs: '/guilds',
     channels: -1,
-    readstates: -1
+    readstates: -1,
 }
 
 for bp, url in bps.items():

@@ -1,7 +1,7 @@
 from quart import Blueprint, jsonify, request
 
 from ..checks import search_messages, validate_channel
-from ..database import Message, GuildChannelPin, _get_date, to_dict
+from ..database import GuildChannelPin, Message, _get_date, to_dict
 from ..errors import BadData, Forbidden
 from ..randoms import get_bucket, snowflake
 
@@ -165,9 +165,10 @@ async def delete_guild_channel_message(
 
     return r
 
+
 @bp.post(
     '/<int:guild_id>/channels/<int:channel_id>/pins/<int:message_id>',
-    strict_slashes=False
+    strict_slashes=False,
 )
 async def pin_guild_channel_message(
     guild_id: int, channel_id: int, message_id: int
@@ -179,7 +180,9 @@ async def pin_guild_channel_message(
         permission='manage_channel_pins',
     )
 
-    msg = search_messages(channel_id=channel.id, message_id=message_id)
+    msg = search_messages(
+        channel_id=channel.id, message_id=message_id
+    )
 
     if msg is None:
         raise BadData()
@@ -188,24 +191,24 @@ async def pin_guild_channel_message(
 
     possibly_not_empty = GuildChannelPin.objects(
         GuildChannelPin.channel_id == channel_id,
-        GuildChannelPin.message_id == message_id
+        GuildChannelPin.message_id == message_id,
     )
 
     if possibly_not_empty.all() != []:
         raise BadData()
 
     pin = GuildChannelPin.create(
-        channel_id=channel_id,
-        message_id=message_id
+        channel_id=channel_id, message_id=message_id
     )
     msg = msg.save()
 
     ret = {
         'pinned_data': to_dict(pin),
-        'message_pinned': to_dict(msg)
+        'message_pinned': to_dict(msg),
     }
 
     return jsonify(ret)
+
 
 @bp.delete(
     '/<int:guild_id>/channels/<int:channel_id>/pins/<int:message_id>',
@@ -221,7 +224,9 @@ async def unpin_guild_channel_message(
         permission='manage_channel_pins',
     )
 
-    msg = search_messages(channel_id=channel.id, message_id=message_id)
+    msg = search_messages(
+        channel_id=channel.id, message_id=message_id
+    )
 
     if msg is None or not msg.pinned:
         raise BadData()
@@ -229,7 +234,7 @@ async def unpin_guild_channel_message(
     msg.pinned = False
     pin: GuildChannelPin = GuildChannelPin.objects(
         GuildChannelPin.channel_id == channel_id,
-        GuildChannelPin.message_id == message_id
+        GuildChannelPin.message_id == message_id,
     ).get()
     pin.delete()
     msg.save()
