@@ -42,7 +42,7 @@ async def ack_message(channel_id: int, message_id: int):
 
     read_state.last_message_id = message.id
 
-    read_state.save()
+    read_state = read_state.save()
 
     return jsonify(to_dict(read_state))
 
@@ -106,7 +106,7 @@ async def ack_guild_message(
 
     read_state.last_message_id = message.id
 
-    read_state.save()
+    read_state = read_state.save()
 
     return jsonify(to_dict(read_state))
 

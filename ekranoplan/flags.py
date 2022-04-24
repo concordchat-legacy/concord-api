@@ -76,6 +76,8 @@ class GuildPermissions:
         # NOTE: Is this feature actually possible?
         # self.manage_events = has(1 << 30)
 
+        self.manage_channel_pins = has(1 << 31)
+
 
 if __name__ == '__main__':
     print(GuildPermissions.default())

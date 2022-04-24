@@ -1,7 +1,7 @@
 from quart import Blueprint, jsonify, request
 
 from ..checks import search_messages, validate_channel
-from ..database import Message, _get_date, to_dict
+from ..database import Message, GuildChannelPin, _get_date, to_dict
 from ..errors import BadData, Forbidden
 from ..randoms import get_bucket, snowflake
 
@@ -132,7 +132,7 @@ async def edit_guild_channel_message(
 
     msg.last_edited = _get_date()
 
-    msg.save()
+    msg = msg.save()
 
     return jsonify(to_dict(msg))
 
@@ -164,3 +164,77 @@ async def delete_guild_channel_message(
     r.status_code = 204
 
     return r
+
+@bp.post(
+    '/<int:guild_id>/channels/<int:channel_id>/pins/<int:message_id>',
+    strict_slashes=False
+)
+async def pin_guild_channel_message(
+    guild_id: int, channel_id: int, message_id: int
+):
+    member, user, channel, perms = validate_channel(
+        token=request.headers.get('Authorization'),
+        guild_id=guild_id,
+        channel_id=channel_id,
+        permission='manage_channel_pins',
+    )
+
+    msg = search_messages(channel_id=channel.id, message_id=message_id)
+
+    if msg is None:
+        raise BadData()
+
+    msg.pinned = True
+
+    possibly_not_empty = GuildChannelPin.objects(
+        GuildChannelPin.channel_id == channel_id,
+        GuildChannelPin.message_id == message_id
+    )
+
+    if possibly_not_empty.all() != []:
+        raise BadData()
+
+    pin = GuildChannelPin.create(
+        channel_id=channel_id,
+        message_id=message_id
+    )
+    msg = msg.save()
+
+    ret = {
+        'pinned_data': to_dict(pin),
+        'message_pinned': to_dict(msg)
+    }
+
+    return jsonify(ret)
+
+@bp.delete(
+    '/<int:guild_id>/channels/<int:channel_id>/pins/<int:message_id>',
+    strict_slashes=False,
+)
+async def unpin_guild_channel_message(
+    guild_id: int, channel_id: int, message_id: int
+):
+    member, user, channel, perms = validate_channel(
+        token=request.headers.get('Authorization'),
+        guild_id=guild_id,
+        channel_id=channel_id,
+        permission='manage_channel_pins',
+    )
+
+    msg = search_messages(channel_id=channel.id, message_id=message_id)
+
+    if msg is None or not msg.pinned:
+        raise BadData()
+
+    msg.pinned = False
+    pin: GuildChannelPin = GuildChannelPin.objects(
+        GuildChannelPin.channel_id == channel_id,
+        GuildChannelPin.message_id == message_id
+    ).get()
+    pin.delete()
+    msg.save()
+
+    r = jsonify([])
+    r.status_code = 204
+
+    return jsonify(r)

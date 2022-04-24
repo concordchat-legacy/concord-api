@@ -197,6 +197,11 @@ class GuildChannel(models.Model):
     recipients = columns.Set(columns.UserDefinedType(UserType))
     parent_id = columns.BigInt()
 
+class GuildChannelPin(models.Model):
+    __table_name__ = 'guild-channels-pins'
+    __options__ = default_options
+    channel_id = columns.BigInt(primary_key=True, partition_key=True)
+    message_id = columns.BigInt()
 
 class EmbedField(usertype.UserType):
     name = columns.Text(max_length=100)
