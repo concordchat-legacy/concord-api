@@ -112,7 +112,7 @@ class UserType(usertype.UserType):
     verified = columns.Boolean()
     system = columns.Boolean()
     bot = columns.Boolean(default=False)
-    referrer = columns.Text()
+    referrer = columns.Text(default='')
 
 
 # NOTE: Guilds
