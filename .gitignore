@@ -1,5 +1,3 @@
 .env
 tests/
 __pycache__/
-ekranoplan/static/bundle.zip
-ekranoplan/static/bundle-dev.zip
