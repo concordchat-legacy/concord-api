@@ -16,7 +16,7 @@ dotenv.load_dotenv()
 
 cloud = {
     'secure_connect_bundle': os.getcwd()
-    + '\\ekranoplan\\static\\bundle.zip'
+    + r'/ekranoplan/static/bundle.zip'
 }
 auth_provider = PlainTextAuthProvider(
     os.getenv('client_id'), os.getenv('client_secret')
