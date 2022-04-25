@@ -113,6 +113,7 @@ app.exceptions_handlers.update(
         InternalServerError: _internal_server_err,
         NotFound: _not_found,
         ValueError: _bad_data,
+        TypeError: _bad_data,
         BadRequest: _bad_data,
         BadRequestFormat: _bad_data,
     }
