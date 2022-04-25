@@ -93,12 +93,16 @@ async def _default_error_handler(app, req, err: Err):
 
 async def _internal_server_err(*args):
     return jsonify(
-        {'code': 0, 'message': '500: Internal Server Error'}, 500
+        {'code': 0, 'message': '500: Internal Server Error'},
+        500
     )
 
 
 async def _not_found(*args):
-    return jsonify({'code': 0, 'message': '404: Not Found'})
+    return jsonify(
+        {'code': 0, 'message': '404: Not Found'},
+        404
+    )
 
 
 app.exceptions_handlers.update(

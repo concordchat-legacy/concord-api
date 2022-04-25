@@ -135,7 +135,7 @@ class ReadStates(Controller):
         me = validate_user(auth.value, stop_bots=True)
 
         _readstates = ReadState.objects(
-            ReadState.user_id == me.id
+            ReadState.id == me.id
         ).all()
 
         readstates = []
