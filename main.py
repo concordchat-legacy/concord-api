@@ -11,7 +11,6 @@ from blacksheep.exceptions import (
 )
 from blacksheep_prometheus import PrometheusMiddleware, metrics
 from cassandra.cqlengine.query import DoesNotExist
-from pyrate_limiter_concord import BucketFullException
 
 from ekranoplan.admin import admin_users
 from ekranoplan.channels import channels, readstates
@@ -100,18 +99,6 @@ async def _internal_server_err(*args):
 
 async def _not_found(*args):
     return jsonify({'code': 0, 'message': '404: Not Found'})
-
-
-async def ratelimited(app, req, err: BucketFullException):
-    return jsonify(
-        {
-            'code': 0,
-            'message': '429: Too Much Requests',
-            'retry_after': err.meta_info.get('remaining_time'),
-            'ratelimit': '50/60',
-        },
-        429,
-    )
 
 
 app.exceptions_handlers.update(
