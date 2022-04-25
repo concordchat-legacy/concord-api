@@ -1,9 +1,14 @@
 # Ekranoplan
 Privacy-focused, scalable, and blazingly fast REST API for concord.
 
+# Design Philosophy
+You may be asking multiple questions, like "why is this in python?" or "why not use rust?"
+Answers to those exact questions are stated, [here]
+
+
 # Abuse Protection
 Ekranoplan has been made to allow as little abuse of the API as possible
-and as little database calls as needed.
+and use as little database calls as needed.
 to try and avoid DDOS Attacks we recommend using [cloudflare](https://cloudflare.com).
 
 # Running
@@ -21,7 +26,7 @@ to try and avoid DDOS Attacks we recommend using [cloudflare](https://cloudflare
 
 - Development
     
-    While doing development please only run `main.py`
+    Running `run.py` should be fine.
 
 - Production
     
@@ -33,7 +38,7 @@ to try and avoid DDOS Attacks we recommend using [cloudflare](https://cloudflare
 # Stack
 
 - [Python](https://python.org)
-- [Quart](https://github.com/pgjones/quart)
+- [Blacksheep](https://github.com/Neoteroi/BlackSheep)
 - [Uvicorn](https://uvicorn.org)
 - [snowflake.py](https://pypi.org/project/snowflake.py)
 - [uvloop](https://github.com/MagicStack/uvloop)

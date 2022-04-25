@@ -4,7 +4,13 @@ from typing import Any
 
 import dotenv
 from cassandra.auth import PlainTextAuthProvider
-from cassandra.cqlengine import columns, connection, management, models, usertype
+from cassandra.cqlengine import (
+    columns,
+    connection,
+    management,
+    models,
+    usertype,
+)
 
 dotenv.load_dotenv()
 
@@ -32,9 +38,9 @@ def connect():
             connection.setup(
                 None,
                 'ekranoplan',
-                auth_provider=auth_provider,
                 connect_timeout=100,
                 retry_connect=True,
+                compression=False,
             )
     except:
         connect()

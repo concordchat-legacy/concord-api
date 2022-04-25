@@ -1,4 +1,4 @@
-from quart import jsonify
+from .utils import jsonify
 
 
 class Err(Exception):

@@ -1,1 +1,1 @@
-from .users import bp as admin_users
+from .users import AdminUsers as admin_users

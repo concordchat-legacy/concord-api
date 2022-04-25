@@ -17,7 +17,7 @@ def create_token(user_id: Union[int, str], user_password: str):
 
 
 def verify_token(token: str):
-    if token is None:
+    if token is None or not isinstance(token, str):
         raise Unauthorized()
 
     if token.startswith('ConcordBot '):

@@ -1,4 +1,5 @@
-from quart import Blueprint, jsonify, request
+from blacksheep import Request
+from blacksheep.server.controllers import Controller, get, post
 
 from ..checks import (
     validate_channel,
@@ -11,116 +12,110 @@ from ..errors import BadData, Forbidden, NotFound
 from ..flags import GuildPermissions
 from ..randoms import snowflake
 from ..redis_manager import channel_event
+from ..utils import AuthHeader, jsonify
 
-bp = Blueprint('channels', __name__)
 
-
-@bp.route(
-    '/guilds/<int:guild_id>/channels',
-    strict_slashes=False,
-    methods=['POST'],
-)
-async def create_channel(guild_id: int):
-    guild: Guild = Guild.objects(Guild.id == guild_id).first()
-
-    if guild == None:
-        raise NotFound()
-
-    member, me = validate_member(
-        request.headers.get('Authorization', '1'), guild_id
+class ChannelCore(Controller):
+    @post(
+        '/guilds/{int:guild_id}/channels',
     )
-    me = to_dict(me)
-    me.pop('email')
-    me.pop('password')
-    me.pop('settings')
-
-    permissions = None
-
-    if member.roles == []:
-        permissions = guild.permissions
-    else:
-        id = member.roles[0]
-
-        role: Role = Role.objects(
-            Role.id == id, Role.guild_id == guild_id
-        ).get()
-
-        permissions = role.permissions
-
-    calc = GuildPermissions(permissions)
-
-    if (
-        not calc.manage_channels
-        and member.id != guild.owner_id
-        and not calc.administator
+    async def create_channel(
+        self, guild_id: int, request: Request, auth: AuthHeader
     ):
-        raise Forbidden()
+        member, me = validate_member(auth.value, guild_id)
 
-    data: dict = request.get_json(True)
+        guild: Guild = Guild.objects(Guild.id == guild_id).get()
 
-    slowmode = 0
+        if guild == None:
+            raise NotFound()
 
-    if data.get('slowmode_timeout'):
-        if (
-            int(data.get('slowmode_timeout')) > 21600
-            or data.get('slowmode') < 0
-        ):
-            raise BadData()
+        permissions = None
+
+        if member.roles == []:
+            permissions = guild.permissions
         else:
-            slowmode = round(int(data.pop('slowmode_timeout')))
+            id = member.roles[0]
 
-    if int(data.get('type')) not in [0, 1]:
-        raise BadData()
+            role: Role = Role.objects(
+                Role.id == id, Role.guild_id == guild_id
+            ).get()
 
-    if data.get('parent_id'):
-        pid = int(data.pop('parent_id'))
-        verify_parent_id(pid, guild_id=guild_id)
-    else:
-        pid = 0
+            permissions = role.permissions
 
-    position = int(data.pop('position'))
+        calc = GuildPermissions(permissions)
 
-    verify_channel_position(pos=position, guild_id=guild_id)
+        if (
+            not calc.manage_channels
+            and member.id != guild.owner_id
+            and not calc.administator
+        ):
+            raise Forbidden()
 
-    name = str(data['name'])[:30].lower().replace(' ', '-')
+        data: dict = request.get_json(True)
 
-    kwargs = {
-        'id': snowflake(),
-        'guild_id': guild_id,
-        'name': name,
-        'topic': str(data.get('topic', ''))[:1024],
-        'slowmode_timeout': slowmode,
-        'type': int(data.get('type', 1)),
-        'parent_id': pid,
-        'position': position,
-    }
+        slowmode = 0
 
-    channel: GuildChannel = GuildChannel.create(**kwargs)
-    d = to_dict(channel)
+        if data.get('slowmode_timeout'):
+            if (
+                int(data.get('slowmode_timeout')) > 21600
+                or data.get('slowmode') < 0
+            ):
+                raise BadData()
+            else:
+                slowmode = round(int(data.pop('slowmode_timeout')))
 
-    await channel_event(
-        'CREATE',
-        to_dict(channel),
-        to_dict(channel),
-        guild_id=guild_id,
-        is_message=False,
-    )
+        if int(data.get('type')) not in [0, 1]:
+            raise BadData()
 
-    return jsonify(d)
+        if data.get('parent_id'):
+            pid = int(data.pop('parent_id'))
+            verify_parent_id(pid, guild_id=guild_id)
+        else:
+            pid = 0
 
+        position = int(data.pop('position'))
 
-@bp.route(
-    '/guilds/<int:guild_id>/channels/<int:channel_id>',
-    methods=['GET'],
-)
-async def get_guild_channel(guild_id: int, channel_id: int):
-    channel: GuildChannel = list(
-        validate_channel(
-            token=request.headers.get('Authorization'),
+        verify_channel_position(pos=position, guild_id=guild_id)
+
+        name = str(data['name'])[:30].lower().replace(' ', '-')
+
+        kwargs = {
+            'id': snowflake(),
+            'guild_id': guild_id,
+            'name': name,
+            'topic': str(data.get('topic', ''))[:1024],
+            'slowmode_timeout': slowmode,
+            'type': int(data.get('type', 1)),
+            'parent_id': pid,
+            'position': position,
+        }
+
+        channel: GuildChannel = GuildChannel.create(**kwargs)
+        d = to_dict(channel)
+
+        await channel_event(
+            'CREATE',
+            to_dict(channel),
+            to_dict(channel),
             guild_id=guild_id,
-            channel_id=channel_id,
-            permission='view_channels',
+            is_message=False,
         )
-    )[2]
 
-    return jsonify(to_dict(channel))
+        return jsonify(d)
+
+    @get(
+        '/guilds/{int:guild_id}/channels/{int:channel_id}',
+    )
+    async def get_guild_channel(
+        self, guild_id: int, channel_id: int, auth: AuthHeader
+    ):
+        channel: GuildChannel = list(
+            validate_channel(
+                token=auth.value,
+                guild_id=guild_id,
+                channel_id=channel_id,
+                permission='view_channels',
+            )
+        )[2]
+
+        return jsonify(to_dict(channel))

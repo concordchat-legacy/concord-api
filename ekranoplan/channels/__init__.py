@@ -1,2 +1,2 @@
-from .core import bp as channels
-from .read_states import bp as readstates
+from .core import ChannelCore as channels
+from .read_states import ReadStates as readstates

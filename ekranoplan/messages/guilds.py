@@ -1,186 +1,330 @@
-from quart import Blueprint, jsonify, request
+import orjson
+from blacksheep import Request
+from blacksheep.server.controllers import (
+    Controller,
+    delete,
+    get,
+    patch,
+    post,
+)
 
 from ..checks import search_messages, validate_channel
 from ..database import GuildChannelPin, Message, _get_date, to_dict
 from ..errors import BadData, Forbidden
 from ..randoms import get_bucket, snowflake
 from ..redis_manager import channel_event
+from ..utils import AuthHeader, jsonify
 
-bp = Blueprint('guild-messages', __name__)
 
-
-@bp.get(
-    '/<int:guild_id>/channels/<int:channel_id>/messages/<int:message_id>',
-    strict_slashes=False,
-)
-async def get_guild_channel_message(
-    guild_id: int, channel_id: int, message_id: int
-):
-    member, user, channel, perms = validate_channel(
-        token=request.headers.get('Authorization'),
-        guild_id=guild_id,
-        channel_id=channel_id,
-        permission='read_message_history',
+class GuildMessages(Controller):
+    @get(
+        '/guilds/{int:guild_id}/channels/{int:channel_id}/messages/{int:message_id}',
     )
-
-    msg = search_messages(
-        channel_id=channel.id, message_id=message_id
-    )
-
-    return jsonify(to_dict(msg))
-
-
-@bp.get(
-    '/<int:guild_id>/channels/<int:channel_id>/messages',
-    strict_slashes=False,
-)
-async def get_guild_channel_messages(guild_id: int, channel_id: int):
-    member, user, channel, perms = validate_channel(
-        token=request.headers.get('Authorization'),
-        guild_id=guild_id,
-        channel_id=channel_id,
-        permission='read_message_history',
-    )
-
-    limit = int(request.args.get('limit', 50))
-
-    if limit > 10000:
-        raise BadData()
-
-    _msgs = search_messages(channel_id=channel.id, limit=limit)
-    msgs = []
-
-    for msg in _msgs:
-        msgs.append(to_dict(msg))
-
-    return jsonify(msgs)
-
-
-@bp.post(
-    '/<int:guild_id>/channels/<int:channel_id>/messages',
-    strict_slashes=False,
-)
-async def create_guild_channel_message(
-    guild_id: int, channel_id: int
-):
-    member, user, channel, perms = validate_channel(
-        token=request.headers.get('Authorization'),
-        guild_id=guild_id,
-        channel_id=channel_id,
-        permission='send_messages',
-    )
-
-    d: dict = await request.get_json()
-
-    if '@everyone' in d['content']:
-        mentions_everyone = True if perms.mention_everyone else False
-    else:
-        mentions_everyone = False
-
-    if d.get('referenced_message_id'):
-        referenced_message = search_messages(
+    async def get_guild_channel_message(
+        self,
+        guild_id: int,
+        channel_id: int,
+        message_id: int,
+        auth: AuthHeader,
+    ):
+        member, user, channel, perms = validate_channel(
+            token=auth.value,
+            guild_id=guild_id,
             channel_id=channel_id,
-            message_id=int(d.pop('referenced_message_id')),
+            permission='read_message_history',
         )
 
-    if referenced_message is None:
-        raise BadData()
+        msg = search_messages(
+            channel_id=channel.id, message_id=message_id
+        )
 
-    data = {
-        'id': snowflake(),
-        'channel_id': channel_id,
-        'bucket_id': get_bucket(channel_id),
-        'guild_id': guild_id,
-        'author': member.user,
-        'content': str(d['content']),
-        'mentions_everyone': mentions_everyone,
-        'referenced_message_id': referenced_message.id,
-    }
+        return jsonify(to_dict(msg))
 
-    msg = Message.create(**data)
-
-    await channel_event(
-        'CREATE',
-        to_dict(channel),
-        to_dict(msg),
-        guild_id=guild_id,
-        is_message=True,
+    @get(
+        '/guilds/{int:guild_id}/channels/{int:channel_id}/messages',
     )
+    async def get_guild_channel_messages(
+        self,
+        guild_id: int,
+        channel_id: int,
+        auth: AuthHeader,
+        request: Request,
+    ):
+        member, user, channel, perms = validate_channel(
+            token=auth.value,
+            guild_id=guild_id,
+            channel_id=channel_id,
+            permission='read_message_history',
+        )
 
-    return jsonify(to_dict(msg))
+        limit = int(request.query.get('limit', '50'))
 
+        if limit > 10000:
+            raise BadData()
 
-@bp.patch(
-    '/<int:guild_id>/channels/<int:channel_id>/messages/<int:message_id>',
-    strict_slashes=False,
-)
-async def edit_guild_channel_message(
-    guild_id: int, channel_id: int, message_id: int
-):
-    member, user, channel, perms = validate_channel(
-        token=request.headers.get('Authorization'),
-        guild_id=guild_id,
-        channel_id=channel_id,
-        permission=None,
+        _msgs = search_messages(channel_id=channel.id, limit=limit)
+        msgs = []
+
+        for msg in _msgs:
+            msgs.append(to_dict(msg))
+
+        return jsonify(msgs)
+
+    @post(
+        '/guilds/{int:guild_id}/channels/{int:channel_id}/messages',
     )
+    async def create_guild_channel_message(
+        self,
+        guild_id: int,
+        channel_id: int,
+        request: Request,
+        auth: AuthHeader,
+    ):
+        member, user, channel, perms = validate_channel(
+            token=auth.value,
+            guild_id=guild_id,
+            channel_id=channel_id,
+            permission='send_messages',
+        )
 
-    msg = search_messages(
-        channel_id=channel.id, message_id=message_id
+        d: dict = await request.json(orjson.loads)
+
+        if '@everyone' in d['content']:
+            mentions_everyone = (
+                True if perms.mention_everyone else False
+            )
+        else:
+            mentions_everyone = False
+
+        if d.get('referenced_message_id'):
+            referenced_message = search_messages(
+                channel_id=channel_id,
+                message_id=int(d.pop('referenced_message_id')),
+            )
+
+        if referenced_message is None:
+            raise BadData()
+
+        data = {
+            'id': snowflake(),
+            'channel_id': channel_id,
+            'bucket_id': get_bucket(channel_id),
+            'guild_id': guild_id,
+            'author': member.user,
+            'content': str(d['content']),
+            'mentions_everyone': mentions_everyone,
+            'referenced_message_id': referenced_message.id,
+        }
+
+        msg = Message.create(**data)
+
+        await channel_event(
+            'CREATE',
+            to_dict(channel),
+            to_dict(msg),
+            guild_id=guild_id,
+            is_message=True,
+        )
+
+        return jsonify(to_dict(msg))
+
+    @patch(
+        '/guilds/{int:guild_id}/channels/{int:channel_id}/messages/{int:message_id}',
     )
+    async def edit_guild_channel_message(
+        self,
+        guild_id: int,
+        channel_id: int,
+        message_id: int,
+        auth: AuthHeader,
+        request: Request,
+    ):
+        member, user, channel, perms = validate_channel(
+            token=auth.value,
+            guild_id=guild_id,
+            channel_id=channel_id,
+            permission=None,
+        )
 
-    if msg is None:
-        raise BadData()
+        msg = search_messages(
+            channel_id=channel.id, message_id=message_id
+        )
 
-    if msg.author.id != member.id:
-        raise Forbidden()
+        if msg is None:
+            raise BadData()
 
-    d: dict = await request.get_json()
+        if msg.author.id != member.id:
+            raise Forbidden()
 
-    if d.get('content'):
-        msg.content = str(d.pop('content'))
+        d: dict = await request.json(orjson.loads)
 
-    msg.last_edited = _get_date()
+        if d.get('content'):
+            msg.content = str(d.pop('content'))
 
-    msg = msg.save()
+        msg.last_edited = _get_date()
 
-    await channel_event(
-        'EDIT',
-        to_dict(channel),
-        to_dict(msg),
-        guild_id=guild_id,
-        is_message=True,
+        msg = msg.save()
+
+        await channel_event(
+            'EDIT',
+            to_dict(channel),
+            to_dict(msg),
+            guild_id=guild_id,
+            is_message=True,
+        )
+
+        return jsonify(to_dict(msg))
+
+    @delete(
+        '/guilds/{int:guild_id}/channels/{int:channel_id}/messages/{int:message_id}',
     )
+    async def delete_guild_channel_message(
+        self,
+        guild_id: int,
+        channel_id: int,
+        message_id: int,
+        auth: AuthHeader,
+    ):
+        member, user, channel, perms = validate_channel(
+            token=auth.value,
+            guild_id=guild_id,
+            channel_id=channel_id,
+            permission='manage_messages',
+        )
 
-    return jsonify(to_dict(msg))
+        msg = search_messages(
+            channel_id=channel.id, message_id=message_id
+        )
 
+        if msg is None:
+            raise BadData()
 
-@bp.delete(
-    '/<int:guild_id>/channels/<int:channel_id>/messages/<int:message_id>',
-    strict_slashes=False,
-)
-async def delete_guild_channel_message(
-    guild_id: int, channel_id: int, message_id: int
-):
-    member, user, channel, perms = validate_channel(
-        token=request.headers.get('Authorization'),
-        guild_id=guild_id,
-        channel_id=channel_id,
-        permission='manage_messages',
+        if msg.pinned:
+            pin: GuildChannelPin = GuildChannelPin.objects(
+                GuildChannelPin.channel_id == channel_id,
+                GuildChannelPin.message_id == message_id,
+            ).get()
+            pin.delete()
+            await channel_event(
+                'UNPIN',
+                to_dict(channel),
+                {
+                    'guild_id': guild_id,
+                    'channel_id': channel_id,
+                    'message_id': message_id,
+                },
+                guild_id=guild_id,
+                is_message=True,
+            )
+
+        msg.delete()
+
+        r = jsonify([])
+        r.status_code = 204
+
+        await channel_event(
+            'DELETE',
+            to_dict(channel),
+            {
+                'id': message_id,
+                'channel_id': channel_id,
+                'guild_id': guild_id,
+            },
+            guild_id=guild_id,
+            is_message=True,
+        )
+
+        return r
+
+    @post(
+        '/guilds/{int:guild_id}/channels/{int:channel_id}/pins/{int:message_id}',
     )
+    async def pin_guild_channel_message(
+        self,
+        guild_id: int,
+        channel_id: int,
+        message_id: int,
+        auth: AuthHeader,
+    ):
+        member, user, channel, perms = validate_channel(
+            token=auth.value,
+            guild_id=guild_id,
+            channel_id=channel_id,
+            permission='manage_channel_pins',
+        )
 
-    msg = search_messages(
-        channel_id=channel.id, message_id=message_id
+        msg = search_messages(
+            channel_id=channel.id, message_id=message_id
+        )
+
+        if msg is None:
+            raise BadData()
+
+        msg.pinned = True
+
+        possibly_not_empty = GuildChannelPin.objects(
+            GuildChannelPin.channel_id == channel_id,
+            GuildChannelPin.message_id == message_id,
+        )
+
+        if possibly_not_empty.all() != []:
+            raise BadData()
+
+        pin = GuildChannelPin.create(
+            channel_id=channel_id, message_id=message_id
+        )
+        msg = msg.save()
+
+        ret = {
+            'pinned_data': to_dict(pin),
+            'message_pinned': to_dict(msg),
+        }
+
+        await channel_event(
+            'PIN',
+            to_dict(channel),
+            ret,
+            guild_id=guild_id,
+            is_message=True,
+        )
+
+        return jsonify(ret)
+
+    @delete(
+        '/guilds/{int:guild_id}/channels/{int:channel_id}/pins/{int:message_id}',
     )
+    async def unpin_guild_channel_message(
+        self,
+        guild_id: int,
+        channel_id: int,
+        message_id: int,
+        auth: AuthHeader,
+    ):
+        member, user, channel, perms = validate_channel(
+            token=auth.value,
+            guild_id=guild_id,
+            channel_id=channel_id,
+            permission='manage_channel_pins',
+        )
 
-    if msg is None:
-        raise BadData()
+        msg = search_messages(
+            channel_id=channel.id, message_id=message_id
+        )
 
-    if msg.pinned:
+        if msg is None or not msg.pinned:
+            raise BadData()
+
+        msg.pinned = False
         pin: GuildChannelPin = GuildChannelPin.objects(
             GuildChannelPin.channel_id == channel_id,
             GuildChannelPin.message_id == message_id,
         ).get()
         pin.delete()
+        msg.save()
+
+        r = jsonify([])
+        r.status_code = 204
+
         await channel_event(
             'UNPIN',
             to_dict(channel),
@@ -193,120 +337,4 @@ async def delete_guild_channel_message(
             is_message=True,
         )
 
-    msg.delete()
-
-    r = jsonify([])
-    r.status_code = 204
-
-    await channel_event(
-        'DELETE',
-        to_dict(channel),
-        {
-            'id': message_id,
-            'channel_id': channel_id,
-            'guild_id': guild_id,
-        },
-        guild_id=guild_id,
-        is_message=True,
-    )
-
-    return r
-
-
-@bp.post(
-    '/<int:guild_id>/channels/<int:channel_id>/pins/<int:message_id>',
-    strict_slashes=False,
-)
-async def pin_guild_channel_message(
-    guild_id: int, channel_id: int, message_id: int
-):
-    member, user, channel, perms = validate_channel(
-        token=request.headers.get('Authorization'),
-        guild_id=guild_id,
-        channel_id=channel_id,
-        permission='manage_channel_pins',
-    )
-
-    msg = search_messages(
-        channel_id=channel.id, message_id=message_id
-    )
-
-    if msg is None:
-        raise BadData()
-
-    msg.pinned = True
-
-    possibly_not_empty = GuildChannelPin.objects(
-        GuildChannelPin.channel_id == channel_id,
-        GuildChannelPin.message_id == message_id,
-    )
-
-    if possibly_not_empty.all() != []:
-        raise BadData()
-
-    pin = GuildChannelPin.create(
-        channel_id=channel_id, message_id=message_id
-    )
-    msg = msg.save()
-
-    ret = {
-        'pinned_data': to_dict(pin),
-        'message_pinned': to_dict(msg),
-    }
-
-    await channel_event(
-        'PIN',
-        to_dict(channel),
-        ret,
-        guild_id=guild_id,
-        is_message=True,
-    )
-
-    return jsonify(ret)
-
-
-@bp.delete(
-    '/<int:guild_id>/channels/<int:channel_id>/pins/<int:message_id>',
-    strict_slashes=False,
-)
-async def unpin_guild_channel_message(
-    guild_id: int, channel_id: int, message_id: int
-):
-    member, user, channel, perms = validate_channel(
-        token=request.headers.get('Authorization'),
-        guild_id=guild_id,
-        channel_id=channel_id,
-        permission='manage_channel_pins',
-    )
-
-    msg = search_messages(
-        channel_id=channel.id, message_id=message_id
-    )
-
-    if msg is None or not msg.pinned:
-        raise BadData()
-
-    msg.pinned = False
-    pin: GuildChannelPin = GuildChannelPin.objects(
-        GuildChannelPin.channel_id == channel_id,
-        GuildChannelPin.message_id == message_id,
-    ).get()
-    pin.delete()
-    msg.save()
-
-    r = jsonify([])
-    r.status_code = 204
-
-    await channel_event(
-        'UNPIN',
-        to_dict(channel),
-        {
-            'guild_id': guild_id,
-            'channel_id': channel_id,
-            'message_id': message_id,
-        },
-        guild_id=guild_id,
-        is_message=True,
-    )
-
-    return jsonify(r)
+        return jsonify(r)

@@ -1,5 +1,4 @@
 [tool.isort]
-skip = 'ratelimiter.py'
 profile = 'black'
 
 [tool.black]

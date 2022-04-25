@@ -1,4 +1,3 @@
-quart==0.17.0
 aioredis==2.0.1
 orjson==3.6.7
 Cython==0.29.28
@@ -7,7 +6,8 @@ python-dotenv==0.20.0
 uvicorn[standard]==0.17.6
 cassandra-driver==3.25.0
 itsdangerous==2.1.2
-Flask-Limiter==2.3.0
 uvloop==0.16.0; platform_system!="Windows" # https://github.com/MagicStack/uvloop/issues/14
 Cerberus==1.3.4
 bcrypt==3.2.0
+blacksheep==1.2.5
+blacksheep-prometheus==0.1.6

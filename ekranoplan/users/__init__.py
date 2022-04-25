@@ -1,1 +1,1 @@
-from .core import bp as users
+from .core import CoreUsers as users

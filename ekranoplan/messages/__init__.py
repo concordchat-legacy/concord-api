@@ -1,1 +1,1 @@
-from .guilds import bp as guild_msgs
+from .guilds import GuildMessages as guild_messages
