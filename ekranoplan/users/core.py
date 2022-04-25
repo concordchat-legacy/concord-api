@@ -54,6 +54,10 @@ class CoreUsers(Controller):
         flags = 1 << 0
         bio = str(data.get('bio')) or ''
         locale = str(data.get('locale') or 'EN_US')
+        referrer = request.query.get('utm_source') or ''
+
+        if not isinstance(referrer, str):
+            referrer = str(referrer)
 
         if locale not in [
             'EN_US'
@@ -73,6 +77,7 @@ class CoreUsers(Controller):
                 accept_friend_requests=True,
                 accept_direct_messages=True,
             ),
+            referrer=referrer,
         )
 
         resp = to_dict(user)

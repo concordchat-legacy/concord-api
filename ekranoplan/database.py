@@ -93,6 +93,7 @@ class User(models.Model):
     verified = columns.Boolean(default=False)
     system = columns.Boolean(default=False)
     bot = columns.Boolean(default=False)
+    referrer = columns.Text()
 
 
 class UserType(usertype.UserType):
@@ -111,6 +112,7 @@ class UserType(usertype.UserType):
     verified = columns.Boolean()
     system = columns.Boolean()
     bot = columns.Boolean(default=False)
+    referrer = columns.Text()
 
 
 # NOTE: Guilds
