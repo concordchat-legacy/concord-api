@@ -26,7 +26,7 @@ print(f'DEBUG: Starting on {platform.platform()}', file=sys.stderr)
 
 if os.name != 'nt':
     os.system(
-        f'gunicorn -w 40 -k uvicorn.workers.UvicornH11Worker -b 0.0.0.0:{os.getenv("PORT", "5000")}'
+        f'gunicorn -w 40 -k uvicorn.workers.UvicornWorker -b 0.0.0.0:{os.getenv("PORT", "5000")}'
     )
 else:
     os.system(
