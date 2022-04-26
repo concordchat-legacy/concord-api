@@ -69,9 +69,7 @@ async def get_hash(string: str) -> str:
     return result.decode()
 
 
-async def verify_hash(
-    hashed_password: str, given_password: str
-) -> bool:
+async def verify_hash(hashed_password: str, given_password: str) -> bool:
     loop = asyncio.get_running_loop()
     result = await loop.run_in_executor(
         None,
@@ -90,9 +88,7 @@ def get_bucket(sf: int):
 def random_timemade():
     now = time.time_ns() // 1000000 - 1649325271415
 
-    return (
-        base64.b32encode(str(now).encode()).decode().replace('=', '')
-    )
+    return base64.b32encode(str(now).encode()).decode().replace('=', '')
 
 
 if __name__ == '__main__':

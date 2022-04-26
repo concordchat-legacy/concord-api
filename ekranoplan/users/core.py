@@ -56,9 +56,7 @@ class CoreUsers(Controller):
         locale = str(data.get('locale') or 'EN_US')
         referrer = request.query.get('utm_source') or ''
 
-        if not isinstance(referrer, str) and not isinstance(
-            referrer, list
-        ):
+        if not isinstance(referrer, str) and not isinstance(referrer, list):
             referrer = str(referrer)
         elif isinstance(referrer, list):
             referrer = str(referrer[0])
@@ -83,8 +81,6 @@ class CoreUsers(Controller):
         )
 
         resp = to_dict(user)
-        resp['token'] = create_token(
-            user_id=user.id, user_password=user.password
-        )
+        resp['token'] = create_token(user_id=user.id, user_password=user.password)
 
         return jsonify(resp, 201)

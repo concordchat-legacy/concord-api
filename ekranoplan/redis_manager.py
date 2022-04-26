@@ -35,9 +35,7 @@ async def user_event(name: str, user_id: int, data: dict):
     await manager.publish('gateway', orjson.dumps(d))
 
 
-async def guild_event(
-    name: str, guild_id: int, data: dict, user_id: int = None
-):
+async def guild_event(name: str, guild_id: int, data: dict, user_id: int = None):
     d = {
         'type': 2,
         'name': name,
@@ -68,9 +66,7 @@ async def channel_event(
     await manager.publish('gateway', orjson.dumps(d))
 
 
-async def friend_request_event(
-    name: str, user_id: int, receiver_id: int, data: dict
-):
+async def friend_request_event(name: str, user_id: int, receiver_id: int, data: dict):
     d = {
         'type': 5,
         'name': name,
@@ -82,9 +78,7 @@ async def friend_request_event(
     await manager.publish('gateway', orjson.dumps(d))
 
 
-async def member_event(
-    name: str, member_id: int, guild_id: int, data: dict
-):
+async def member_event(name: str, member_id: int, guild_id: int, data: dict):
     d = {
         'type': 6,
         'name': name,

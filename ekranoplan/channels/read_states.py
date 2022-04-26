@@ -11,9 +11,7 @@ class ReadStates(Controller):
     @post(
         '/channels/{int:channel_id}/messages/{int:message_id}/ack',
     )
-    async def ack_message(
-        self, channel_id: int, message_id: int, auth: AuthHeader
-    ):
+    async def ack_message(self, channel_id: int, message_id: int, auth: AuthHeader):
         user_id = validate_user(auth.value, stop_bots=True).id
 
         try:
@@ -21,9 +19,7 @@ class ReadStates(Controller):
         except (DoesNotExist):
             raise NotFound()
 
-        message = search_messages(
-            channel_id=channel_id, message_id=message_id
-        )
+        message = search_messages(channel_id=channel_id, message_id=message_id)
 
         if message is None:
             raise BadData()
@@ -45,9 +41,7 @@ class ReadStates(Controller):
         return jsonify(to_dict(read_state))
 
     @get('/channels/{int:channel_id}/readstate')
-    async def get_channel_read_state(
-        self, channel_id: int, auth: AuthHeader
-    ):
+    async def get_channel_read_state(self, channel_id: int, auth: AuthHeader):
         user_id = validate_user(auth.value, stop_bots=True).id
 
         try:
@@ -83,9 +77,7 @@ class ReadStates(Controller):
             stop_bots=True,
         )
 
-        message = search_messages(
-            channel_id=channel_id, message_id=message_id
-        )
+        message = search_messages(channel_id=channel_id, message_id=message_id)
 
         if message is None:
             raise BadData()

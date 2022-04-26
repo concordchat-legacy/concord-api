@@ -35,13 +35,7 @@ dotenv.load_dotenv()
 
 @app.route('/auth/fingerprint')
 async def uuid():
-    return jsonify(
-        {
-            'fingerprint': str(snowflake())
-            + '.'
-            + secrets.token_urlsafe(16)
-        }
-    )
+    return jsonify({'fingerprint': str(snowflake()) + '.' + secrets.token_urlsafe(16)})
 
 
 @app.route('/favicon.ico')
@@ -52,9 +46,7 @@ async def favicon():
 @app.route('/invites/{str:invite_code}', methods=['GET'])
 async def get_guild_by_invite(invite_code: str):
     try:
-        invite: GuildInvite = GuildInvite.objects(
-            GuildInvite.id == invite_code
-        ).get()
+        invite: GuildInvite = GuildInvite.objects(GuildInvite.id == invite_code).get()
     except (DoesNotExist):
         raise NotFound()
 
@@ -92,9 +84,7 @@ async def _default_error_handler(app, req, err: Err):
 
 
 async def _internal_server_err(*args):
-    return jsonify(
-        {'code': 0, 'message': '500: Internal Server Error'}, 500
-    )
+    return jsonify({'code': 0, 'message': '500: Internal Server Error'}, 500)
 
 
 async def _not_found(*args):

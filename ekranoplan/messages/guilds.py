@@ -1,12 +1,6 @@
 import orjson
 from blacksheep import Request
-from blacksheep.server.controllers import (
-    Controller,
-    delete,
-    get,
-    patch,
-    post,
-)
+from blacksheep.server.controllers import Controller, delete, get, patch, post
 
 from ..checks import search_messages, validate_channel
 from ..database import GuildChannelPin, Message, _get_date, to_dict
@@ -34,9 +28,7 @@ class GuildMessages(Controller):
             permission='read_message_history',
         )
 
-        msg = search_messages(
-            channel_id=channel.id, message_id=message_id
-        )
+        msg = search_messages(channel_id=channel.id, message_id=message_id)
 
         return jsonify(to_dict(msg))
 
@@ -90,9 +82,7 @@ class GuildMessages(Controller):
         d: dict = await request.json(orjson.loads)
 
         if '@everyone' in d['content']:
-            mentions_everyone = (
-                True if perms.mention_everyone else False
-            )
+            mentions_everyone = True if perms.mention_everyone else False
         else:
             mentions_everyone = False
 
@@ -146,9 +136,7 @@ class GuildMessages(Controller):
             permission=None,
         )
 
-        msg = search_messages(
-            channel_id=channel.id, message_id=message_id
-        )
+        msg = search_messages(channel_id=channel.id, message_id=message_id)
 
         if msg is None:
             raise BadData()
@@ -192,9 +180,7 @@ class GuildMessages(Controller):
             permission='manage_messages',
         )
 
-        msg = search_messages(
-            channel_id=channel.id, message_id=message_id
-        )
+        msg = search_messages(channel_id=channel.id, message_id=message_id)
 
         if msg is None:
             raise BadData()
@@ -253,9 +239,7 @@ class GuildMessages(Controller):
             permission='manage_channel_pins',
         )
 
-        msg = search_messages(
-            channel_id=channel.id, message_id=message_id
-        )
+        msg = search_messages(channel_id=channel.id, message_id=message_id)
 
         if msg is None:
             raise BadData()
@@ -270,9 +254,7 @@ class GuildMessages(Controller):
         if possibly_not_empty.all() != []:
             raise BadData()
 
-        pin = GuildChannelPin.create(
-            channel_id=channel_id, message_id=message_id
-        )
+        pin = GuildChannelPin.create(channel_id=channel_id, message_id=message_id)
         msg = msg.save()
 
         ret = {
@@ -307,9 +289,7 @@ class GuildMessages(Controller):
             permission='manage_channel_pins',
         )
 
-        msg = search_messages(
-            channel_id=channel.id, message_id=message_id
-        )
+        msg = search_messages(channel_id=channel.id, message_id=message_id)
 
         if msg is None or not msg.pinned:
             raise BadData()

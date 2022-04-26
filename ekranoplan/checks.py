@@ -31,9 +31,7 @@ def validate_member(
     token: str, guild_id: int, *, stop_bots: bool = False
 ) -> tuple[Member, User]:
     user = validate_user(token=token)
-    objs = Member.objects(
-        Member.id == user.id, Member.guild_id == guild_id
-    )
+    objs = Member.objects(Member.id == user.id, Member.guild_id == guild_id)
 
     try:
         member: Member = objs.get()
@@ -54,6 +52,22 @@ def validate_admin(token: str):
     return admin
 
 
+def get_member_permissions(
+    member: Member,
+):
+    if list(member.roles) == []:
+        guild: Guild = Guild.objects(Guild.id == member.guild_id).get()
+        permissions = GuildPermissions(guild.permissions)
+    else:
+        role_id: int = list(member.roles)[0]
+
+        role: Role = Role.objects(role_id).get()
+
+        permissions = GuildPermissions(role.permissions)
+
+    return permissions
+
+
 def validate_channel(
     token: str,
     guild_id: int,
@@ -62,9 +76,7 @@ def validate_channel(
     *,
     stop_bots: bool = False,
 ) -> tuple[Member, User, GuildChannel, Union[GuildPermissions, None]]:
-    member, user = validate_member(
-        token=token, guild_id=guild_id, stop_bots=stop_bots
-    )
+    member, user = validate_member(token=token, guild_id=guild_id, stop_bots=stop_bots)
 
     try:
         channel: GuildChannel = GuildChannel.objects(
@@ -85,16 +97,12 @@ def validate_channel(
             if overwrite.id == user.id:
                 user_found = True
                 allow_permissions = GuildPermissions(overwrite.allow)
-                disallow_permissions = GuildPermissions(
-                    overwrite.deny
-                )
+                disallow_permissions = GuildPermissions(overwrite.deny)
                 break
 
         if not user_found:
             if list(member.roles) == []:
-                guild: Guild = Guild.objects(
-                    Guild.id == guild_id
-                ).get()
+                guild: Guild = Guild.objects(Guild.id == guild_id).get()
                 permissions = GuildPermissions(guild.permissions)
             else:
                 role_id: int = list(member.roles)[0]
@@ -206,3 +214,13 @@ def verify_channel_position(pos: int, guild_id: int):
 
     del highest_pos
     del guild_channels
+
+
+def verify_permission_overwrite(d: dict):
+    data = {
+        'id': d['id'],
+        'allow': d['allow'],
+        'deny': d['deny'],
+    }
+
+    return data

@@ -34,9 +34,7 @@ class AdminUsers(Controller):
         c: List[dict] = User.objects(
             username=username, discriminator=discrim
         ).allow_filtering()
-        cd: List[dict] = User.objects(
-            username=username
-        ).allow_filtering()
+        cd: List[dict] = User.objects(username=username).allow_filtering()
 
         if len(c) != 0:
             raise BadData()
@@ -60,8 +58,6 @@ class AdminUsers(Controller):
         )
 
         resp = to_dict(user)
-        resp['token'] = create_token(
-            user_id=user.id, user_password=user.password
-        )
+        resp['token'] = create_token(user_id=user.id, user_password=user.password)
 
         return jsonify(resp)
