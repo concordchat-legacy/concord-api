@@ -3,7 +3,7 @@ Privacy-focused, scalable, and blazingly fast REST API for concord.
 
 # Stack
 
-- [Python](https://python.org)
+- [Uvicorn](https://uvicorn.org)
 - [Blacksheep](https://github.com/Neoteroi/BlackSheep)
 - [Cassandra](https://cassandra.apache.org)
 
