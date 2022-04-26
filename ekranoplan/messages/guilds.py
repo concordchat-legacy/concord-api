@@ -2,8 +2,8 @@ import orjson
 from blacksheep import Request
 from blacksheep.server.controllers import Controller, delete, get, patch, post
 
-from ..checks import search_messages, validate_channel
-from ..database import GuildChannelPin, Message, _get_date, to_dict
+from ..checks import search_messages, validate_channel, verify_slowmode
+from ..database import GuildChannelPin, Message, ChannelSlowMode, _get_date, to_dict
 from ..errors import BadData, Forbidden
 from ..randoms import get_bucket, snowflake
 from ..redis_manager import channel_event
@@ -72,12 +72,14 @@ class GuildMessages(Controller):
         request: Request,
         auth: AuthHeader,
     ):
-        member, user, channel, perms = validate_channel(
+        member, _, channel, perms = validate_channel(
             token=auth.value,
             guild_id=guild_id,
             channel_id=channel_id,
             permission='send_messages',
         )
+
+        verify_slowmode(member.id, channel.id)
 
         d: dict = await request.json(orjson.loads)
 
@@ -115,6 +117,12 @@ class GuildMessages(Controller):
             guild_id=guild_id,
             is_message=True,
         )
+
+        slowmode: ChannelSlowMode = ChannelSlowMode.create(
+            id=member.id,
+            channel_id=channel_id
+        )
+        slowmode.ttl(channel.slowmode_timeout)
 
         return jsonify(to_dict(msg))
 

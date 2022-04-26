@@ -10,8 +10,9 @@ from .database import (
     PermissionOverWrites,
     Role,
     User,
+    ChannelSlowMode
 )
-from .errors import BadData, Forbidden, NotFound
+from .errors import BadData, Conflict, Forbidden, NotFound
 from .flags import GuildPermissions, UserFlags
 from .randoms import get_bucket
 from .tokens import verify_token
@@ -224,3 +225,14 @@ def verify_permission_overwrite(d: dict):
     }
 
     return data
+
+def verify_slowmode(user_id: int, channel_id: int):
+    try:
+        ChannelSlowMode.objects(
+            ChannelSlowMode.id == user_id,
+            ChannelSlowMode.channel_id == channel_id
+        ).get()
+    except(query.DoesNotExist):
+        ...
+    else:
+        raise Conflict()

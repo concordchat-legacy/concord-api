@@ -32,3 +32,7 @@ class Unauthorized(Err):
 class NotFound(Err):
     resp_type = 404
     resp_message = 'Not Found'
+
+class Conflict(Err):
+    resp_type = 409
+    resp_name = 'Conflict'

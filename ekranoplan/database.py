@@ -191,9 +191,13 @@ class GuildChannel(models.Model):
     permission_overwrites = columns.Set(columns.UserDefinedType(PermissionOverWrites))
     name = columns.Text(max_length=45)
     topic = columns.Text(max_length=1024, default='')
-    slowmode_timeout = columns.Integer()
+    slowmode_timeout = columns.Integer(default=0)
     parent_id = columns.BigInt()
 
+class ChannelSlowMode(models.Model):
+    __table_name__ = 'channelslowmode'
+    id = columns.BigInt(primary_key=True, partition_key=True)
+    channel_id = columns.BigInt(primary_key=True, partition_key=True)
 
 class GuildChannelPin(models.Model):
     __table_name__ = 'guildchannelspins'
