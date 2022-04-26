@@ -1,6 +1,12 @@
 # Ekranoplan
 Privacy-focused, scalable, and blazingly fast REST API for concord.
 
+# Stack
+
+- [Python](https://python.org)
+- [Blacksheep](https://github.com/Neoteroi/BlackSheep)
+- [Cassandra](https://cassandra.apache.org)
+
 # Design Philosophy
 You may be asking multiple questions, like "why is this in python?" or "why not use rust?"
 Answers to those exact questions are stated, [here]
@@ -34,12 +40,3 @@ to try and avoid DDOS Attacks we recommend using [cloudflare](https://cloudflare
     
     - Using Kubernetes or Docker
     - Running `run.py` only
-
-# Stack
-
-- [Python](https://python.org)
-- [Blacksheep](https://github.com/Neoteroi/BlackSheep)
-- [Uvicorn](https://uvicorn.org)
-- [snowflake.py](https://pypi.org/project/snowflake.py)
-- [uvloop](https://github.com/MagicStack/uvloop)
-- [and more](https://github.com/cncrd/ekranoplan/blob/master/requirements.txt)
