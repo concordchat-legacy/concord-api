@@ -17,12 +17,8 @@ from .randoms import get_bucket
 from .tokens import verify_token
 
 
-def valid_session(token: str) -> User:
-    return verify_token(token=token)
-
-
 def validate_user(token: str, stop_bots: bool = False) -> User:
-    user = valid_session(token=token)
+    user = verify_token(token=token)
 
     if stop_bots:
         if user.bot:

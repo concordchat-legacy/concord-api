@@ -30,7 +30,7 @@ class CoreUsers(Controller):
 
         try:
             user: User = User.objects(User.id == user_id).get()
-        except (query.DoesNotExist):
+        except query.DoesNotExist:
             raise NotFound()
 
         ret = to_dict(user)
@@ -56,14 +56,14 @@ class CoreUsers(Controller):
         locale = str(data.get('locale') or 'EN_US')
         referrer = request.query.get('utm_source') or ''
 
-        if not isinstance(referrer, str) and not isinstance(referrer, list):
+        if not isinstance(referrer, str) and not isinstance(
+            referrer, list
+        ):
             referrer = str(referrer)
         elif isinstance(referrer, list):
             referrer = str(referrer[0])
 
-        if locale not in [
-            'EN_US'
-        ]:
+        if locale not in ['EN_US']:
             raise BadData()
 
         user: User = User.create(
@@ -84,8 +84,7 @@ class CoreUsers(Controller):
 
         resp = to_dict(user)
         resp['token'] = create_token(
-            user_id=user.id,
-            user_password=user.password
+            user_id=user.id, user_password=user.password
         )
 
         return jsonify(resp, 201)

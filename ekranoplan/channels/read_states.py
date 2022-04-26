@@ -134,9 +134,7 @@ class ReadStates(Controller):
     async def get_readstates(self, auth: AuthHeader):
         me = validate_user(auth.value, stop_bots=True)
 
-        _readstates = ReadState.objects(
-            ReadState.id == me.id
-        ).all()
+        _readstates = ReadState.objects(ReadState.id == me.id).all()
 
         readstates = []
 
