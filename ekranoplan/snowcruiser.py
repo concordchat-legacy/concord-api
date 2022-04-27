@@ -17,6 +17,9 @@ class SnowflakeFactory:
         epoch |= self._incrementation % 4096
 
         self._incrementation += 1
+        
+        if self._incrementation == 1000:
+            self._incrementation = 0
 
         return epoch
 
