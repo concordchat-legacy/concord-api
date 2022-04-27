@@ -5,18 +5,20 @@ import re
 import secrets
 import time
 from random import choice, randint
-from typing import List
+from typing import TYPE_CHECKING, List
 
 import bcrypt
 import dotenv
-from .snowcruiser import SnowflakeFactory
+
+if TYPE_CHECKING:
+    from .snowcruiser import SnowflakeFactory
 
 EPOCH = 1649325271415  # Epoch in Milliseconds
 # A bucket only lasts for 10 days, which lets us have partitions that are small and efficient
 BUCKET_SIZE = 1000 * 60 * 60 * 24 * 10
 dotenv.load_dotenv()
 
-_CURRENT_FACTORY: SnowflakeFactory = None
+_CURRENT_FACTORY: "SnowflakeFactory" = None
 
 
 WELCOME_MESSAGES: List[str] = [
@@ -35,6 +37,8 @@ def factory():
 
     if _CURRENT_FACTORY is not None:
         return _CURRENT_FACTORY
+
+    from .snowcruiser import SnowflakeFactory
 
     _CURRENT_FACTORY = SnowflakeFactory()
 
@@ -101,8 +105,10 @@ if __name__ == '__main__':
     '2124005656035328'
     '3617899005116416'
     '5796720099213312'
+    '7294043503133174'
 
     pwd = asyncio.run(get_hash('12345'))
     print(pwd)
     pwdd = asyncio.run(verify_hash(pwd, '12345'))
     print(pwdd)
+    print(code())

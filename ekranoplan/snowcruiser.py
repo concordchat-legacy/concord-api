@@ -14,7 +14,7 @@ class SnowflakeFactory:
         epoch |= threading.current_thread().ident << 17
         epoch |= os.getpid() << 12
 
-        epoch |= self._incrementation % 0xFFF
+        epoch |= self._incrementation % 4096
 
         self._incrementation += 1
 

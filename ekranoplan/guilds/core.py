@@ -175,6 +175,16 @@ class GuildsCore(Controller):
 
         return jsonify(to_dict(guild))
 
+    # @get('/guilds/{int:guild_id}/invites')
+    async def get_guild_invites(self, guild_id: int, auth: AuthHeader):
+        member, _ = validate_member(
+            token=auth.value,
+            guild_id=guild_id,
+            stop_bots=True
+        )
+
+        
+
     @put('/guilds/{int:guild_id}/vanity')
     async def claim_guild_vanity(
         self, guild_id: int, auth: AuthHeader, request: Request
