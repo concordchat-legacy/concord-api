@@ -1,39 +1,22 @@
 import asyncio
 import base64
-import os
 import random
 import re
 import secrets
-import threading
 import time
 from random import choice, randint
 from typing import List
 
 import bcrypt
 import dotenv
+from .snowcruiser import SnowflakeFactory
 
 EPOCH = 1649325271415  # Epoch in Milliseconds
 # A bucket only lasts for 10 days, which lets us have partitions that are small and efficient
 BUCKET_SIZE = 1000 * 60 * 60 * 24 * 10
 dotenv.load_dotenv()
 
-_COUNT = 0
-
-def snowflake() -> int:
-    global _COUNT
-    timestamp = int(time.time() * 1000)
-
-    ep = timestamp - EPOCH
-
-    sflake = ep
-
-    sflake |= (threading.current_thread().ident % 32) << 17
-    sflake |= (os.getpid() % 32) << 12
-    sflake |= (_COUNT % 4096)
-
-    _COUNT += 1
-
-    return sflake
+_CURRENT_FACTORY: SnowflakeFactory = None
 
 
 WELCOME_MESSAGES: List[str] = [
@@ -47,6 +30,15 @@ WELCOME_MESSAGES: List[str] = [
     '',
 ]
 
+def factory():
+    global _CURRENT_FACTORY
+
+    if _CURRENT_FACTORY is not None:
+        return _CURRENT_FACTORY
+
+    _CURRENT_FACTORY = SnowflakeFactory()
+
+    return _CURRENT_FACTORY
 
 def get_welcome_content(user_id: int) -> str:
     _msg = randint(0, len(WELCOME_MESSAGES))
@@ -109,13 +101,7 @@ if __name__ == '__main__':
     '2124005656035328'
     '3617899005116416'
     '5796720099213312'
-    # ID v2, somewhat shorter
-    '1711273369'
 
-    id = snowflake()
-    print(get_bucket(id))
-    print(id)
-    print(len(str(id)))
     pwd = asyncio.run(get_hash('12345'))
     print(pwd)
     pwdd = asyncio.run(verify_hash(pwd, '12345'))

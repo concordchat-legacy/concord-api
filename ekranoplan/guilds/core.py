@@ -15,7 +15,7 @@ from ..database import (
     to_dict,
 )
 from ..errors import BadData, Forbidden
-from ..randoms import get_bucket, get_welcome_content, snowflake
+from ..randoms import get_bucket, get_welcome_content, factory
 from ..redis_manager import guild_event
 from ..utils import AuthHeader, jsonify
 
@@ -32,7 +32,7 @@ class GuildsCore(Controller):
             raise BadData()
 
         data: dict = await request.json(orjson.loads)
-        guild_id = snowflake()
+        guild_id = factory().formulate()
         me_usertype = UserType(**dict(me.items()))
 
         inserted_data = {
@@ -51,7 +51,7 @@ class GuildsCore(Controller):
             'user': me_usertype,
         }
 
-        parent_id = snowflake()
+        parent_id = factory().formulate()
         default_category_channel = {
             'id': parent_id,
             'guild_id': guild_id,
@@ -60,7 +60,7 @@ class GuildsCore(Controller):
             'position': 0,
         }
 
-        text_channel = snowflake()
+        text_channel = factory().formulate()
         default_text_channel = {
             'id': text_channel,
             'guild_id': guild_id,

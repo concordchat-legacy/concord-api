@@ -8,7 +8,7 @@ from cassandra.cqlengine import query
 from ..checks import validate_user
 from ..database import SettingsType, User, to_dict
 from ..errors import BadData, NotFound
-from ..randoms import get_hash, snowflake
+from ..randoms import get_hash, factory
 from ..tokens import create_token
 from ..utils import AuthHeader, jsonify
 
@@ -65,7 +65,7 @@ class CoreUsers(Controller):
             raise BadData()
 
         user: User = User.create(
-            id=snowflake(),
+            id=factory().formulate(),
             username=username,
             discriminator=discrim,
             email=email,

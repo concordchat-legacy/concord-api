@@ -5,7 +5,7 @@ from blacksheep.server.controllers import Controller, delete, get, patch, post
 from ..checks import search_messages, validate_channel, verify_slowmode
 from ..database import GuildChannelPin, Message, ChannelSlowMode, _get_date, to_dict
 from ..errors import BadData, Forbidden
-from ..randoms import get_bucket, snowflake
+from ..randoms import get_bucket, factory
 from ..redis_manager import channel_event
 from ..utils import AuthHeader, jsonify
 
@@ -98,7 +98,7 @@ class GuildMessages(Controller):
             raise BadData()
 
         data = {
-            'id': snowflake(),
+            'id': factory().formulate(),
             'channel_id': channel_id,
             'bucket_id': get_bucket(channel_id),
             'guild_id': guild_id,

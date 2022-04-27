@@ -8,7 +8,7 @@ from blacksheep.server.controllers import Controller, post, put
 from ..checks import validate_admin
 from ..database import SettingsType, User, to_dict
 from ..errors import BadData
-from ..randoms import get_hash, snowflake
+from ..randoms import get_hash, factory
 from ..tokens import create_token
 from ..utils import AuthHeader, jsonify
 
@@ -43,7 +43,7 @@ class AdminUsers(Controller):
             raise KeyError()
 
         user: User = User.create(
-            id=snowflake(),
+            id=factory().formulate(),
             username=username,
             discriminator=discrim,
             email=email,

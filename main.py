@@ -18,7 +18,7 @@ from ekranoplan.database import Guild, GuildInvite, connect, to_dict
 from ekranoplan.errors import BadData, Err, NotFound
 from ekranoplan.guilds import guilds
 from ekranoplan.messages import guild_messages
-from ekranoplan.randoms import snowflake
+from ekranoplan.randoms import factory
 from ekranoplan.users import users
 from ekranoplan.utils import jsonify
 
@@ -35,7 +35,7 @@ dotenv.load_dotenv()
 
 @app.route('/auth/fingerprint')
 async def uuid():
-    return jsonify({'fingerprint': str(snowflake()) + '.' + secrets.token_urlsafe(16)})
+    return jsonify({'fingerprint': str(factory().formulate()) + '.' + secrets.token_urlsafe(16)})
 
 
 @app.route('/favicon.ico')

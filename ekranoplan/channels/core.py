@@ -12,9 +12,9 @@ from ..checks import (
 from ..database import Guild, GuildChannel, PermissionOverWrites, Role, to_dict
 from ..errors import BadData, Forbidden, NotFound
 from ..flags import GuildPermissions
-from ..randoms import snowflake
 from ..redis_manager import channel_event
 from ..utils import AuthHeader, jsonify
+from ..randoms import factory
 
 
 class ChannelCore(Controller):
@@ -75,7 +75,7 @@ class ChannelCore(Controller):
         name = str(data['name'])[:45].lower().replace(' ', '-')
 
         kwargs = {
-            'id': snowflake(),
+            'id': factory().formulate(),
             'guild_id': guild_id,
             'name': name,
             'topic': str(data.get('topic', ''))[:1024],
