@@ -21,5 +21,13 @@ class SnowflakeFactory:
         return epoch
 
 if __name__ == '__main__':
+    import gc
+    l = []
     f = SnowflakeFactory()
-    print(f.formulate())
+    while True:
+        sf = f.formulate()
+        if sf in l:
+            print(sf, ' was duplicated')
+            break
+        l.append(sf)
+        print(sf)
