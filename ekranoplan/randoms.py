@@ -11,20 +11,29 @@ from typing import List
 
 import bcrypt
 import dotenv
-import snowflake as winter
 
-EPOCH = 1649325271415  # Epoch is in GMT +8
+EPOCH = 1649325271415  # Epoch in Milliseconds
 # A bucket only lasts for 10 days, which lets us have partitions that are small and efficient
 BUCKET_SIZE = 1000 * 60 * 60 * 24 * 10
 dotenv.load_dotenv()
 
+_COUNT = 0
 
 def snowflake() -> int:
-    _generator_flake = winter.Generator(
-        EPOCH, os.getpid(), threading.current_thread().ident
-    )
-    result = _generator_flake.generate(round(time.time() * 1000))
-    return result._flake
+    global _COUNT
+    timestamp = int(time.time() * 1000)
+
+    ep = timestamp - EPOCH
+
+    sflake = ep
+
+    sflake |= (threading.current_thread().ident % 32) << 17
+    sflake |= (os.getpid() % 32) << 12
+    sflake |= (_COUNT % 4096)
+
+    _COUNT += 1
+
+    return sflake
 
 
 WELCOME_MESSAGES: List[str] = [
@@ -100,6 +109,8 @@ if __name__ == '__main__':
     '2124005656035328'
     '3617899005116416'
     '5796720099213312'
+    # ID v2, somewhat shorter
+    '1711273369'
 
     id = snowflake()
     print(get_bucket(id))
