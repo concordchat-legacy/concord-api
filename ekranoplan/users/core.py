@@ -108,6 +108,9 @@ class CoreUsers(Controller):
         if data.get('password'):
             me.password = str(data['password'])
 
+        if data.get('discriminator'):
+            me.discriminator = int(str(data['discriminator'])[:4])
+
         me = me.save()
 
         ret = to_dict(me)
