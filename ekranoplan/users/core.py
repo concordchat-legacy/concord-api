@@ -2,7 +2,7 @@ import random
 
 import orjson
 from blacksheep import Request
-from blacksheep.server.controllers import Controller, get, post
+from blacksheep.server.controllers import Controller, get, post, patch
 from cassandra.cqlengine import query
 
 from ..checks import validate_user
@@ -38,6 +38,9 @@ class CoreUsers(Controller):
         ret.pop('password')
         ret.pop('email')
         ret.pop('settings')
+
+        if user.bot:
+            ret['pronouns'] = 'Attack Helicopter'
 
         return jsonify(ret)
 
@@ -86,3 +89,27 @@ class CoreUsers(Controller):
         resp['token'] = create_token(user_id=user.id, user_password=user.password)
 
         return jsonify(resp, 201)
+
+    @patch('/users/@me')
+    async def edit_me(self, auth: AuthHeader, request: Request):
+        me = validate_user(auth.value, stop_bots=True)
+
+        data: dict = await request.json(orjson.loads)
+    
+        if data.get('username'):
+            me.username = str(data['username'])
+
+        if data.get('pronouns'):
+            me.pronouns = str(data['pronouns'])
+
+        if data.get('email'):
+            me.email = str(data['email'])
+
+        if data.get('password'):
+            me.password = str(data['password'])
+
+        me = me.save()
+
+        ret = to_dict(me)
+
+        return jsonify(ret)
