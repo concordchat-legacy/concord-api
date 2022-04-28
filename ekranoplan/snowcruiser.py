@@ -11,20 +11,19 @@ class SnowflakeFactory:
         current_ms = time.time_ns() // 1000000
         epoch = current_ms - self._epoch << 22
 
-        epoch |= threading.current_thread().ident << 17
-        epoch |= os.getpid() << 12
+        epoch |= (threading.current_thread().ident % 32) << 17
+        epoch |= (os.getpid() << 12 % 32)
 
         epoch |= self._incrementation % 4096
 
         self._incrementation += 1
         
-        if self._incrementation == 1000:
+        if self._incrementation == 30000:
             self._incrementation = 0
 
         return epoch
 
 if __name__ == '__main__':
-    import gc
     l = []
     f = SnowflakeFactory()
     while True:
