@@ -15,7 +15,7 @@ from ..database import (
     to_dict,
 )
 from ..errors import BadData, Forbidden
-from ..randoms import get_bucket, get_welcome_content, factory
+from ..randoms import factory, get_bucket, get_welcome_content
 from ..redis_manager import guild_event
 from ..utils import AuthHeader, jsonify
 
@@ -177,13 +177,7 @@ class GuildsCore(Controller):
 
     # @get('/guilds/{int:guild_id}/invites')
     async def get_guild_invites(self, guild_id: int, auth: AuthHeader):
-        member, _ = validate_member(
-            token=auth.value,
-            guild_id=guild_id,
-            stop_bots=True
-        )
-
-        
+        member, _ = validate_member(token=auth.value, guild_id=guild_id, stop_bots=True)
 
     @put('/guilds/{int:guild_id}/vanity')
     async def claim_guild_vanity(

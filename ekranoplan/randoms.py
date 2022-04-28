@@ -32,6 +32,7 @@ WELCOME_MESSAGES: List[str] = [
     '',
 ]
 
+
 def factory():
     global _CURRENT_FACTORY
 
@@ -43,6 +44,7 @@ def factory():
     _CURRENT_FACTORY = SnowflakeFactory()
 
     return _CURRENT_FACTORY
+
 
 def get_welcome_content(user_id: int) -> str:
     _msg = randint(0, len(WELCOME_MESSAGES))

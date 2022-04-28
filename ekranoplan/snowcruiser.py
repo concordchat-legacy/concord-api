@@ -1,6 +1,7 @@
-import time
 import os
 import threading
+import time
+
 
 class SnowflakeFactory:
     def __init__(self) -> None:
@@ -12,16 +13,17 @@ class SnowflakeFactory:
         epoch = current_ms - self._epoch << 22
 
         epoch |= (threading.current_thread().ident % 32) << 17
-        epoch |= (os.getpid() << 12 % 32)
+        epoch |= (os.getpid() % 32) << 12
 
         epoch |= self._incrementation % 4096
 
         self._incrementation += 1
-        
+
         if self._incrementation == 30000:
             self._incrementation = 0
 
         return epoch
+
 
 if __name__ == '__main__':
     l = []

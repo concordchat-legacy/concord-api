@@ -3,6 +3,7 @@ from typing import List, Union
 from cassandra.cqlengine import query
 
 from .database import (
+    ChannelSlowMode,
     Guild,
     GuildChannel,
     Member,
@@ -10,7 +11,6 @@ from .database import (
     PermissionOverWrites,
     Role,
     User,
-    ChannelSlowMode
 )
 from .errors import BadData, Conflict, Forbidden, NotFound
 from .flags import GuildPermissions, UserFlags
@@ -226,13 +226,13 @@ def verify_permission_overwrite(d: dict):
 
     return data
 
+
 def verify_slowmode(user_id: int, channel_id: int):
     try:
         ChannelSlowMode.objects(
-            ChannelSlowMode.id == user_id,
-            ChannelSlowMode.channel_id == channel_id
+            ChannelSlowMode.id == user_id, ChannelSlowMode.channel_id == channel_id
         ).get()
-    except(query.DoesNotExist):
+    except (query.DoesNotExist):
         ...
     else:
         raise Conflict()

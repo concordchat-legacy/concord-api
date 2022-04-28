@@ -84,7 +84,8 @@ class User(models.Model):
     verified = columns.Boolean(default=False)
     system = columns.Boolean(default=False)
     bot = columns.Boolean(default=False)
-    referrer = columns.Text()
+    referrer = columns.Text(default='')
+    pronouns = columns.Text(default='')
 
 
 class UserType(usertype.UserType):
@@ -194,10 +195,12 @@ class GuildChannel(models.Model):
     slowmode_timeout = columns.Integer(default=0)
     parent_id = columns.BigInt()
 
+
 class ChannelSlowMode(models.Model):
     __table_name__ = 'channelslowmode'
     id = columns.BigInt(primary_key=True, partition_key=True)
     channel_id = columns.BigInt(primary_key=True, partition_key=True)
+
 
 class GuildChannelPin(models.Model):
     __table_name__ = 'guildchannelspins'

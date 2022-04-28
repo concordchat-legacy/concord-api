@@ -35,7 +35,9 @@ dotenv.load_dotenv()
 
 @app.route('/auth/fingerprint')
 async def uuid():
-    return jsonify({'fingerprint': str(factory().formulate()) + '.' + secrets.token_urlsafe(16)})
+    return jsonify(
+        {'fingerprint': str(factory().formulate()) + '.' + secrets.token_urlsafe(16)}
+    )
 
 
 @app.route('/favicon.ico')

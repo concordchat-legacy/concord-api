@@ -8,7 +8,7 @@ from blacksheep.server.controllers import Controller, post, put
 from ..checks import validate_admin
 from ..database import SettingsType, User, to_dict
 from ..errors import BadData
-from ..randoms import get_hash, factory
+from ..randoms import factory, get_hash
 from ..tokens import create_token
 from ..utils import AuthHeader, jsonify
 

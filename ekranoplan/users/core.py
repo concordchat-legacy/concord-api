@@ -8,7 +8,7 @@ from cassandra.cqlengine import query
 from ..checks import validate_user
 from ..database import SettingsType, User, to_dict
 from ..errors import BadData, NotFound
-from ..randoms import get_hash, factory
+from ..randoms import factory, get_hash
 from ..tokens import create_token
 from ..utils import AuthHeader, jsonify
 
@@ -55,6 +55,7 @@ class CoreUsers(Controller):
         bio = str(data.get('bio')) or ''
         locale = str(data.get('locale') or 'en_US')
         referrer = request.query.get('utm_source') or ''
+        pronouns = str(data.get('pronouns') or '')
 
         if not isinstance(referrer, str) and not isinstance(referrer, list):
             referrer = str(referrer)
@@ -78,6 +79,7 @@ class CoreUsers(Controller):
                 accept_direct_messages=True,
             ),
             referrer=referrer,
+            pronouns=pronouns,
         )
 
         resp = to_dict(user)

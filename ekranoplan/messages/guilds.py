@@ -3,9 +3,9 @@ from blacksheep import Request
 from blacksheep.server.controllers import Controller, delete, get, patch, post
 
 from ..checks import search_messages, validate_channel, verify_slowmode
-from ..database import GuildChannelPin, Message, ChannelSlowMode, _get_date, to_dict
+from ..database import ChannelSlowMode, GuildChannelPin, Message, _get_date, to_dict
 from ..errors import BadData, Forbidden
-from ..randoms import get_bucket, factory
+from ..randoms import factory, get_bucket
 from ..redis_manager import channel_event
 from ..utils import AuthHeader, jsonify
 
@@ -119,8 +119,7 @@ class GuildMessages(Controller):
         )
 
         slowmode: ChannelSlowMode = ChannelSlowMode.create(
-            id=member.id,
-            channel_id=channel_id
+            id=member.id, channel_id=channel_id
         )
         slowmode.ttl(channel.slowmode_timeout)
 

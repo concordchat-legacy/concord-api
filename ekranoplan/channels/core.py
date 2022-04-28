@@ -12,9 +12,9 @@ from ..checks import (
 from ..database import Guild, GuildChannel, PermissionOverWrites, Role, to_dict
 from ..errors import BadData, Forbidden, NotFound
 from ..flags import GuildPermissions
+from ..randoms import factory
 from ..redis_manager import channel_event
 from ..utils import AuthHeader, jsonify
-from ..randoms import factory
 
 
 class ChannelCore(Controller):
