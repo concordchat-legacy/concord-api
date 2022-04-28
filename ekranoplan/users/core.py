@@ -45,7 +45,7 @@ class CoreUsers(Controller):
     async def register_user(self, request: Request):
         data: dict = await request.json(orjson.loads)
 
-        username = data['username']
+        username = data['username'][:40]
         # TODO: Implement this better
         discrim = random.randint(1, 9999)
         discrim = int('%04d' % discrim)
@@ -68,10 +68,10 @@ class CoreUsers(Controller):
             id=factory().formulate(),
             username=username,
             discriminator=discrim,
-            email=email,
+            email=email[:100],
             password=password,
             flags=flags,
-            bio=bio,
+            bio=bio[:4000],
             locale=locale,
             settings=SettingsType(
                 accept_friend_requests=True,
