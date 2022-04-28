@@ -8,7 +8,7 @@ from .database import User
 from .errors import Forbidden, Unauthorized
 
 
-def create_token(user_id: Union[int, str], user_password: str):
+def create_token(user_id: int, user_password: str) -> str:
     signer = itsdangerous.TimestampSigner(user_password)
     user_id = str(user_id)
     user_id = base64.b64encode(user_id.encode())
