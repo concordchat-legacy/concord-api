@@ -28,7 +28,7 @@ class GuildsCore(Controller):
 
         guilds = Member.objects(Member.id == me['id']).all()
 
-        if len(guilds) == 200:
+        if len(guilds) == 300:
             raise BadData()
 
         data: dict = await request.json(orjson.loads)
