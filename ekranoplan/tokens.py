@@ -1,6 +1,5 @@
 import base64
 import binascii
-from typing import Union
 
 import itsdangerous
 
