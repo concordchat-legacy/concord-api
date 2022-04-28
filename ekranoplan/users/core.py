@@ -53,7 +53,7 @@ class CoreUsers(Controller):
         password = await get_hash(data.pop('password'))
         flags = 1 << 0
         bio = str(data.get('bio')) or ''
-        locale = str(data.get('locale') or 'EN_US')
+        locale = str(data.get('locale') or 'en_US')
         referrer = request.query.get('utm_source') or ''
 
         if not isinstance(referrer, str) and not isinstance(referrer, list):
@@ -61,7 +61,7 @@ class CoreUsers(Controller):
         elif isinstance(referrer, list):
             referrer = str(referrer[0])
 
-        if locale not in ['EN_US']:
+        if locale not in ['en_US']:
             raise BadData()
 
         user: User = User.create(
