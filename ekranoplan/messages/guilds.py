@@ -72,6 +72,7 @@ class GuildMessages(Controller):
         request: Request,
         auth: AuthHeader,
     ):
+        # TODO: Attachments/Image Embeds
         member, _, channel, perms = validate_channel(
             token=auth.value,
             guild_id=guild_id,
