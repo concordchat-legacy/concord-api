@@ -7,7 +7,7 @@ from ..database import ChannelSlowMode, GuildChannelPin, Message, _get_date, to_
 from ..errors import BadData, Forbidden
 from ..randoms import factory, get_bucket
 from ..redis_manager import channel_event
-from ..utils import AuthHeader, jsonify
+from ..utils import AuthHeader, jsonify, NONMESSAGEABLE
 
 
 class GuildMessages(Controller):
@@ -21,12 +21,15 @@ class GuildMessages(Controller):
         message_id: int,
         auth: AuthHeader,
     ):
-        member, user, channel, perms = validate_channel(
+        _, _, channel, _ = validate_channel(
             token=auth.value,
             guild_id=guild_id,
             channel_id=channel_id,
             permission='read_message_history',
         )
+
+        if channel.type in NONMESSAGEABLE:
+            raise BadData()
 
         msg = search_messages(channel_id=channel.id, message_id=message_id)
 
@@ -42,12 +45,15 @@ class GuildMessages(Controller):
         auth: AuthHeader,
         request: Request,
     ):
-        member, user, channel, perms = validate_channel(
+        _, _, channel, _ = validate_channel(
             token=auth.value,
             guild_id=guild_id,
             channel_id=channel_id,
             permission='read_message_history',
         )
+
+        if channel.type in NONMESSAGEABLE:
+            raise BadData()
 
         limit = int(request.query.get('limit', '50'))
 
@@ -79,6 +85,9 @@ class GuildMessages(Controller):
             channel_id=channel_id,
             permission='send_messages',
         )
+
+        if channel.type in NONMESSAGEABLE:
+            raise BadData()
 
         verify_slowmode(member.id, channel.id)
 
@@ -137,12 +146,15 @@ class GuildMessages(Controller):
         auth: AuthHeader,
         request: Request,
     ):
-        member, user, channel, perms = validate_channel(
+        member, _, channel, _ = validate_channel(
             token=auth.value,
             guild_id=guild_id,
             channel_id=channel_id,
             permission=None,
         )
+
+        if channel.type in NONMESSAGEABLE:
+            raise BadData()
 
         msg = search_messages(channel_id=channel.id, message_id=message_id)
 
@@ -181,12 +193,15 @@ class GuildMessages(Controller):
         message_id: int,
         auth: AuthHeader,
     ):
-        member, user, channel, perms = validate_channel(
+        _, _, channel, _ = validate_channel(
             token=auth.value,
             guild_id=guild_id,
             channel_id=channel_id,
             permission='manage_messages',
         )
+
+        if channel.type in NONMESSAGEABLE:
+            raise BadData()
 
         msg = search_messages(channel_id=channel.id, message_id=message_id)
 
@@ -240,12 +255,15 @@ class GuildMessages(Controller):
         message_id: int,
         auth: AuthHeader,
     ):
-        member, user, channel, perms = validate_channel(
+        _, _, channel, _ = validate_channel(
             token=auth.value,
             guild_id=guild_id,
             channel_id=channel_id,
             permission='manage_channel_pins',
         )
+
+        if channel.type in NONMESSAGEABLE:
+            raise BadData()
 
         msg = search_messages(channel_id=channel.id, message_id=message_id)
 
@@ -290,12 +308,15 @@ class GuildMessages(Controller):
         message_id: int,
         auth: AuthHeader,
     ):
-        member, user, channel, perms = validate_channel(
+        _, _, channel, _ = validate_channel(
             token=auth.value,
             guild_id=guild_id,
             channel_id=channel_id,
             permission='manage_channel_pins',
         )
+
+        if channel.type in NONMESSAGEABLE:
+            raise BadData()
 
         msg = search_messages(channel_id=channel.id, message_id=message_id)
 

@@ -180,7 +180,7 @@ class GuildsCore(Controller):
 
     @get('/guilds/{int:guild_id}')
     async def get_guild(self, guild_id: int, auth: AuthHeader):
-        member, user = validate_member(
+        member, _ = validate_member(
             token=auth.value,
             guild_id=guild_id,
         )
@@ -189,15 +189,23 @@ class GuildsCore(Controller):
 
         return jsonify(to_dict(guild))
 
-    # @get('/guilds/{int:guild_id}/invites')
+    @get('/guilds/{int:guild_id}/invites')
     async def get_guild_invites(self, guild_id: int, auth: AuthHeader):
-        member, _ = validate_member(token=auth.value, guild_id=guild_id, stop_bots=True)
+        validate_member(token=auth.value, guild_id=guild_id, stop_bots=True)
+
+        _guild_invites = GuildInvite.objects(GuildInvite.guild_id == guild_id).allow_filtering().all()
+        guild_invites = []
+
+        for invite in _guild_invites:
+            guild_invites.append(to_dict(invite))
+    
+        return jsonify(guild_invites)
 
     @put('/guilds/{int:guild_id}/vanity')
     async def claim_guild_vanity(
         self, guild_id: int, auth: AuthHeader, request: Request
     ):
-        member, user = validate_member(
+        member, _ = validate_member(
             token=auth.value, guild_id=guild_id, stop_bots=True
         )
 

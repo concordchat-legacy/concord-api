@@ -2,20 +2,20 @@ from blacksheep.server.controllers import Controller, get, post
 from cassandra.cqlengine.query import DoesNotExist
 
 from ..checks import search_messages, validate_channel, validate_user
-from ..database import Channel, ReadState, to_dict
+from ..database import GuildChannel, ReadState, to_dict
 from ..errors import BadData, NotFound
-from ..utils import AuthHeader, jsonify
+from ..utils import NONMESSAGEABLE, AuthHeader, jsonify
 
 
 class ReadStates(Controller):
     @post(
-        '/channels/{int:channel_id}/messages/{int:message_id}/ack',
+        '/guilds/{int:guild_id}/channels/{int:channel_id}/messages/{int:message_id}/ack',
     )
-    async def ack_message(self, channel_id: int, message_id: int, auth: AuthHeader):
+    async def ack_message(self, guild_id: int, channel_id: int, message_id: int, auth: AuthHeader):
         user_id = validate_user(auth.value, stop_bots=True).id
 
         try:
-            Channel.objects(Channel.id == channel_id).get()
+            GuildChannel.objects(GuildChannel.id == channel_id, GuildChannel.guild_id == guild_id).get()
         except (DoesNotExist):
             raise NotFound()
 
@@ -40,13 +40,16 @@ class ReadStates(Controller):
 
         return jsonify(to_dict(read_state))
 
-    @get('/channels/{int:channel_id}/readstate')
-    async def get_channel_read_state(self, channel_id: int, auth: AuthHeader):
+    @get('/guilds/{int:guild_id}/channels/{int:channel_id}/readstate')
+    async def get_channel_read_state(self, guild_id: int, channel_id: int, auth: AuthHeader):
         user_id = validate_user(auth.value, stop_bots=True).id
 
         try:
-            Channel.objects(Channel.id == channel_id).get()
+            channel: GuildChannel = GuildChannel.objects(GuildChannel.id == channel_id, GuildChannel.guild_id == guild_id).get()
         except (DoesNotExist):
+            raise BadData()
+
+        if channel.type in NONMESSAGEABLE:
             raise BadData()
 
         try:
@@ -69,13 +72,16 @@ class ReadStates(Controller):
         message_id: int,
         auth: AuthHeader,
     ):
-        member, user, channel, perms = validate_channel(
+        _, user, channel, _ = validate_channel(
             token=auth.value,
             guild_id=guild_id,
             channel_id=channel_id,
             permission='read_message_history',
             stop_bots=True,
         )
+
+        if channel.type in NONMESSAGEABLE:
+            raise BadData()
 
         message = search_messages(channel_id=channel_id, message_id=message_id)
 
@@ -104,13 +110,16 @@ class ReadStates(Controller):
     async def get_guild_channel_read_state(
         self, guild_id: int, channel_id: int, auth: AuthHeader
     ):
-        member, user, channel, perms = validate_channel(
+        _, user, channel, _ = validate_channel(
             token=auth.value,
             guild_id=guild_id,
             channel_id=channel_id,
             permission='read_message_history',
             stop_bots=True,
         )
+
+        if channel.type in NONMESSAGEABLE:
+            raise BadData()
 
         try:
             obj = ReadState.objects(

@@ -220,8 +220,8 @@ def verify_channel_position(pos: int, guild_id: int):
 def verify_permission_overwrite(d: dict):
     data = {
         'id': d['id'],
-        'allow': d['allow'],
-        'deny': d['deny'],
+        'allow': d['allow'] if d['allow'] is not None else '0',
+        'deny': d['deny'] if d['deny'] is not None else '0',
     }
 
     return data
