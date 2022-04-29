@@ -206,6 +206,9 @@ async def verify_channel_position(pos: int, current_pos: int, guild_id: int):
         GuildChannel.guild_id == guild_id
     ).all()
 
+    if len(guild_channels) + 1 < pos:
+        raise BadData()
+
     guild_channels_ = []
 
     for channel in guild_channels:
