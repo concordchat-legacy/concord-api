@@ -76,20 +76,24 @@ async def _bad_data(*args):
     b = BadData()
     r = b._to_json()
     r.status = 400
+    print(*args)
     return r
 
 
 async def _default_error_handler(app, req, err: Err):
     r = err._to_json()
     r.status = err.resp_type
+    print(err)
     return r
 
 
 async def _internal_server_err(*args):
+    print(*args)
     return jsonify({'code': 0, 'message': '500: Internal Server Error'}, 500)
 
 
 async def _not_found(*args):
+    print(*args)
     return jsonify({'code': 0, 'message': '404: Not Found'}, 404)
 
 

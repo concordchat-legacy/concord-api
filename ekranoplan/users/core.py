@@ -1,9 +1,12 @@
+import uuid
 import random
 
 import orjson
+import datauri
 from blacksheep import Request
 from blacksheep.server.controllers import Controller, get, post, patch
 from cassandra.cqlengine import query
+from io import BytesIO
 
 from ..checks import validate_user
 from ..database import SettingsType, User, to_dict
@@ -11,7 +14,7 @@ from ..errors import BadData, NotFound
 from ..randoms import factory, get_hash
 from ..tokens import create_token
 from ..utils import AuthHeader, jsonify
-
+from ..valkyrie import upload
 
 class CoreUsers(Controller):
     @get('/users/@me')
@@ -40,7 +43,11 @@ class CoreUsers(Controller):
         ret.pop('settings')
 
         if user.bot:
-            ret['pronouns'] = 'Attack Helicopter'
+            ret['pronouns'] = 'Attack Helicopter/AttkHeli'
+
+        if user.locale == 'EN_US':
+            user.locale = 'en_US'
+            user.save()
 
         return jsonify(ret)
 
@@ -68,6 +75,45 @@ class CoreUsers(Controller):
         if locale not in ['en_US']:
             raise BadData()
 
+        pfp_id = ''
+        banner_id = ''
+
+        if data.get('avatar'):
+            duri = datauri.DataURI(data.pop('avatar'))
+            
+            if not str(duri.mimetype.startswith('image/')) or str(duri.mimetype) not in [
+                'image/png',
+                'image/jpeg',
+                'image/gif'
+            ]:
+                ...
+            else:
+                pfp_id = str(uuid.uuid1()) + '.' + duri.mimetype.split('/')[1]
+                upload(
+                    pfp_id,
+                    'users',
+                    BytesIO(duri.data),
+                    str(duri.mimetype)
+                )
+
+        if data.get('banner'):
+            duri = datauri.DataURI(data.pop('banner'))
+
+            if not str(duri.mimetype.startswith('image/')) or str(duri.mimetype) not in [
+                'image/png',
+                'image/jpeg',
+                'image/gif'
+            ]:
+                ...
+            else:
+                banner_id = str(uuid.uuid1()) + '.' + duri.mimetype.split('/')[1]
+                upload(
+                    banner_id,
+                    'users',
+                    BytesIO(duri.data),
+                    str(duri.mimetype)
+                )
+
         user: User = User.create(
             id=factory().formulate(),
             username=username,
@@ -83,15 +129,19 @@ class CoreUsers(Controller):
             ),
             referrer=referrer,
             pronouns=pronouns,
+            avatar=pfp_id,
+            banner=banner_id
         )
 
         resp = to_dict(user)
         resp['token'] = create_token(user_id=user.id, user_password=user.password)
+        resp.pop('password')
 
         return jsonify(resp, 201)
 
     @patch('/users/@me')
     async def edit_me(self, auth: AuthHeader, request: Request):
+        # TODO: Edit Avatar and Banner
         me = validate_user(auth.value, stop_bots=True)
 
         data: dict = await request.json(orjson.loads)
@@ -111,8 +161,47 @@ class CoreUsers(Controller):
         if data.get('discriminator'):
             me.discriminator = int(str(data['discriminator'])[:4])
 
+        if data.get('avatar'):
+            duri = datauri.DataURI(data.pop('avatar'))
+            
+            if not str(duri.mimetype.startswith('image/')) or str(duri.mimetype) not in [
+                'image/png',
+                'image/jpeg',
+                'image/gif'
+            ]:
+                ...
+            else:
+                pfp_id = str(uuid.uuid1()) + '.' + duri.mimetype.split('/')[1]
+                upload(
+                    pfp_id,
+                    'users',
+                    BytesIO(duri.data),
+                    str(duri.mimetype)
+                )
+                me.avatar = pfp_id
+
+        if data.get('banner'):
+            duri = datauri.DataURI(data.pop('banner'))
+
+            if not str(duri.mimetype.startswith('image/')) or str(duri.mimetype) not in [
+                'image/png',
+                'image/jpeg',
+                'image/gif'
+            ]:
+                ...
+            else:
+                banner_id = str(uuid.uuid1()) + '.' + duri.mimetype.split('/')[1]
+                upload(
+                    banner_id,
+                    'users',
+                    BytesIO(duri.data),
+                    str(duri.mimetype)
+                )
+                me.banner = banner_id
+
         me = me.save()
 
         ret = to_dict(me)
+        ret.pop('password')
 
         return jsonify(ret)

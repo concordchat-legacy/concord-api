@@ -31,5 +31,5 @@ if os.name != 'nt':
 else:
     os.system(
         f'uvicorn --host 0.0.0.0 --port {os.getenv("PORT", "5000")} --backlog 20000 '
-        '--no-server-header --workers 30 --use-colors --access-log --log-level debug main:app'
+        '--no-server-header --workers 1 --use-colors --access-log --log-level debug main:app'
     )
