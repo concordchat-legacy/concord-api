@@ -70,7 +70,7 @@ class ChannelCore(Controller):
         else:
             pid = 0
 
-        position = int(data.get('position'))
+        position = int(data.get('position') or -0)
 
         if pid != 0:
             pos_pos = get_cat_channels(parent, True)
