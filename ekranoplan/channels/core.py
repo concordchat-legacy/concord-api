@@ -8,6 +8,7 @@ from ..checks import (
     verify_channel_position,
     verify_parent_id,
     verify_permission_overwrite,
+    delete_channel
 )
 from ..database import Guild, GuildChannel, PermissionOverWrites, Role, to_dict
 from ..errors import BadData, Forbidden, NotFound
@@ -107,7 +108,7 @@ class ChannelCore(Controller):
             permission='manage_channels',
         )
 
-        channel.delete()
+        delete_channel(channel=channel)
 
         await channel_event(
             'DELETE',

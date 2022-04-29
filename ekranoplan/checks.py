@@ -151,7 +151,7 @@ def search_messages(
     current_bucket = get_bucket(channel_id)
     collected_messages = []
     if message_id is None:
-        for bucket in range(current_bucket):
+        for bucket in range(current_bucket + 1):
             msgs = (
                 Message.objects(
                     Message.channel_id == channel_id,
@@ -171,7 +171,7 @@ def search_messages(
 
         return collected_messages
     else:
-        for bucket in range(current_bucket):
+        for bucket in range(current_bucket + 1):
             pmsg = Message.objects(
                 Message.id == message_id,
                 Message.channel_id == channel_id,
@@ -236,3 +236,25 @@ def verify_slowmode(user_id: int, channel_id: int):
         ...
     else:
         raise Conflict()
+
+def delete_channel(channel: GuildChannel):
+    if channel.type in [ 1 ]:
+        highest_bucket = get_bucket(channel.id)
+
+        for bucket in range(highest_bucket + 1):
+            msgs: List[Message] = Message.objects(
+                Message.channel_id == channel.id,
+                Message.bucket_id == bucket
+            ).all()
+
+            for msg in msgs:
+                 msg.delete()
+    channel.delete()
+
+def delete_all_channels(guild_id: int):
+    channels: List[GuildChannel] = GuildChannel.objects(
+        GuildChannel.guild_id == guild_id
+    ).all()
+
+    for channel in channels:
+        delete_channel(channel)

@@ -4,7 +4,7 @@ import orjson
 from blacksheep import Request
 from blacksheep.server.controllers import Controller, delete, get, patch, post, put
 
-from ..checks import get_member_permissions, validate_member, validate_user
+from ..checks import delete_all_channels, get_member_permissions, validate_member, validate_user
 from ..database import (
     Guild,
     GuildChannel,
@@ -12,6 +12,7 @@ from ..database import (
     Member,
     Message,
     UserType,
+    Role,
     to_dict,
 )
 from ..errors import BadData, Forbidden
@@ -141,7 +142,7 @@ class GuildsCore(Controller):
 
     @delete('/guilds/{int:guild_id}')
     async def delete_guild(self, guild_id: int, auth: AuthHeader):
-        member, user = validate_member(
+        member, _ = validate_member(
             token=auth.value, guild_id=guild_id, stop_bots=True
         )
 
@@ -159,6 +160,19 @@ class GuildsCore(Controller):
 
         for member in members:
             member.delete()
+
+        delete_all_channels(guild_id=guild_id)
+
+        # this isn't too efficient but theres not much else i can do
+        filter = GuildInvite.objects(GuildInvite.guild_id == guild_id).allow_filtering().all()
+
+        for obj in filter:
+            obj.delete()
+
+        roles = Role.objects(Role.guild_id == guild_id).all()
+
+        for role in roles:
+            role.delete()
 
         await guild_event('DELETE', guild_id=guild_id, data={'guild_id': guild.id})
 
