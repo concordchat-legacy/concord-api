@@ -11,11 +11,15 @@ class ReadStates(Controller):
     @post(
         '/guilds/{int:guild_id}/channels/{int:channel_id}/messages/{int:message_id}/ack',
     )
-    async def ack_message(self, guild_id: int, channel_id: int, message_id: int, auth: AuthHeader):
+    async def ack_message(
+        self, guild_id: int, channel_id: int, message_id: int, auth: AuthHeader
+    ):
         user_id = validate_user(auth.value, stop_bots=True).id
 
         try:
-            GuildChannel.objects(GuildChannel.id == channel_id, GuildChannel.guild_id == guild_id).get()
+            GuildChannel.objects(
+                GuildChannel.id == channel_id, GuildChannel.guild_id == guild_id
+            ).get()
         except (DoesNotExist):
             raise NotFound()
 
@@ -41,11 +45,15 @@ class ReadStates(Controller):
         return jsonify(to_dict(read_state))
 
     @get('/guilds/{int:guild_id}/channels/{int:channel_id}/readstate')
-    async def get_channel_read_state(self, guild_id: int, channel_id: int, auth: AuthHeader):
+    async def get_channel_read_state(
+        self, guild_id: int, channel_id: int, auth: AuthHeader
+    ):
         user_id = validate_user(auth.value, stop_bots=True).id
 
         try:
-            channel: GuildChannel = GuildChannel.objects(GuildChannel.id == channel_id, GuildChannel.guild_id == guild_id).get()
+            channel: GuildChannel = GuildChannel.objects(
+                GuildChannel.id == channel_id, GuildChannel.guild_id == guild_id
+            ).get()
         except (DoesNotExist):
             raise BadData()
 

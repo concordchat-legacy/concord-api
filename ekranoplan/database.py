@@ -138,6 +138,7 @@ class Guild(models.Model):
     permissions = columns.BigInt(default=default_permissions)
     splash = columns.Text(default='')
     features = columns.Set(columns.Text)
+    verified = columns.Boolean(default=False)
 
 
 class GuildInvite(models.Model):
@@ -250,7 +251,15 @@ class Embed(usertype.UserType):
 class Reaction(usertype.UserType):
     count = columns.Integer()
     # TODO: Implement Emojis
-    emoji = columns.Text()
+    emoji_id = columns.BigInt()
+
+
+class Emoji(models.Model):
+    __table_name__ = 'emojis'
+    __options__ = default_options
+    id = columns.BigInt(primary_key=True, partition_key=False)
+    guild_id = columns.BigInt(primary_key=True, partition_key=True)
+    cdn_url = columns.Text()
 
 
 class Message(models.Model):
@@ -348,3 +357,4 @@ if __name__ == '__main__':
     management.sync_table(Message)
     management.sync_table(ReadState)
     management.sync_table(Role)
+    management.sync_table(Emoji)

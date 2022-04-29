@@ -1,9 +1,10 @@
 import orjson
 from blacksheep import Content, FromHeader, Response
 
-NONMESSAGEABLE = [ 0 ]
-MESSAGEABLE = [ 1 ]
-CHANNEL_TYPES = [ 0, 1 ]
+NONMESSAGEABLE = [0]
+MESSAGEABLE = [1]
+CHANNEL_TYPES = [0, 1]
+
 
 class AuthHeader(FromHeader[str]):
     name = 'Authorization'

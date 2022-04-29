@@ -16,8 +16,8 @@ from .database import (
 from .errors import BadData, Conflict, Forbidden, NotFound
 from .flags import GuildPermissions, UserFlags
 from .randoms import get_bucket
-from .tokens import verify_token
 from .redis_manager import channel_event
+from .tokens import verify_token
 
 
 def validate_user(token: str, stop_bots: bool = False) -> User:
@@ -219,7 +219,9 @@ async def verify_channel_position(pos: int, current_pos: int, guild_id: int):
     left_shift = pos > current_pos
 
     shift_block = (
-        guild_channels[current_pos:pos] if left_shift else guild_channels[pos:current_pos]
+        guild_channels[current_pos:pos]
+        if left_shift
+        else guild_channels[pos:current_pos]
     )
 
     shift = -1 if left_shift else 1
@@ -228,16 +230,14 @@ async def verify_channel_position(pos: int, current_pos: int, guild_id: int):
         channel.position = channel.position + shift
         channel.save()
         await channel_event(
-            'UPDATE',
-            to_dict(channel),
-            to_dict(channel),
-            guild_id=guild_id
+            'UPDATE', to_dict(channel), to_dict(channel), guild_id=guild_id
         )
+
 
 def get_cat_channels(category: GuildChannel, _add_one: bool = False):
     channels: List[GuildChannel] = GuildChannel.objects(
         GuildChannel.guild_id == category.guild_id,
-        GuildChannel.parent_id == category.id
+        GuildChannel.parent_id == category.id,
     )
 
     ret = []
@@ -249,6 +249,7 @@ def get_cat_channels(category: GuildChannel, _add_one: bool = False):
         ret.append(None)
 
     return ret
+
 
 def verify_permission_overwrite(d: dict):
     data = {
@@ -270,19 +271,20 @@ def verify_slowmode(user_id: int, channel_id: int):
     else:
         raise Conflict()
 
+
 def delete_channel(channel: GuildChannel):
-    if channel.type in [ 1 ]:
+    if channel.type in [1]:
         highest_bucket = get_bucket(channel.id)
 
         for bucket in range(highest_bucket + 1):
             msgs: List[Message] = Message.objects(
-                Message.channel_id == channel.id,
-                Message.bucket_id == bucket
+                Message.channel_id == channel.id, Message.bucket_id == bucket
             ).all()
 
             for msg in msgs:
-                 msg.delete()
+                msg.delete()
     channel.delete()
+
 
 def delete_all_channels(guild_id: int):
     channels: List[GuildChannel] = GuildChannel.objects(

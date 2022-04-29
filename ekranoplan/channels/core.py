@@ -3,12 +3,12 @@ from blacksheep import Request
 from blacksheep.server.controllers import Controller, delete, get, patch, post
 
 from ..checks import (
+    delete_channel,
     validate_channel,
     validate_member,
     verify_channel_position,
     verify_parent_id,
     verify_permission_overwrite,
-    delete_channel
 )
 from ..database import Guild, GuildChannel, PermissionOverWrites, Role, to_dict
 from ..errors import BadData, Forbidden, NotFound
@@ -75,15 +75,9 @@ class ChannelCore(Controller):
         if chek.startswith('-'):
             raise BadData()
 
-        channels = GuildChannel.objects(
-            GuildChannel.guild_id == guild_id
-        ).all()
+        channels = GuildChannel.objects(GuildChannel.guild_id == guild_id).all()
 
-        await verify_channel_position(
-            position,
-            len(channels),
-            guild_id=guild_id
-        )
+        await verify_channel_position(position, len(channels), guild_id=guild_id)
 
         name = str(data['name'])[:45].lower().replace(' ', '-')
 
@@ -147,7 +141,9 @@ class ChannelCore(Controller):
             channel.name = str(data.pop('name'))[:45]
 
         if data.get('position'):
-            await verify_channel_position(int(data.pop('position')), channel.position, guild_id=guild_id)
+            await verify_channel_position(
+                int(data.pop('position')), channel.position, guild_id=guild_id
+            )
             channel.position = int(data.pop('position'))
 
         if data.get('permission_overwrites'):

@@ -1,12 +1,12 @@
-import uuid
 import random
-
-import orjson
-import datauri
-from blacksheep import Request
-from blacksheep.server.controllers import Controller, get, post, patch
-from cassandra.cqlengine import query
+import uuid
 from io import BytesIO
+
+import datauri
+import orjson
+from blacksheep import Request
+from blacksheep.server.controllers import Controller, get, patch, post
+from cassandra.cqlengine import query
 
 from ..checks import validate_user
 from ..database import SettingsType, User, to_dict
@@ -15,6 +15,7 @@ from ..randoms import factory, get_hash
 from ..tokens import create_token
 from ..utils import AuthHeader, jsonify
 from ..valkyrie import upload
+
 
 class CoreUsers(Controller):
     @get('/users/@me')
@@ -80,39 +81,25 @@ class CoreUsers(Controller):
 
         if data.get('avatar'):
             duri = datauri.DataURI(data.pop('avatar'))
-            
-            if not str(duri.mimetype.startswith('image/')) or str(duri.mimetype) not in [
-                'image/png',
-                'image/jpeg',
-                'image/gif'
-            ]:
+
+            if not str(duri.mimetype.startswith('image/')) or str(
+                duri.mimetype
+            ) not in ['image/png', 'image/jpeg', 'image/gif']:
                 ...
             else:
                 pfp_id = str(uuid.uuid1()) + '.' + duri.mimetype.split('/')[1]
-                upload(
-                    pfp_id,
-                    'users',
-                    BytesIO(duri.data),
-                    str(duri.mimetype)
-                )
+                upload(pfp_id, 'users', BytesIO(duri.data), str(duri.mimetype))
 
         if data.get('banner'):
             duri = datauri.DataURI(data.pop('banner'))
 
-            if not str(duri.mimetype.startswith('image/')) or str(duri.mimetype) not in [
-                'image/png',
-                'image/jpeg',
-                'image/gif'
-            ]:
+            if not str(duri.mimetype.startswith('image/')) or str(
+                duri.mimetype
+            ) not in ['image/png', 'image/jpeg', 'image/gif']:
                 ...
             else:
                 banner_id = str(uuid.uuid1()) + '.' + duri.mimetype.split('/')[1]
-                upload(
-                    banner_id,
-                    'users',
-                    BytesIO(duri.data),
-                    str(duri.mimetype)
-                )
+                upload(banner_id, 'users', BytesIO(duri.data), str(duri.mimetype))
 
         user: User = User.create(
             id=factory().formulate(),
@@ -130,7 +117,7 @@ class CoreUsers(Controller):
             referrer=referrer,
             pronouns=pronouns,
             avatar=pfp_id,
-            banner=banner_id
+            banner=banner_id,
         )
 
         resp = to_dict(user)
@@ -145,7 +132,7 @@ class CoreUsers(Controller):
         me = validate_user(auth.value, stop_bots=True)
 
         data: dict = await request.json(orjson.loads)
-    
+
         if data.get('username'):
             me.username = str(data['username'])
 
@@ -163,40 +150,26 @@ class CoreUsers(Controller):
 
         if data.get('avatar'):
             duri = datauri.DataURI(data.pop('avatar'))
-            
-            if not str(duri.mimetype.startswith('image/')) or str(duri.mimetype) not in [
-                'image/png',
-                'image/jpeg',
-                'image/gif'
-            ]:
+
+            if not str(duri.mimetype.startswith('image/')) or str(
+                duri.mimetype
+            ) not in ['image/png', 'image/jpeg', 'image/gif']:
                 ...
             else:
                 pfp_id = str(uuid.uuid1()) + '.' + duri.mimetype.split('/')[1]
-                upload(
-                    pfp_id,
-                    'users',
-                    BytesIO(duri.data),
-                    str(duri.mimetype)
-                )
+                upload(pfp_id, 'users', BytesIO(duri.data), str(duri.mimetype))
                 me.avatar = pfp_id
 
         if data.get('banner'):
             duri = datauri.DataURI(data.pop('banner'))
 
-            if not str(duri.mimetype.startswith('image/')) or str(duri.mimetype) not in [
-                'image/png',
-                'image/jpeg',
-                'image/gif'
-            ]:
+            if not str(duri.mimetype.startswith('image/')) or str(
+                duri.mimetype
+            ) not in ['image/png', 'image/jpeg', 'image/gif']:
                 ...
             else:
                 banner_id = str(uuid.uuid1()) + '.' + duri.mimetype.split('/')[1]
-                upload(
-                    banner_id,
-                    'users',
-                    BytesIO(duri.data),
-                    str(duri.mimetype)
-                )
+                upload(banner_id, 'users', BytesIO(duri.data), str(duri.mimetype))
                 me.banner = banner_id
 
         me = me.save()

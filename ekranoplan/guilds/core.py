@@ -4,15 +4,20 @@ import orjson
 from blacksheep import Request
 from blacksheep.server.controllers import Controller, delete, get, patch, post, put
 
-from ..checks import delete_all_channels, get_member_permissions, validate_member, validate_user
+from ..checks import (
+    delete_all_channels,
+    get_member_permissions,
+    validate_member,
+    validate_user,
+)
 from ..database import (
     Guild,
     GuildChannel,
     GuildInvite,
     Member,
     Message,
-    UserType,
     Role,
+    UserType,
     to_dict,
 )
 from ..errors import BadData, Forbidden
@@ -142,9 +147,7 @@ class GuildsCore(Controller):
 
     @delete('/guilds/{int:guild_id}')
     async def delete_guild(self, guild_id: int, auth: AuthHeader):
-        member, _ = validate_member(
-            token=auth.value, guild_id=guild_id, stop_bots=True
-        )
+        member, _ = validate_member(token=auth.value, guild_id=guild_id, stop_bots=True)
 
         if not member.owner:
             raise Forbidden()
@@ -164,7 +167,11 @@ class GuildsCore(Controller):
         delete_all_channels(guild_id=guild_id)
 
         # this isn't too efficient but theres not much else i can do
-        filter = GuildInvite.objects(GuildInvite.guild_id == guild_id).allow_filtering().all()
+        filter = (
+            GuildInvite.objects(GuildInvite.guild_id == guild_id)
+            .allow_filtering()
+            .all()
+        )
 
         for obj in filter:
             obj.delete()
@@ -193,21 +200,23 @@ class GuildsCore(Controller):
     async def get_guild_invites(self, guild_id: int, auth: AuthHeader):
         validate_member(token=auth.value, guild_id=guild_id, stop_bots=True)
 
-        _guild_invites = GuildInvite.objects(GuildInvite.guild_id == guild_id).allow_filtering().all()
+        _guild_invites = (
+            GuildInvite.objects(GuildInvite.guild_id == guild_id)
+            .allow_filtering()
+            .all()
+        )
         guild_invites = []
 
         for invite in _guild_invites:
             guild_invites.append(to_dict(invite))
-    
+
         return jsonify(guild_invites)
 
     @put('/guilds/{int:guild_id}/vanity')
     async def claim_guild_vanity(
         self, guild_id: int, auth: AuthHeader, request: Request
     ):
-        member, _ = validate_member(
-            token=auth.value, guild_id=guild_id, stop_bots=True
-        )
+        member, _ = validate_member(token=auth.value, guild_id=guild_id, stop_bots=True)
 
         perms = get_member_permissions(member=member)
 

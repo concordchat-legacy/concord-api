@@ -7,7 +7,7 @@ from ..database import ChannelSlowMode, GuildChannelPin, Message, _get_date, to_
 from ..errors import BadData, Forbidden
 from ..randoms import factory, get_bucket
 from ..redis_manager import channel_event
-from ..utils import AuthHeader, jsonify, NONMESSAGEABLE
+from ..utils import NONMESSAGEABLE, AuthHeader, jsonify
 
 
 class GuildMessages(Controller):
