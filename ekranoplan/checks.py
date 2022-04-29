@@ -11,11 +11,13 @@ from .database import (
     PermissionOverWrites,
     Role,
     User,
+    to_dict,
 )
 from .errors import BadData, Conflict, Forbidden, NotFound
 from .flags import GuildPermissions, UserFlags
 from .randoms import get_bucket
 from .tokens import verify_token
+from .redis_manager import channel_event
 
 
 def validate_user(token: str, stop_bots: bool = False) -> User:
@@ -199,29 +201,57 @@ def verify_parent_id(parent: int, guild_id: int) -> GuildChannel:
     return channel
 
 
-def verify_channel_position(pos: int, guild_id: int):
+async def verify_channel_position(pos: int, current_pos: int, guild_id: int):
     guild_channels: List[GuildChannel] = GuildChannel.objects(
         GuildChannel.guild_id == guild_id
     ).all()
 
-    highest_pos = 0
+    guild_channels_ = []
+
     for channel in guild_channels:
-        if channel.position > highest_pos:
-            highest_pos = channel.position
+        guild_channels_.insert(channel.position, channel)
 
-    if pos != highest_pos + 1:
-        # this might be prone to error...
-        raise BadData()
+    guild_channels = guild_channels_
 
-    del highest_pos
-    del guild_channels
+    left_shift = pos > current_pos
 
+    shift_block = (
+        guild_channels[current_pos:pos] if left_shift else guild_channels[pos:current_pos]
+    )
+
+    shift = -1 if left_shift else 1
+
+    for channel in shift_block:
+        channel.position = channel.position + shift
+        channel.save()
+        await channel_event(
+            'UPDATE',
+            to_dict(channel),
+            to_dict(channel),
+            guild_id=guild_id
+        )
+
+def get_cat_channels(category: GuildChannel, _add_one: bool = False):
+    channels: List[GuildChannel] = GuildChannel.objects(
+        GuildChannel.guild_id == category.guild_id,
+        GuildChannel.parent_id == category.id
+    )
+
+    ret = []
+
+    for channel in channels:
+        ret.insert(channel.position, channel)
+
+    if _add_one:
+        ret.append(None)
+
+    return ret
 
 def verify_permission_overwrite(d: dict):
     data = {
         'id': d['id'],
-        'allow': d['allow'] if d['allow'] is not None else '0',
-        'deny': d['deny'] if d['deny'] is not None else '0',
+        'allow': str(d['allow']) if d['allow'] is not None else '0',
+        'deny': str(d['deny']) if d['deny'] is not None else '0',
     }
 
     return data

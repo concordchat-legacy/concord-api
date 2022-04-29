@@ -19,7 +19,7 @@ class SnowflakeFactory:
 
         self._incrementation += 1
 
-        if self._incrementation == 30000:
+        if self._incrementation == 50000:
             self._incrementation = 0
 
         return epoch

@@ -8,7 +8,8 @@ from ..checks import (
     verify_channel_position,
     verify_parent_id,
     verify_permission_overwrite,
-    delete_channel
+    delete_channel,
+    get_cat_channels
 )
 from ..database import Guild, GuildChannel, PermissionOverWrites, Role, to_dict
 from ..errors import BadData, Forbidden, NotFound
@@ -65,13 +66,20 @@ class ChannelCore(Controller):
 
         if data.get('parent_id'):
             pid = int(data.pop('parent_id'))
-            verify_parent_id(pid, guild_id=guild_id)
+            parent = verify_parent_id(pid, guild_id=guild_id)
         else:
             pid = 0
 
-        position = int(data.pop('position'))
+        position = int(data.get('position'))
 
-        verify_channel_position(pos=position, guild_id=guild_id)
+        if pid != 0:
+            pos_pos = get_cat_channels(parent, True)
+            if len(pos_pos) < position:
+                raise BadData()
+
+            chek = str(position)
+            if chek.startswith('-'):
+                raise BadData()
 
         name = str(data['name'])[:45].lower().replace(' ', '-')
 
@@ -135,7 +143,7 @@ class ChannelCore(Controller):
             channel.name = str(data.pop('name'))[:45]
 
         if data.get('position'):
-            verify_channel_position(int(data.pop('position')), guild_id=guild_id)
+            await verify_channel_position(int(data.pop('position')), channel.position, guild_id=guild_id)
             channel.position = int(data.pop('position'))
 
         if data.get('permission_overwrites'):
