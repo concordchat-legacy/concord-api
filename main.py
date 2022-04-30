@@ -49,7 +49,7 @@ async def favicon():
 @app.route('/invites/{str:invite_code}', methods=['GET'])
 async def get_guild_by_invite(invite_code: str):
     try:
-        invite: GuildInvite = GuildInvite.objects(GuildInvite.id == invite_code).get()
+        invite: GuildInvite = GuildInvite.objects(GuildInvite.id == invite_code.lower()).get()
     except (DoesNotExist):
         raise NotFound()
 

@@ -223,7 +223,7 @@ class GuildsCore(Controller):
         guild.vanity_url = str(vanity_code)
 
         GuildInvite.create(
-            id=str(vanity_code),
+            id=str(vanity_code).lower(),
             guild_id=guild_id,
             creator_id=0,
         )
