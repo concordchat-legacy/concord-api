@@ -76,10 +76,10 @@ class CoreUsers(Controller):
             raise BadData()
 
         if data.get('avatar'):
-            pfp_id = upload_image(data['avatar'], "users")
+            pfp_id = upload_image(data['avatar'], 'users')
 
         if data.get('banner'):
-            banner_id = upload_image(data['banner'], "users")
+            banner_id = upload_image(data['banner'], 'users')
 
         user: User = User.create(
             id=factory().formulate(),
@@ -130,10 +130,10 @@ class CoreUsers(Controller):
             me.discriminator = d
 
         if data.get('avatar'):
-            me.avatar = upload_image(data['avatar'], "users")
+            me.avatar = upload_image(data['avatar'], 'users') if data['avatar'] != '' else ''
 
         if data.get('banner'):
-            me.banner = upload_image(data['banner'], "users")
+            me.banner = upload_image(data['banner'], 'users') if data['banner'] != '' else ''
 
         me = me.save()
 
