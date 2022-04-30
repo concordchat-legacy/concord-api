@@ -1,1 +1,1 @@
-from .core import bp as guilds
+from .core import GuildsCore as guilds

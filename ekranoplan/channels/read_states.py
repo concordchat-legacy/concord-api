@@ -1,73 +1,91 @@
+from blacksheep.server.controllers import Controller, get, post
 from cassandra.cqlengine.query import DoesNotExist
-from quart import Blueprint, jsonify, request
 
-from ..checks import validate_user
-from ..database import Channel, Message, ReadState, to_dict
+from ..checks import search_messages, validate_channel, validate_user
+from ..database import ReadState, to_dict
 from ..errors import BadData, NotFound
+from ..utils import NONMESSAGEABLE, AuthHeader, jsonify
 
-bp = Blueprint('readstates', __name__)
 
-
-@bp.route('/channels/<int:channel_id>/messages/<int:message_id>/ack', methods=['POST'])
-async def ack_message(channel_id: int, message_id: int):
-    user_id = validate_user(request.headers.get('Authorization'), stop_bots=True).id
-
-    try:
-        Channel.objects(Channel.id == channel_id).get()
-    except (DoesNotExist):
-        raise NotFound()
-
-    try:
-        message: Message = (
-            Message.objects(Message.id == message_id, Message.channel_id == channel_id)
-            .allow_filtering()
-            .get()
+class ReadStates(Controller):
+    @post(
+        '/guilds/{int:guild_id}/channels/{int:channel_id}/messages/{int:message_id}/ack',
+    )
+    async def ack_guild_message(
+        self,
+        guild_id: int,
+        channel_id: int,
+        message_id: int,
+        auth: AuthHeader,
+    ):
+        _, user, channel, _ = validate_channel(
+            token=auth.value,
+            guild_id=guild_id,
+            channel_id=channel_id,
+            permission='read_message_history',
+            stop_bots=True,
         )
-    except (DoesNotExist):
-        raise NotFound()
 
-    try:
-        read_state: ReadState = ReadState.objects(
-            ReadState.user_id == user_id, ReadState.channel_id == channel_id
-        ).get()
-    except (DoesNotExist):
-        read_state: ReadState = ReadState.create(user_id=user_id, channel_id=channel_id)
+        if channel.type in NONMESSAGEABLE:
+            raise BadData()
 
-    read_state.last_message_id = message.id
+        message = search_messages(channel_id=channel_id, message_id=message_id)
 
-    read_state.save()
+        if message is None:
+            raise BadData()
 
-    return jsonify(to_dict(read_state))
+        try:
+            read_state: ReadState = ReadState.objects(
+                ReadState.user_id == user.id,
+                ReadState.channel_id == channel_id,
+            ).get()
+        except (DoesNotExist):
+            read_state: ReadState = ReadState.create(
+                user_id=user.id, channel_id=channel_id
+            )
 
+        read_state.last_message_id = message.id
 
-@bp.route('/channels/<int:channel_id>')
-async def get_channel_read_state(channel_id: int):
-    user_id = validate_user(request.headers.get('Authorization'), stop_bots=True).id
+        read_state = read_state.save()
 
-    try:
-        Channel.objects(Channel.id == channel_id).get()
-    except (DoesNotExist):
-        raise BadData()
+        return jsonify(to_dict(read_state))
 
-    try:
-        obj = ReadState.objects(
-            ReadState.user_id == user_id, ReadState.channel_id == channel_id
-        ).get()
-    except (DoesNotExist):
-        raise NotFound()
+    @get(
+        '/guilds/{int:guild_id}/channels/{int:channel_id}/readstate',
+    )
+    async def get_guild_channel_read_state(
+        self, guild_id: int, channel_id: int, auth: AuthHeader
+    ):
+        _, user, channel, _ = validate_channel(
+            token=auth.value,
+            guild_id=guild_id,
+            channel_id=channel_id,
+            permission='read_message_history',
+            stop_bots=True,
+        )
 
-    return jsonify(to_dict(obj))
+        if channel.type in NONMESSAGEABLE:
+            raise BadData()
 
+        try:
+            obj = ReadState.objects(
+                ReadState.user_id == user.id,
+                ReadState.channel_id == channel_id,
+            ).get()
+        except (DoesNotExist):
+            raise NotFound()
 
-@bp.route('/readstates')
-async def get_readstates():
-    me = validate_user(request.headers.get('Authorization'), stop_bots=True)
+        return jsonify(to_dict(obj))
 
-    _readstates = ReadState.objects(ReadState.user_id == me.id).all()
+    @get('/readstates')
+    async def get_readstates(self, auth: AuthHeader):
+        me = validate_user(auth.value, stop_bots=True)
 
-    readstates = []
+        _readstates = ReadState.objects(ReadState.id == me.id).all()
 
-    for readstate in _readstates:
-        readstates.append(to_dict(readstate))
+        readstates = []
 
-    return jsonify(readstates)
+        for readstate in _readstates:
+            readstates.append(to_dict(readstate))
+
+        return jsonify(readstates)

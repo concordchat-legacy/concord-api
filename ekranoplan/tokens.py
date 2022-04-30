@@ -1,6 +1,5 @@
 import base64
 import binascii
-from typing import Union
 
 import itsdangerous
 
@@ -8,7 +7,7 @@ from .database import User
 from .errors import Forbidden, Unauthorized
 
 
-def create_token(user_id: Union[int, str], user_password: str):
+def create_token(user_id: int, user_password: str) -> str:
     signer = itsdangerous.TimestampSigner(user_password)
     user_id = str(user_id)
     user_id = base64.b64encode(user_id.encode())
@@ -17,6 +16,9 @@ def create_token(user_id: Union[int, str], user_password: str):
 
 
 def verify_token(token: str):
+    if token is None or not isinstance(token, str):
+        raise Unauthorized()
+
     if token.startswith('ConcordBot '):
         token = token.replace('ConcordBot ', '')
     elif token.startswith('ConcordUser '):

@@ -1,4 +1,4 @@
-from quart import jsonify
+from .utils import jsonify
 
 
 class Err(Exception):
@@ -6,7 +6,12 @@ class Err(Exception):
     resp_message = 'Internal Server Error'
 
     def _to_json(self):
-        return jsonify({'code': 0, 'message': f'{self.resp_type}: {self.resp_message}'})
+        return jsonify(
+            {
+                'code': 0,
+                'message': f'{self.resp_type}: {self.resp_message}',
+            }
+        )
 
 
 class Forbidden(Err):
@@ -27,3 +32,8 @@ class Unauthorized(Err):
 class NotFound(Err):
     resp_type = 404
     resp_message = 'Not Found'
+
+
+class Conflict(Err):
+    resp_type = 409
+    resp_name = 'Conflict'

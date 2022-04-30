@@ -13,6 +13,8 @@ class UserFlags:
         self.staff = has(1 << 1)
         self.verified = has(1 << 2)
         self.likely_scammer = has(1 << 3)
+        self.donator = has(1 << 4)
+        self.contributor = has(1 << 5)
 
 
 class GuildPermissions:
@@ -75,6 +77,8 @@ class GuildPermissions:
 
         # NOTE: Is this feature actually possible?
         # self.manage_events = has(1 << 30)
+
+        self.manage_channel_pins = has(1 << 31)
 
 
 if __name__ == '__main__':

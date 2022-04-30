@@ -8,7 +8,7 @@ from cassandra.cqlengine import columns, connection, management, models, usertyp
 
 dotenv.load_dotenv()
 
-cloud = {'secure_connect_bundle': os.getcwd() + '\\ekranoplan\\static\\bundle.zip'}
+cloud = {'secure_connect_bundle': os.getcwd() + r'/ekranoplan/static/bundle.zip'}
 auth_provider = PlainTextAuthProvider(
     os.getenv('client_id'), os.getenv('client_secret')
 )
@@ -18,14 +18,22 @@ def connect():
     try:
         if os.getenv('safe', 'false') == 'true':
             connection.setup(
-                [], 'concord', cloud=cloud, auth_provider=auth_provider, connect_timeout=100
+                None,
+                'ekranoplan',
+                cloud=cloud,
+                auth_provider=auth_provider,
+                connect_timeout=100,
+                retry_connect=True,
             )
         else:
             connection.setup(
-                [], 'concord', auth_provider=auth_provider, connect_timeout=100
+                None,
+                'ekranoplan',
+                connect_timeout=100,
+                retry_connect=True,
+                compression=False,
             )
     except:
-        # Just try again
         connect()
 
 
@@ -69,14 +77,15 @@ class User(models.Model):
     flags = columns.Integer()
     avatar = columns.Text(default='')
     banner = columns.Text(default='')
-    locale = columns.Text(default='EN_US')
+    locale = columns.Text(default='en_US')
     joined_at = columns.DateTime(default=_get_date)
     bio = columns.Text(max_length=4000)
     settings = columns.UserDefinedType(SettingsType)
     verified = columns.Boolean(default=False)
     system = columns.Boolean(default=False)
-    early_supporter_benefiter = columns.Boolean(default=True)
     bot = columns.Boolean(default=False)
+    referrer = columns.Text(default='')
+    pronouns = columns.Text(default='')
 
 
 class UserType(usertype.UserType):
@@ -94,20 +103,23 @@ class UserType(usertype.UserType):
     settings = columns.UserDefinedType(SettingsType)
     verified = columns.Boolean()
     system = columns.Boolean()
-    early_supporter_benefiter = columns.Boolean()
     bot = columns.Boolean(default=False)
+    referrer = columns.Text(default='')
 
 
 # NOTE: Guilds
-class Role(usertype.UserType):
-    id = columns.BigInt()
+class Role(models.Model):
+    __table_name__ = 'roles'
+    __options__ = default_options
+    id = columns.BigInt(primary_key=True, partition_key=False)
+    guild_id = columns.BigInt(primary_key=True, partition_key=True)
     name = columns.Text(max_length=100)
-    color = columns.Integer()
-    hoist = columns.Boolean()
+    color = columns.Integer(default=0000)
+    hoist = columns.Boolean(default=False)
     icon = columns.Text()
     position = columns.Integer()
-    permissions = columns.BigInt()
-    mentionable = columns.Boolean()
+    permissions = columns.BigInt(default=0)
+    mentionable = columns.Boolean(default=False)
 
 
 class Guild(models.Model):
@@ -122,17 +134,17 @@ class Guild(models.Model):
     owner_id = columns.BigInt(primary_key=True)
     nsfw = columns.Boolean(default=False)
     large = columns.Boolean(primary_key=True, default=False)
-    perferred_locale = columns.Text(default='EN_US/EU')
+    perferred_locale = columns.Text(default='en_US/EU')
     permissions = columns.BigInt(default=default_permissions)
     splash = columns.Text(default='')
-    roles = columns.Set(columns.UserDefinedType(Role))
     features = columns.Set(columns.Text)
+    verified = columns.Boolean(default=False)
 
 
 class GuildInvite(models.Model):
     __table_name__ = 'guild_invites'
     __options__ = default_options
-    id = columns.Text(primary_key=True, partition_key=False)
+    id = columns.Text(primary_key=True, partition_key=True)
     guild_id = columns.BigInt(primary_key=True)
     creator_id = columns.BigInt(primary_key=True)
     created_at = columns.DateTime(default=_get_date)
@@ -143,11 +155,10 @@ class Member(models.Model):
     __options__ = default_options
     id = columns.BigInt(primary_key=True, partition_key=True)
     guild_id = columns.BigInt(primary_key=True)
-    user = columns.UserDefinedType(UserType)
     avatar = columns.Text(default='')
     banner = columns.Text(default='')
     joined_at = columns.DateTime(default=_get_date)
-    roles = columns.List(columns.BigInt)
+    roles = columns.Set(columns.BigInt)
     nick = columns.Text(default='')
     owner = columns.Boolean(default=False)
 
@@ -166,16 +177,36 @@ class Channel(models.Model):
     __table_name__ = 'channels'
     __options__ = default_options
     id = columns.BigInt(primary_key=True, partition_key=True)
-    guild_id = columns.BigInt(primary_key=True)
+    name = columns.Text(max_length=45)
+    recipients = columns.Set(columns.UserDefinedType(UserType))
+    owner_id = columns.BigInt()
+
+
+class GuildChannel(models.Model):
+    __table_name__ = 'guildchannels'
+    __options__ = default_options
+    id = columns.BigInt(primary_key=True, partition_key=False)
+    guild_id = columns.BigInt(primary_key=True, partition_key=True)
     type = columns.Integer(default=0)
     position = columns.Integer()
-    permission_overwrites = columns.UserDefinedType(PermissionOverWrites)
-    name = columns.Text(max_length=30)
-    topic = columns.Text(max_length=1024)
-    slowmode_timeout = columns.Integer()
-    recipients = columns.List(columns.UserDefinedType(UserType))
-    owner_id = columns.BigInt()
+    permission_overwrites = columns.Set(columns.UserDefinedType(PermissionOverWrites))
+    name = columns.Text(max_length=45)
+    topic = columns.Text(max_length=1024, default='')
+    slowmode_timeout = columns.Integer(default=0)
     parent_id = columns.BigInt()
+
+
+class ChannelSlowMode(models.Model):
+    __table_name__ = 'channelslowmode'
+    id = columns.BigInt(primary_key=True, partition_key=True)
+    channel_id = columns.BigInt(primary_key=True, partition_key=True)
+
+
+class GuildChannelPin(models.Model):
+    __table_name__ = 'guildchannelspins'
+    __options__ = default_options
+    channel_id = columns.BigInt(primary_key=True, partition_key=True)
+    message_id = columns.BigInt()
 
 
 class EmbedField(usertype.UserType):
@@ -219,20 +250,28 @@ class Embed(usertype.UserType):
 class Reaction(usertype.UserType):
     count = columns.Integer()
     # TODO: Implement Emojis
-    emoji = columns.Text()
+    emoji_id = columns.BigInt()
+
+
+class Emoji(models.Model):
+    __table_name__ = 'emojis'
+    __options__ = default_options
+    id = columns.BigInt(primary_key=True, partition_key=False)
+    guild_id = columns.BigInt(primary_key=True, partition_key=True)
+    cdn_url = columns.Text()
 
 
 class Message(models.Model):
     __table_name__ = 'messages'
     __options__ = default_options
-    id = columns.BigInt(primary_key=True, partition_key=False, clustering_order='DESC')
     channel_id = columns.BigInt(primary_key=True, partition_key=True)
     bucket_id = columns.Integer(primary_key=True, partition_key=True)
+    message_id = columns.BigInt(primary_key=True, partition_key=False, clustering_order='DESC')
     guild_id = columns.BigInt(primary_key=True)
-    author = columns.UserDefinedType(UserType)
+    author_id = columns.BigInt()
     content = columns.Text(max_length=3000)
     created_at = columns.DateTime(default=_get_date)
-    last_edited = columns.DateTime()
+    last_edited = columns.DateTime(default=_get_date)
     tts = columns.Boolean(default=False)
     mentions_everyone = columns.Boolean(default=False)
     mentions = columns.List(columns.UserDefinedType(UserType))
@@ -249,7 +288,7 @@ class ReadState(models.Model):
     last_message_id = columns.BigInt()
 
 
-def to_dict(model: models.Model) -> dict:
+def to_dict(model: models.Model, _keep_email=False) -> dict:
     initial: dict[str, Any] = model.items()
     ret = dict(initial)
 
@@ -272,16 +311,29 @@ def to_dict(model: models.Model) -> dict:
 
             for v in value:
                 if isinstance(v, usertype.UserType):
-                    set_values.append(to_dict(v.items()))
+                    set_values.append(to_dict(v))
                 else:
                     set_values.append(v)
 
             ret[name] = set_values
 
-        if name == 'id' or name.endswith('_id') and len(str(value)) > 14:
+        if name == 'id' or name.endswith('_id') and len(str(value)) > 14 and name != 'message_id':
             ret[name] = str(value)
+        
         if name == 'permissions':
             ret[name] = str(value)
+        
+        if name == 'password':
+            ret.pop(name)
+        
+        if name == 'email' and not _keep_email:
+            ret.pop(name)
+      
+        if name == 'settings' and not _keep_email:
+            ret.pop(name)
+
+        if name == 'message_id':
+            ret['id'] = str(value)
 
     return ret
 
@@ -295,16 +347,16 @@ if __name__ == '__main__':
     # migrate old data
 
     # NOTE: Types
-    management.sync_type('concord', SettingsType)
-    management.sync_type('concord', UserType)
-    management.sync_type('concord', PermissionOverWrites)
-    management.sync_type('concord', EmbedAuthor)
-    management.sync_type('concord', EmbedField)
-    management.sync_type('concord', EmbedFooter)
-    management.sync_type('concord', EmbedImage)
-    management.sync_type('concord', EmbedVideo)
-    management.sync_type('concord', Embed)
-    management.sync_type('concord', Reaction)
+    management.sync_type('ekranoplan', SettingsType)
+    management.sync_type('ekranoplan', UserType)
+    management.sync_type('ekranoplan', PermissionOverWrites)
+    management.sync_type('ekranoplan', EmbedAuthor)
+    management.sync_type('ekranoplan', EmbedField)
+    management.sync_type('ekranoplan', EmbedFooter)
+    management.sync_type('ekranoplan', EmbedImage)
+    management.sync_type('ekranoplan', EmbedVideo)
+    management.sync_type('ekranoplan', Embed)
+    management.sync_type('ekranoplan', Reaction)
 
     # NOTE: Tables
     management.sync_table(User)
@@ -312,5 +364,10 @@ if __name__ == '__main__':
     management.sync_table(GuildInvite)
     management.sync_table(Member)
     management.sync_table(Channel)
+    management.sync_table(GuildChannel)
+    management.sync_table(GuildChannelPin)
     management.sync_table(Message)
     management.sync_table(ReadState)
+    management.sync_table(Role)
+    management.sync_table(Emoji)
+    management.sync_table(ChannelSlowMode)
