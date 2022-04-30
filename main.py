@@ -20,7 +20,7 @@ from ekranoplan.errors import BadData, Err, NotFound
 from ekranoplan.guilds import guilds, members
 from ekranoplan.messages import guild_messages
 from ekranoplan.randoms import factory
-from ekranoplan.users import users
+from ekranoplan.users import users, meta
 from ekranoplan.utils import jsonify
 
 try:
@@ -121,6 +121,7 @@ bps = [
     channels,
     readstates,
     members,
+    meta
 ]
 
 app.register_controllers(bps)
