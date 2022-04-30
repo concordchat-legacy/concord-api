@@ -106,6 +106,9 @@ class GuildMessages(Controller):
 
             if referenced_message is None:
                 raise BadData()
+        else:
+            referenced_message = ''
+            referenced_message.id = 0
 
         data = {
             'id': factory().formulate(),
