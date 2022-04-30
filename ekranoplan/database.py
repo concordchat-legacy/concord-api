@@ -368,3 +368,4 @@ if __name__ == '__main__':
     management.sync_table(ReadState)
     management.sync_table(Role)
     management.sync_table(Emoji)
+    management.sync_table(ChannelSlowMode)
