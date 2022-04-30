@@ -140,7 +140,7 @@ class CoreUsers(Controller):
             me.email = str(data['email'])
 
         if data.get('password'):
-            me.password = str(data['password'])
+            me.password = await get_hash(str(data['password']))
 
         if data.get('discriminator'):
             d = int(str(data['discriminator'])[:4])
