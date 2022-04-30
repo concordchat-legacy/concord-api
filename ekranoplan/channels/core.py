@@ -157,7 +157,7 @@ class ChannelCore(Controller):
                 overwrites.append(
                     PermissionOverWrites(**verify_permission_overwrite(dict(overwrite)))
                 )
-            channel.permission_overwrites = set(overwrites)
+            # channel.permission_overwrites = set(overwrites)
 
         if data.get('topic'):
             channel.topic = str(data.pop('topic'))[:1024]
