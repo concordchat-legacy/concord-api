@@ -3,7 +3,7 @@ from blacksheep import Request
 from blacksheep.server.controllers import Controller, delete, get, patch, post
 
 from ..checks import search_messages, validate_channel, verify_slowmode
-from ..database import ChannelSlowMode, GuildChannelPin, Message, _get_date, to_dict
+from ..database import ChannelSlowMode, GuildChannelPin, Message, UserType, _get_date, to_dict
 from ..errors import BadData, Forbidden
 from ..randoms import factory, get_bucket
 from ..redis_manager import channel_event
@@ -79,7 +79,7 @@ class GuildMessages(Controller):
         auth: AuthHeader,
     ):
         # TODO: Attachments/Image Embeds
-        member, _, channel, perms = validate_channel(
+        member, me, channel, perms = validate_channel(
             token=auth.value,
             guild_id=guild_id,
             channel_id=channel_id,
@@ -112,7 +112,7 @@ class GuildMessages(Controller):
             'channel_id': channel_id,
             'bucket_id': get_bucket(channel_id),
             'guild_id': guild_id,
-            'author': member.user,
+            'author': UserType(**dict(me.items())),
             'content': str(d['content']),
             'mentions_everyone': mentions_everyone,
             'referenced_message_id': referenced_message.id,

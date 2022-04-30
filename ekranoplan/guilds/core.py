@@ -15,13 +15,12 @@ from ..database import (
     GuildChannel,
     GuildInvite,
     Member,
-    Message,
     Role,
     UserType,
     to_dict,
 )
-from ..errors import BadData, Forbidden
-from ..randoms import factory, get_bucket, get_welcome_content
+from ..errors import BadData, Conflict, Forbidden
+from ..randoms import factory
 from ..redis_manager import guild_event
 from ..utils import AuthHeader, jsonify
 
@@ -146,7 +145,7 @@ class GuildsCore(Controller):
 
         guild.delete()
 
-        members: List[Member] = Member.objects(Member.guild_id == guild_id).all()
+        members: List[Member] = Member.objects(Member.guild_id == guild_id).allow_filtering().all()
 
         for member in members:
             member.delete()
@@ -213,6 +212,15 @@ class GuildsCore(Controller):
         guild: Guild = Guild.objects(Guild.id == guild_id).get()
 
         vanity_code = request.query.get('utm_vanity')[0]
+
+        try:
+            GuildInvite.objects(
+                GuildInvite.id == str(vanity_code)
+            ).get()
+        except:
+            pass
+        else:
+            raise Conflict()
 
         if guild.vanity_url:
             GuildInvite.objects(
