@@ -10,8 +10,8 @@ from cassandra.cqlengine import query
 
 from ..checks import validate_user
 from ..database import SettingsType, User, to_dict
-from ..errors import BadData, NotFound
-from ..randoms import factory, get_hash
+from ..errors import BadData, Forbidden, NotFound
+from ..randoms import factory, get_hash, verify_hash
 from ..tokens import create_token
 from ..utils import AuthHeader, jsonify
 from ..valkyrie import upload
@@ -170,3 +170,19 @@ class CoreUsers(Controller):
         ret = to_dict(me, True)
 
         return jsonify(ret)
+
+    @get('/users/@me/tokens')
+    async def make_token(self, request: Request):
+        data = await request.json(orjson.loads)
+        email, password = data['email'], data['password']
+
+        me = User.objects(User.email == str(email)).allow_filtering().get()
+
+        ok = await verify_hash(me.password, str(password))
+
+        if not ok:
+            raise Forbidden()
+
+        token = create_token(me.id, me.password)
+
+        return jsonify([token], 201)
