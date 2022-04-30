@@ -108,6 +108,7 @@ app.exceptions_handlers.update(
         TypeError: _bad_data,
         BadRequest: _bad_data,
         BadRequestFormat: _bad_data,
+        DoesNotExist: _bad_data,
     }
 )
 

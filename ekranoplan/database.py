@@ -159,7 +159,7 @@ class Member(models.Model):
     avatar = columns.Text(default='')
     banner = columns.Text(default='')
     joined_at = columns.DateTime(default=_get_date)
-    roles = columns.List(columns.BigInt)
+    roles = columns.Set(columns.BigInt)
     nick = columns.Text(default='')
     owner = columns.Boolean(default=False)
 
@@ -289,7 +289,7 @@ class ReadState(models.Model):
     last_message_id = columns.BigInt()
 
 
-def to_dict(model: models.Model) -> dict:
+def to_dict(model: models.Model, _keep_email=False) -> dict:
     initial: dict[str, Any] = model.items()
     ret = dict(initial)
 
@@ -320,8 +320,17 @@ def to_dict(model: models.Model) -> dict:
 
         if name == 'id' or name.endswith('_id') and len(str(value)) > 14:
             ret[name] = str(value)
-        if name == 'permissions':
+        elif name == 'permissions':
             ret[name] = str(value)
+        elif name == 'password':
+            ret.pop(name)
+            continue
+        elif name == 'email' and not _keep_email:
+            ret.pop(name)
+            continue
+        elif name == 'settings' and not _keep_email:
+            ret.pop('settings')
+            continue
 
     return ret
 

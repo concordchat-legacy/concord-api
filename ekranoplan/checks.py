@@ -296,3 +296,34 @@ def delete_all_channels(guild_id: int):
 
     for channel in channels:
         delete_channel(channel)
+
+
+def modify_member_roles(guild_id: int, member: Member, changed_roles: list):
+    roles: List[Role] = Role.objects(
+        Role.guild_id == guild_id
+    ).all()
+
+    rroles = [r.id for r in roles]
+    croles: List[Role] = []
+
+    for role in changed_roles:
+        if role not in rroles:
+            raise BadData()
+
+        for role_ in roles:
+            if role_.id == role:
+                croles.append(role_)
+
+    mroles = []
+
+    for _role in member.roles:
+        for role in roles:
+            if role.id == _role:
+                mroles.append(role)
+
+    for role in mroles:
+        for role_ in croles:
+            if role_.position > role.position:
+                raise Forbidden()
+
+    return set(changed_roles)

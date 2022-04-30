@@ -22,9 +22,7 @@ class CoreUsers(Controller):
     async def get_me(self, auth: AuthHeader):
         me = validate_user(auth.value)
 
-        me = to_dict(me)
-
-        me.pop('password')
+        me = to_dict(me, True)
 
         return jsonify(me)
 
@@ -38,10 +36,6 @@ class CoreUsers(Controller):
             raise NotFound()
 
         ret = to_dict(user)
-
-        ret.pop('password')
-        ret.pop('email')
-        ret.pop('settings')
 
         if user.bot:
             ret['pronouns'] = 'Attack Helicopter/AttkHeli'
@@ -61,7 +55,7 @@ class CoreUsers(Controller):
         discrim = random.randint(1, 9999)
         discrim = int('%04d' % discrim)
         email = data['email']
-        password = await get_hash(data.pop('password'))
+        password = await get_hash(str(data.pop('password')))
         flags = 1 << 0
         bio = str(data.get('bio')) or ''
         locale = str(data.get('locale') or 'en_US')
@@ -120,9 +114,8 @@ class CoreUsers(Controller):
             banner=banner_id,
         )
 
-        resp = to_dict(user)
+        resp = to_dict(user, True)
         resp['token'] = create_token(user_id=user.id, user_password=user.password)
-        resp.pop('password')
 
         return jsonify(resp, 201)
 
@@ -174,7 +167,6 @@ class CoreUsers(Controller):
 
         me = me.save()
 
-        ret = to_dict(me)
-        ret.pop('password')
+        ret = to_dict(me, True)
 
         return jsonify(ret)

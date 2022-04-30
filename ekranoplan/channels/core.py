@@ -23,7 +23,7 @@ class ChannelCore(Controller):
         '/guilds/{int:guild_id}/channels',
     )
     async def create_channel(self, guild_id: int, request: Request, auth: AuthHeader):
-        member, me = validate_member(auth.value, guild_id)
+        member, _ = validate_member(auth.value, guild_id)
 
         guild: Guild = Guild.objects(Guild.id == guild_id).get()
 
@@ -45,7 +45,7 @@ class ChannelCore(Controller):
 
         if (
             not calc.manage_channels
-            and member.id != guild.owner_id
+            and not member.owner
             and not calc.administator
         ):
             raise Forbidden()
@@ -157,7 +157,7 @@ class ChannelCore(Controller):
                 overwrites.append(
                     PermissionOverWrites(**verify_permission_overwrite(dict(overwrite)))
                 )
-            channel.permission_overwrites = overwrites
+            channel.permission_overwrites = set(overwrites)
 
         if data.get('topic'):
             channel.topic = str(data.pop('topic'))[:1024]

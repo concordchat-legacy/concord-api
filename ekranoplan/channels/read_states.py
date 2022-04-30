@@ -2,75 +2,13 @@ from blacksheep.server.controllers import Controller, get, post
 from cassandra.cqlengine.query import DoesNotExist
 
 from ..checks import search_messages, validate_channel, validate_user
-from ..database import GuildChannel, ReadState, to_dict
+from ..database import ReadState, to_dict
 from ..errors import BadData, NotFound
 from ..utils import NONMESSAGEABLE, AuthHeader, jsonify
 
 
 class ReadStates(Controller):
     @post(
-        '/guilds/{int:guild_id}/channels/{int:channel_id}/messages/{int:message_id}/ack',
-    )
-    async def ack_message(
-        self, guild_id: int, channel_id: int, message_id: int, auth: AuthHeader
-    ):
-        user_id = validate_user(auth.value, stop_bots=True).id
-
-        try:
-            GuildChannel.objects(
-                GuildChannel.id == channel_id, GuildChannel.guild_id == guild_id
-            ).get()
-        except (DoesNotExist):
-            raise NotFound()
-
-        message = search_messages(channel_id=channel_id, message_id=message_id)
-
-        if message is None:
-            raise BadData()
-
-        try:
-            read_state: ReadState = ReadState.objects(
-                ReadState.user_id == user_id,
-                ReadState.channel_id == channel_id,
-            ).get()
-        except (DoesNotExist):
-            read_state: ReadState = ReadState.create(
-                user_id=user_id, channel_id=channel_id
-            )
-
-        read_state.last_message_id = message.id
-
-        read_state = read_state.save()
-
-        return jsonify(to_dict(read_state))
-
-    @get('/guilds/{int:guild_id}/channels/{int:channel_id}/readstate')
-    async def get_channel_read_state(
-        self, guild_id: int, channel_id: int, auth: AuthHeader
-    ):
-        user_id = validate_user(auth.value, stop_bots=True).id
-
-        try:
-            channel: GuildChannel = GuildChannel.objects(
-                GuildChannel.id == channel_id, GuildChannel.guild_id == guild_id
-            ).get()
-        except (DoesNotExist):
-            raise BadData()
-
-        if channel.type in NONMESSAGEABLE:
-            raise BadData()
-
-        try:
-            obj = ReadState.objects(
-                ReadState.user_id == user_id,
-                ReadState.channel_id == channel_id,
-            ).get()
-        except (DoesNotExist):
-            raise NotFound()
-
-        return jsonify(to_dict(obj))
-
-    @get(
         '/guilds/{int:guild_id}/channels/{int:channel_id}/messages/{int:message_id}/ack',
     )
     async def ack_guild_message(

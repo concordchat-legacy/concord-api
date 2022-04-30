@@ -13,6 +13,8 @@ class UserFlags:
         self.staff = has(1 << 1)
         self.verified = has(1 << 2)
         self.likely_scammer = has(1 << 3)
+        self.donator = has(1 << 4)
+        self.contributor = has(1 << 5)
 
 
 class GuildPermissions:
