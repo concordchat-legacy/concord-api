@@ -1,6 +1,10 @@
-from typing import List, Union
+from typing import List, Union, Literal
 
 from cassandra.cqlengine import query
+
+import uuid
+from io import BytesIO
+import datauri
 
 from .database import (
     ChannelSlowMode,
@@ -18,6 +22,7 @@ from .flags import GuildPermissions, UserFlags
 from .randoms import get_bucket
 from .redis_manager import channel_event
 from .tokens import verify_token
+from .valkyrie import upload
 
 
 def validate_user(token: str, stop_bots: bool = False) -> User:
@@ -327,3 +332,15 @@ def modify_member_roles(guild_id: int, member: Member, changed_roles: list):
                 raise Forbidden()
 
     return set(changed_roles)
+
+def upload_image(image: str, location: Literal['users', 'guilds']) -> str:
+    duri = datauri.DataURI(image)
+
+    if not str(duri.mimetype.startswith('image/')) or str(
+        duri.mimetype
+    ) not in ['image/png', 'image/jpeg', 'image/gif']:
+        return ''
+    else:
+        pfp_id = str(uuid.uuid1()) + '.' + duri.mimetype.split('/')[1]
+        upload(pfp_id, location, BytesIO(duri.data), str(duri.mimetype))
+        return pfp_id
