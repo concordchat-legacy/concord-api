@@ -320,17 +320,18 @@ def to_dict(model: models.Model, _keep_email=False) -> dict:
 
         if name == 'id' or name.endswith('_id') and len(str(value)) > 14:
             ret[name] = str(value)
-        elif name == 'permissions':
+        
+        if name == 'permissions':
             ret[name] = str(value)
-        elif name == 'password':
+        
+        if name == 'password':
             ret.pop(name)
-            continue
-        elif name == 'email' and not _keep_email:
+        
+        if name == 'email' and not _keep_email:
             ret.pop(name)
-            continue
-        elif name == 'settings' and not _keep_email:
+      
+        if name == 'settings' and not _keep_email:
             ret.pop('settings')
-            continue
 
     return ret
 
