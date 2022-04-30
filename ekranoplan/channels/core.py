@@ -15,7 +15,7 @@ from ..errors import BadData, Forbidden, NotFound
 from ..flags import GuildPermissions
 from ..randoms import factory
 from ..redis_manager import channel_event
-from ..utils import AuthHeader, jsonify
+from ..utils import NONMESSAGEABLE, AuthHeader, jsonify
 
 
 class ChannelCore(Controller):
@@ -79,7 +79,11 @@ class ChannelCore(Controller):
 
         await verify_channel_position(position, len(channels), guild_id=guild_id)
 
-        name = str(data['name'])[:45].lower().replace(' ', '-')
+        name = (
+            str(data['name'])[:45].lower().replace(' ', '-')
+            if int(data.get('type')) not in NONMESSAGEABLE
+            else str(data['name'])[:45]
+        )
 
         kwargs = {
             'id': factory().formulate(),

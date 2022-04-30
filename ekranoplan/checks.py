@@ -201,10 +201,13 @@ def verify_parent_id(parent: int, guild_id: int) -> GuildChannel:
     return channel
 
 
-async def verify_channel_position(pos: int, current_pos: int, guild_id: int):
-    guild_channels: List[GuildChannel] = GuildChannel.objects(
-        GuildChannel.guild_id == guild_id
-    ).all()
+async def verify_channel_position(pos: int, current_pos: int, guild_id: int, gathered_channels: List[GuildChannel] = None):
+    if gathered_channels:
+        guild_channels = gathered_channels
+    else:
+        guild_channels: List[GuildChannel] = GuildChannel.objects(
+            GuildChannel.guild_id == guild_id
+        ).all()
 
     if len(guild_channels) + 1 < pos:
         raise BadData()
