@@ -265,9 +265,9 @@ class Emoji(models.Model):
 class Message(models.Model):
     __table_name__ = 'messages'
     __options__ = default_options
-    id = columns.BigInt(primary_key=True, partition_key=False, clustering_order='DESC')
     channel_id = columns.BigInt(primary_key=True, partition_key=True)
     bucket_id = columns.Integer(primary_key=True, partition_key=True)
+    message_id = columns.BigInt(primary_key=True, partition_key=False, clustering_order='DESC')
     guild_id = columns.BigInt(primary_key=True)
     author = columns.UserDefinedType(UserType)
     content = columns.Text(max_length=3000)
@@ -312,13 +312,13 @@ def to_dict(model: models.Model, _keep_email=False) -> dict:
 
             for v in value:
                 if isinstance(v, usertype.UserType):
-                    set_values.append(to_dict(v.items()))
+                    set_values.append(to_dict(v))
                 else:
                     set_values.append(v)
 
             ret[name] = set_values
 
-        if name == 'id' or name.endswith('_id') and len(str(value)) > 14:
+        if name == 'id' or name.endswith('_id') and len(str(value)) > 14 and name != 'message_id':
             ret[name] = str(value)
         
         if name == 'permissions':
@@ -331,7 +331,10 @@ def to_dict(model: models.Model, _keep_email=False) -> dict:
             ret.pop(name)
       
         if name == 'settings' and not _keep_email:
-            ret.pop('settings')
+            ret.pop(name)
+
+        if name == 'message_id':
+            ret['id'] = str(value)
 
     return ret
 
