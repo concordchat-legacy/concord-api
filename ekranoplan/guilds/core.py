@@ -52,7 +52,7 @@ class GuildsCore(Controller):
         }
 
         if data.get('icon'):
-            inserted_data["icon"] = upload_image(data['icon'], "guilds")
+            inserted_data["icon"] = upload_image(str(data['icon']), 'guilds')
 
         original_member = {
             'id': me['id'],
