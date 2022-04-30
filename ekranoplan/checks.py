@@ -33,7 +33,7 @@ def validate_user(token: str, stop_bots: bool = False) -> User:
 def validate_member(
     token: str, guild_id: int, *, stop_bots: bool = False
 ) -> tuple[Member, User]:
-    user = validate_user(token=token)
+    user = validate_user(token=token, stop_bots=stop_bots)
     objs = Member.objects(Member.id == user.id, Member.guild_id == guild_id)
 
     try:

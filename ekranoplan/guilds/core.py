@@ -70,36 +70,23 @@ class GuildsCore(Controller):
         default_text_channel = {
             'id': text_channel,
             'guild_id': guild_id,
-            'name': 'general',
+            'name': 'GENERAL'.lower(),
             'parent_id': parent_id,
             'position': 1,
             'type': 1,
         }
 
-        default_message = {
-            'id': me['id'],
-            'channel_id': text_channel,
-            'bucket_id': get_bucket(text_channel),
-            'guild_id': guild_id,
-            'author': me_usertype,
-            'content': get_welcome_content(user_id=me.id),
-            'mentions': set([me_usertype]),
-        }
-
         guild = Guild.create(**inserted_data)
-        member = Member.create(**original_member, user=UserType(**dict(me)))
+        member = Member.create(**original_member)
         channels = []
-        messages = []
         channels.append(to_dict(GuildChannel.create(**default_category_channel)))
         channels.append(to_dict(GuildChannel.create(**default_text_channel)))
-        messages.append(to_dict(Message.create(**default_message)))
 
         guild = to_dict(guild)
         member = to_dict(member)
 
         guild['members'] = member
         guild['channels'] = channels
-        guild['messages'] = messages
 
         await guild_event(
             None,

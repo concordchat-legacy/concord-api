@@ -1,4 +1,5 @@
 import secrets
+import traceback
 
 import dotenv
 from blacksheep import Application, not_found
@@ -72,28 +73,28 @@ async def on_start(application: Application):
     connect()
 
 
-async def _bad_data(*args):
+async def _bad_data(app, req, err: Exception):
     b = BadData()
     r = b._to_json()
     r.status = 400
-    print(*args)
+    print(traceback.print_exc())
     return r
 
 
 async def _default_error_handler(app, req, err: Err):
     r = err._to_json()
     r.status = err.resp_type
-    print(err)
+    print(traceback.print_exc())
     return r
 
 
-async def _internal_server_err(*args):
-    print(*args)
+async def _internal_server_err(app, req, err: Exception):
+    print(traceback.print_exc())
     return jsonify({'code': 0, 'message': '500: Internal Server Error'}, 500)
 
 
-async def _not_found(*args):
-    print(*args)
+async def _not_found(app, req, err: Exception):
+    print(traceback.print_exc())
     return jsonify({'code': 0, 'message': '404: Not Found'}, 404)
 
 

@@ -272,7 +272,7 @@ class Message(models.Model):
     author = columns.UserDefinedType(UserType)
     content = columns.Text(max_length=3000)
     created_at = columns.DateTime(default=_get_date)
-    last_edited = columns.DateTime()
+    last_edited = columns.DateTime(default=_get_date)
     tts = columns.Boolean(default=False)
     mentions_everyone = columns.Boolean(default=False)
     mentions = columns.List(columns.UserDefinedType(UserType))
