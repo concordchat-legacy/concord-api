@@ -106,6 +106,7 @@ class GuildMessages(Controller):
 
             if referenced_message is None:
                 raise BadData()
+            referenced_message = referenced_message.id
         else:
             referenced_message = None
 
@@ -117,7 +118,7 @@ class GuildMessages(Controller):
             'author': UserType(**dict(me.items())),
             'content': str(d['content']),
             'mentions_everyone': mentions_everyone,
-            'referenced_message_id': referenced_message.id or 0,
+            'referenced_message_id': referenced_message or 0,
         }
 
         msg = Message.create(**data)
