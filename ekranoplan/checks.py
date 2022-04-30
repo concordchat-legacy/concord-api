@@ -333,6 +333,7 @@ def modify_member_roles(guild_id: int, member: Member, changed_roles: list):
     return set(changed_roles)
 
 def upload_image(image: str, location: str) -> str:
+    image = str(image)
     duri = datauri.DataURI(image)
 
     if not str(duri.mimetype.startswith('image/')) or str(
