@@ -126,13 +126,14 @@ class GuildsCore(Controller):
             guild.nsfw = bool(data.pop('nsfw'))
 
         if data.get('icon'):
-            guild.icon = upload_image(data['icon'], "guilds")
+            guild.icon = upload_image(data['icon'], 'guilds')
 
-        if data.get('banner'):
-            guild.banner = upload_image(data['banner'], "guilds")
+        # TODO: Check if the user is a donator and let them change this.
+        # if data.get('banner'):
+            # guild.banner = upload_image(data['banner'], 'guilds')
 
-        if data.get('splash'):
-            guild.banner = upload_image(data['splash'], "guilds")
+        # if data.get('splash'):
+            # guild.banner = upload_image(data['splash'], 'guilds')
 
         guild = guild.save()
 
