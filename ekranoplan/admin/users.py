@@ -29,7 +29,7 @@ class AdminUsers(Controller):
         password = await get_hash(data.pop('password'))
         flags = data.get('flags') or 1 << 0
         bio = data.get('bio') or ''
-        locale = data.get('locale') or 'EN_US/EU'
+        locale = data.get('locale') or 'en_US'
 
         c: List[dict] = User.objects(
             username=username, discriminator=discrim

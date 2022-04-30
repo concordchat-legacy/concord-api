@@ -115,7 +115,7 @@ class GuildMessages(Controller):
             'channel_id': channel_id,
             'bucket_id': get_bucket(channel_id),
             'guild_id': guild_id,
-            'author': UserType(**dict(me.items())),
+            'author_id': me.id,
             'content': str(d['content']),
             'mentions_everyone': mentions_everyone,
             'referenced_message_id': referenced_message or 0,
