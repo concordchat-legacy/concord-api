@@ -15,7 +15,7 @@ Answers to those exact questions are stated, [here]
 # Abuse Protection
 Ekranoplan has been made to allow as little abuse of the API as possible
 and use as little database calls as needed.
-to try and avoid DDOS Attacks we recommend using [cloudflare](https://cloudflare.com).
+To try and avoid DDoS Attacks we recommend using [cloudflare](https://cloudflare.com).
 
 # Running
 
