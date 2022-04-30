@@ -14,9 +14,6 @@ pool = redis.ConnectionPool(
     retry_on_timeout=True,
 )
 
-if os.name != 'nt':
-    pool.connection_class = redis.UnixDomainSocketConnection
-
 manager = redis.Redis(connection_pool=pool)
 
 # Possible Types
