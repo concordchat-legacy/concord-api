@@ -6,11 +6,11 @@ from blacksheep.server.controllers import Controller, get, patch, post
 from cassandra.cqlengine import query
 
 from ..checks import upload_image, validate_user
-from ..database import SettingsType, User, to_dict
+from ..database import User, to_dict
 from ..errors import BadData, Forbidden, NotFound
 from ..randoms import factory, get_hash, verify_hash
 from ..tokens import create_token
-from ..utils import AuthHeader, jsonify
+from ..utils import AuthHeader, jsonify, VALID_LOCALES
 
 
 class CoreUsers(Controller):
@@ -67,7 +67,7 @@ class CoreUsers(Controller):
         elif isinstance(referrer, list):
             referrer = str(referrer[0])
 
-        if locale not in ['en_US']:
+        if locale not in VALID_LOCALES:
             raise BadData()
 
         if data.get('avatar'):
@@ -85,10 +85,6 @@ class CoreUsers(Controller):
             flags=flags,
             bio=bio[:4000],
             locale=locale,
-            settings=SettingsType(
-                accept_friend_requests=True,
-                accept_direct_messages=True,
-            ),
             referrer=referrer,
             pronouns=pronouns,
             avatar=pfp_id,

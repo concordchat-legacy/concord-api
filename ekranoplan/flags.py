@@ -15,6 +15,7 @@ class UserFlags:
         self.likely_scammer = has(1 << 3)
         self.donator = has(1 << 4)
         self.contributor = has(1 << 5)
+        self.bug_hunter = has(1 << 6)
 
 
 class GuildPermissions:

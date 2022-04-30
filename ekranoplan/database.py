@@ -19,7 +19,7 @@ def connect():
         if os.getenv('safe', 'false') == 'true':
             connection.setup(
                 None,
-                'ekranoplan',
+                'airbus',
                 cloud=cloud,
                 auth_provider=auth_provider,
                 connect_timeout=100,
@@ -28,7 +28,7 @@ def connect():
         else:
             connection.setup(
                 None,
-                'ekranoplan',
+                'airbus',
                 connect_timeout=100,
                 retry_connect=True,
                 compression=False,
@@ -60,12 +60,6 @@ def _get_date():
     return datetime.datetime.now(datetime.timezone.utc)
 
 
-# NOTE: Users
-class SettingsType(usertype.UserType):
-    accept_friend_requests = columns.Boolean()
-    accept_direct_messages = columns.Boolean()
-
-
 class User(models.Model):
     __table_name__ = 'users'
     __options__ = default_options
@@ -80,31 +74,11 @@ class User(models.Model):
     locale = columns.Text(default='en_US')
     joined_at = columns.DateTime(default=_get_date)
     bio = columns.Text(max_length=4000)
-    settings = columns.UserDefinedType(SettingsType)
     verified = columns.Boolean(default=False)
     system = columns.Boolean(default=False)
     bot = columns.Boolean(default=False)
     referrer = columns.Text(default='')
     pronouns = columns.Text(default='')
-
-
-class UserType(usertype.UserType):
-    id = columns.BigInt()
-    username = columns.Text()
-    discriminator = columns.Integer()
-    email = columns.Text()
-    password = columns.Text()
-    flags = columns.Integer()
-    avatar = columns.Text()
-    banner = columns.Text()
-    locale = columns.Text()
-    joined_at = columns.DateTime()
-    bio = columns.Text()
-    settings = columns.UserDefinedType(SettingsType)
-    verified = columns.Boolean()
-    system = columns.Boolean()
-    bot = columns.Boolean(default=False)
-    referrer = columns.Text(default='')
 
 
 # NOTE: Guilds
@@ -134,7 +108,7 @@ class Guild(models.Model):
     owner_id = columns.BigInt(primary_key=True)
     nsfw = columns.Boolean(default=False)
     large = columns.Boolean(primary_key=True, default=False)
-    perferred_locale = columns.Text(default='en_US/EU')
+    perferred_locale = columns.Text(default='en_US')
     permissions = columns.BigInt(default=default_permissions)
     splash = columns.Text(default='')
     features = columns.Set(columns.Text)
@@ -173,17 +147,8 @@ class PermissionOverWrites(usertype.UserType):
     deny = columns.BigInt()
 
 
-class Channel(models.Model):
-    __table_name__ = 'channels'
-    __options__ = default_options
-    id = columns.BigInt(primary_key=True, partition_key=True)
-    name = columns.Text(max_length=45)
-    recipients = columns.Set(columns.UserDefinedType(UserType))
-    owner_id = columns.BigInt()
-
-
 class GuildChannel(models.Model):
-    __table_name__ = 'guildchannels'
+    __table_name__ = 'guild_channels'
     __options__ = default_options
     id = columns.BigInt(primary_key=True, partition_key=False)
     guild_id = columns.BigInt(primary_key=True, partition_key=True)
@@ -197,54 +162,16 @@ class GuildChannel(models.Model):
 
 
 class ChannelSlowMode(models.Model):
-    __table_name__ = 'channelslowmode'
+    __table_name__ = 'channel_slowmode'
     id = columns.BigInt(primary_key=True, partition_key=True)
     channel_id = columns.BigInt(primary_key=True, partition_key=True)
 
 
 class GuildChannelPin(models.Model):
-    __table_name__ = 'guildchannelspins'
+    __table_name__ = 'guild_channel_pins'
     __options__ = default_options
     channel_id = columns.BigInt(primary_key=True, partition_key=True)
     message_id = columns.BigInt()
-
-
-class EmbedField(usertype.UserType):
-    name = columns.Text(max_length=100)
-    value = columns.Text()
-    inline = columns.Boolean(default=False)
-
-
-class EmbedAuthor(usertype.UserType):
-    name = columns.Text(max_length=100)
-    url = columns.Text(max_length=20)
-    icon_url = columns.Text(max_length=100)
-
-
-class EmbedVideo(usertype.UserType):
-    url = columns.Text(max_length=30)
-
-
-class EmbedImage(usertype.UserType):
-    url = columns.Text(max_length=30)
-
-
-class EmbedFooter(usertype.UserType):
-    text = columns.Text(max_length=500)
-    icon_url = columns.Text(max_length=100)
-
-
-class Embed(usertype.UserType):
-    title = columns.Text(default='', max_length=100)
-    description = columns.Text(max_length=4000, default='')
-    url = columns.Text(default='')
-    timestamp = columns.DateTime()
-    color = columns.Integer()
-    footer = columns.UserDefinedType(EmbedFooter)
-    image = columns.UserDefinedType(EmbedImage)
-    video = columns.UserDefinedType(EmbedVideo)
-    author = columns.UserDefinedType(EmbedAuthor)
-    fields = columns.List(columns.UserDefinedType(EmbedField))
 
 
 class Reaction(usertype.UserType):
@@ -258,9 +185,9 @@ class Emoji(models.Model):
     __options__ = default_options
     id = columns.BigInt(primary_key=True, partition_key=False)
     guild_id = columns.BigInt(primary_key=True, partition_key=True)
-    cdn_url = columns.Text()
+    uri = columns.Text()
 
-
+# TODO: Embeds
 class Message(models.Model):
     __table_name__ = 'messages'
     __options__ = default_options
@@ -274,8 +201,7 @@ class Message(models.Model):
     last_edited = columns.DateTime(default=_get_date)
     tts = columns.Boolean(default=False)
     mentions_everyone = columns.Boolean(default=False)
-    mentions = columns.List(columns.UserDefinedType(UserType))
-    embeds = columns.List(columns.UserDefinedType(Embed))
+    mentioned_users = columns.Set(columns.BigInt)
     reactions = columns.List(columns.UserDefinedType(Reaction))
     pinned = columns.Boolean(default=False)
     referenced_message_id = columns.BigInt()
@@ -286,6 +212,30 @@ class ReadState(models.Model):
     id = columns.BigInt(primary_key=True, partition_key=True)
     channel_id = columns.BigInt(primary_key=True, partition_key=False)
     last_message_id = columns.BigInt()
+
+
+class Meta(models.Model):
+    __table_name__ = 'meta'
+    __options__ = default_options
+    user_id = columns.BigInt(primary_key=True)
+    theme = columns.Text(default='dark')
+    guild_placements = columns.List(columns.BigInt)
+    direct_message_ignored_guilds = columns.Set(columns.BigInt)
+
+
+class GuildMeta(models.Model):
+    __table_name__ = 'guild_meta'
+    __options__ = default_options
+    user_id = columns.BigInt(primary_key=True, partition_key=True)
+    guild_id = columns.BigInt(primary_key=True, partition_key=True)
+    muted_channels = columns.Set(columns.BigInt)
+
+
+class Note(models.Model):
+    __table_name__ = 'notes'
+    creator_id = columns.BigInt(primary_key=True, partition_key=True)
+    user_id = columns.BigInt(primary_key=True)
+    content = columns.Text(max_length=900, default='')
 
 
 def to_dict(model: models.Model, _keep_email=False) -> dict:
@@ -333,6 +283,7 @@ def to_dict(model: models.Model, _keep_email=False) -> dict:
             ret.pop(name)
 
         if name == 'message_id':
+            ret.pop('message_id')
             ret['id'] = str(value)
 
     return ret
@@ -347,23 +298,14 @@ if __name__ == '__main__':
     # migrate old data
 
     # NOTE: Types
-    management.sync_type('ekranoplan', SettingsType)
-    management.sync_type('ekranoplan', UserType)
-    management.sync_type('ekranoplan', PermissionOverWrites)
-    management.sync_type('ekranoplan', EmbedAuthor)
-    management.sync_type('ekranoplan', EmbedField)
-    management.sync_type('ekranoplan', EmbedFooter)
-    management.sync_type('ekranoplan', EmbedImage)
-    management.sync_type('ekranoplan', EmbedVideo)
-    management.sync_type('ekranoplan', Embed)
-    management.sync_type('ekranoplan', Reaction)
+    management.sync_type('airbus', PermissionOverWrites)
+    management.sync_type('airbus', Reaction)
 
     # NOTE: Tables
     management.sync_table(User)
     management.sync_table(Guild)
     management.sync_table(GuildInvite)
     management.sync_table(Member)
-    management.sync_table(Channel)
     management.sync_table(GuildChannel)
     management.sync_table(GuildChannelPin)
     management.sync_table(Message)
@@ -371,3 +313,6 @@ if __name__ == '__main__':
     management.sync_table(Role)
     management.sync_table(Emoji)
     management.sync_table(ChannelSlowMode)
+    management.sync_table(Meta)
+    management.sync_table(GuildMeta)
+    management.sync_table(Note)

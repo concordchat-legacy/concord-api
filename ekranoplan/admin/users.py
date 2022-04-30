@@ -6,7 +6,7 @@ from blacksheep import Request
 from blacksheep.server.controllers import Controller, post, put
 
 from ..checks import validate_admin
-from ..database import SettingsType, User, to_dict
+from ..database import User, to_dict
 from ..errors import BadData
 from ..randoms import factory, get_hash
 from ..tokens import create_token
@@ -51,10 +51,6 @@ class AdminUsers(Controller):
             flags=flags,
             bio=bio,
             locale=locale,
-            settings=SettingsType(
-                accept_friend_requests=True,
-                accept_direct_messages=True,
-            ),
         )
 
         resp = to_dict(user)

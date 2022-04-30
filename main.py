@@ -17,7 +17,7 @@ from ekranoplan.admin import admin_users
 from ekranoplan.channels import channels, readstates
 from ekranoplan.database import Guild, GuildInvite, connect, to_dict
 from ekranoplan.errors import BadData, Err, NotFound
-from ekranoplan.guilds import guilds
+from ekranoplan.guilds import guilds, members
 from ekranoplan.messages import guild_messages
 from ekranoplan.randoms import factory
 from ekranoplan.users import users
@@ -120,6 +120,7 @@ bps = [
     guild_messages,
     channels,
     readstates,
+    members,
 ]
 
 app.register_controllers(bps)

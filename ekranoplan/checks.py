@@ -179,7 +179,7 @@ def search_messages(
     else:
         for bucket in range(current_bucket + 1):
             pmsg = Message.objects(
-                Message.id == message_id,
+                Message.message_id == message_id,
                 Message.channel_id == channel_id,
                 Message.bucket_id == bucket,
             )
@@ -344,3 +344,37 @@ def upload_image(image: str, location: str) -> str:
         pfp_id = str(uuid.uuid1()) + '.' + duri.mimetype.split('/')[1]
         upload(pfp_id, location, BytesIO(duri.data), str(duri.mimetype))
         return pfp_id
+
+def channels_valid(channel_ids: list, guild_id: int):
+    validated_channels: List[GuildChannel] = []
+    for chanid in channel_ids:
+        # The error handler handles DoesNotExist errors with a 400.
+        channel = GuildChannel.objects(
+            GuildChannel.id == chanid,
+            GuildChannel.guild_id == guild_id
+        ).get()
+        validated_channels.append(channel)
+
+    return validated_channels
+
+def guilds_valid(guild_ids: list):
+    validated_guilds: List[Guild] = []
+
+    for guild_id in guild_ids:
+        guild = Guild.objects(Guild.id == guild_id).get()
+        validated_guilds.append(guild)
+
+    return validated_guilds
+
+def validate_meta_guilds(guild_ids: list, user_id: int):
+    guilds_valid(guild_ids=guild_ids)
+
+    members: List[Member] = Member.object(
+        Member.id == user_id
+    ).all()
+
+    joined_guilds = [m.guild_id for m in members]
+
+    for guild_id in joined_guilds:
+        if guild_id not in guild_ids:
+            raise BadData()

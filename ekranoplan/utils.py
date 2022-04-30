@@ -27,6 +27,14 @@ VALID_GUILD_FEATURES = [
     'WELCOME_VERIFICATION',
     'FORM_CHANNELS'
 ]
+VALID_THEMES = [
+    'DARK',
+    'LIGHT'
+]
+VALID_LOCALES = [
+    'en_US',
+    'en_UK',
+]
 
 
 class AuthHeader(FromHeader[str]):

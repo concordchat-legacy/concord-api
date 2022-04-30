@@ -7,7 +7,6 @@ from ..database import (
     ChannelSlowMode,
     GuildChannelPin,
     Message,
-    UserType,
     _get_date,
     to_dict,
 )
@@ -113,12 +112,12 @@ class GuildMessages(Controller):
 
             if referenced_message is None:
                 raise BadData()
-            referenced_message = referenced_message.id
+            referenced_message = referenced_message.message_id
         else:
             referenced_message = None
 
         data = {
-            'id': factory().formulate(),
+            'message_id': factory().formulate(),
             'channel_id': channel_id,
             'bucket_id': get_bucket(channel_id),
             'guild_id': guild_id,
@@ -171,7 +170,7 @@ class GuildMessages(Controller):
         if msg is None:
             raise BadData()
 
-        if msg.author.id != member.id:
+        if msg.author_id != member.id:
             raise Forbidden()
 
         d: dict = await request.json(orjson.loads)
@@ -341,8 +340,7 @@ class GuildMessages(Controller):
         pin.delete()
         msg.save()
 
-        r = jsonify([])
-        r.status_code = 204
+        r = jsonify([], 204)
 
         await channel_event(
             'UNPIN',
@@ -356,4 +354,4 @@ class GuildMessages(Controller):
             is_message=True,
         )
 
-        return jsonify(r)
+        return r

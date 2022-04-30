@@ -11,7 +11,7 @@ from ..checks import (
     validate_member,
     validate_user,
 )
-from ..database import Guild, GuildChannel, GuildInvite, Member, Role, UserType, to_dict
+from ..database import Guild, GuildChannel, GuildInvite, Member, Role, GuildMeta, to_dict
 from ..errors import BadData, Conflict, Forbidden
 from ..randoms import factory
 from ..redis_manager import guild_event
@@ -31,7 +31,6 @@ class GuildsCore(Controller):
 
         data: dict = await request.json(orjson.loads)
         guild_id = factory().formulate()
-        me_usertype = UserType(**dict(me.items()))
 
 
         inserted_data = {
@@ -50,7 +49,6 @@ class GuildsCore(Controller):
             'id': me['id'],
             'guild_id': guild_id,
             'owner': True,
-            'user': me_usertype,
         }
 
         parent_id = factory().formulate()
@@ -172,6 +170,11 @@ class GuildsCore(Controller):
 
         for role in roles:
             role.delete()
+    
+        metas = GuildMeta.objects(GuildMeta.guild_id == guild_id).allow_filtering().all()
+
+        for meta in metas:
+            meta.delete()
 
         await guild_event('DELETE', guild_id=guild_id, data={'guild_id': guild.id})
 
