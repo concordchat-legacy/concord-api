@@ -6,7 +6,7 @@ from blacksheep.server.controllers import Controller, get, patch, post
 from cassandra.cqlengine import query
 
 from ..checks import upload_image, validate_user
-from ..database import User, to_dict
+from ..database import User, Meta, to_dict
 from ..errors import BadData, Forbidden, NotFound
 from ..randoms import factory, get_hash, verify_hash
 from ..tokens import create_token
@@ -75,9 +75,11 @@ class CoreUsers(Controller):
 
         if data.get('banner'):
             banner_id = upload_image(str(data['banner']), 'users')
+            
+        user_id = factory().formulate()
 
         user: User = User.create(
-            id=factory().formulate(),
+            id=user_id,
             username=username,
             discriminator=discrim,
             email=email[:100],
@@ -90,6 +92,7 @@ class CoreUsers(Controller):
             avatar=pfp_id,
             banner=banner_id,
         )
+        Meta.create(user_id=user_id)
 
         resp = to_dict(user, True)
         resp['token'] = create_token(user_id=user.id, user_password=user.password)
