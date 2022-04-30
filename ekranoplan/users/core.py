@@ -139,7 +139,10 @@ class CoreUsers(Controller):
             me.password = str(data['password'])
 
         if data.get('discriminator'):
-            me.discriminator = int(str(data['discriminator'])[:4])
+            d = int(str(data['discriminator'])[:4])
+            if len(str(d)) != 4:
+                raise BadData()
+            me.discriminator = d
 
         if data.get('avatar'):
             duri = datauri.DataURI(data.pop('avatar'))
