@@ -197,7 +197,7 @@ class Message(models.Model):
     message_id = columns.BigInt(
         primary_key=True, partition_key=False, clustering_order='DESC'
     )
-    guild_id = columns.BigInt(primary_key=True)
+    guild_id = columns.BigInt()
     author_id = columns.BigInt()
     content = columns.Text(max_length=3000)
     created_at = columns.DateTime(default=_get_date)
