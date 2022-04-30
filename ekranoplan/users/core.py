@@ -10,7 +10,7 @@ from ..database import User, to_dict
 from ..errors import BadData, Forbidden, NotFound
 from ..randoms import factory, get_hash, verify_hash
 from ..tokens import create_token
-from ..utils import AuthHeader, jsonify, VALID_LOCALES
+from ..utils import VALID_LOCALES, AuthHeader, jsonify
 
 
 class CoreUsers(Controller):
@@ -121,10 +121,18 @@ class CoreUsers(Controller):
             me.discriminator = d
 
         if data.get('avatar'):
-            me.avatar = upload_image(str(data['avatar']), 'users') if data['avatar'] != '' else ''
+            me.avatar = (
+                upload_image(str(data['avatar']), 'users')
+                if data['avatar'] != ''
+                else ''
+            )
 
         if data.get('banner'):
-            me.banner = upload_image(str(data['banner']), 'users') if data['banner'] != '' else ''
+            me.banner = (
+                upload_image(str(data['banner']), 'users')
+                if data['banner'] != ''
+                else ''
+            )
 
         me = me.save()
 

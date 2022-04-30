@@ -205,7 +205,12 @@ def verify_parent_id(parent: int, guild_id: int) -> GuildChannel:
     return channel
 
 
-async def verify_channel_position(pos: int, current_pos: int, guild_id: int, gathered_channels: List[GuildChannel] = None):
+async def verify_channel_position(
+    pos: int,
+    current_pos: int,
+    guild_id: int,
+    gathered_channels: List[GuildChannel] = None,
+):
     if gathered_channels:
         guild_channels = gathered_channels
     else:
@@ -303,9 +308,7 @@ def delete_all_channels(guild_id: int):
 
 
 def modify_member_roles(guild_id: int, member: Member, changed_roles: list):
-    roles: List[Role] = Role.objects(
-        Role.guild_id == guild_id
-    ).all()
+    roles: List[Role] = Role.objects(Role.guild_id == guild_id).all()
 
     rroles = [r.id for r in roles]
     croles: List[Role] = []
@@ -332,30 +335,34 @@ def modify_member_roles(guild_id: int, member: Member, changed_roles: list):
 
     return set(changed_roles)
 
+
 def upload_image(image: str, location: str) -> str:
     image = str(image)
     duri = datauri.DataURI(image)
 
-    if not str(duri.mimetype.startswith('image/')) or str(
-        duri.mimetype
-    ) not in ['image/png', 'image/jpeg', 'image/gif']:
+    if not str(duri.mimetype.startswith('image/')) or str(duri.mimetype) not in [
+        'image/png',
+        'image/jpeg',
+        'image/gif',
+    ]:
         return ''
     else:
         pfp_id = str(uuid.uuid1()) + '.' + duri.mimetype.split('/')[1]
         upload(pfp_id, location, BytesIO(duri.data), str(duri.mimetype))
         return pfp_id
 
+
 def channels_valid(channel_ids: list, guild_id: int):
     validated_channels: List[GuildChannel] = []
     for chanid in channel_ids:
         # The error handler handles DoesNotExist errors with a 400.
         channel = GuildChannel.objects(
-            GuildChannel.id == chanid,
-            GuildChannel.guild_id == guild_id
+            GuildChannel.id == chanid, GuildChannel.guild_id == guild_id
         ).get()
         validated_channels.append(channel)
 
     return validated_channels
+
 
 def guilds_valid(guild_ids: list):
     validated_guilds: List[Guild] = []
@@ -366,12 +373,11 @@ def guilds_valid(guild_ids: list):
 
     return validated_guilds
 
+
 def validate_meta_guilds(guild_ids: list, user_id: int):
     guilds_valid(guild_ids=guild_ids)
 
-    members: List[Member] = Member.object(
-        Member.id == user_id
-    ).all()
+    members: List[Member] = Member.object(Member.id == user_id).all()
 
     joined_guilds = [m.guild_id for m in members]
 

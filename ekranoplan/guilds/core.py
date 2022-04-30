@@ -11,7 +11,15 @@ from ..checks import (
     validate_member,
     validate_user,
 )
-from ..database import Guild, GuildChannel, GuildInvite, Member, Role, GuildMeta, to_dict
+from ..database import (
+    Guild,
+    GuildChannel,
+    GuildInvite,
+    GuildMeta,
+    Member,
+    Role,
+    to_dict,
+)
 from ..errors import BadData, Conflict, Forbidden
 from ..randoms import factory
 from ..redis_manager import guild_event
@@ -31,7 +39,6 @@ class GuildsCore(Controller):
 
         data: dict = await request.json(orjson.loads)
         guild_id = factory().formulate()
-
 
         inserted_data = {
             'id': guild_id,
@@ -120,10 +127,10 @@ class GuildsCore(Controller):
 
         # TODO: Check if the user is a donator and let them change this.
         # if data.get('banner'):
-            # guild.banner = upload_image(data['banner'], 'guilds')
+        # guild.banner = upload_image(data['banner'], 'guilds')
 
         # if data.get('splash'):
-            # guild.banner = upload_image(data['splash'], 'guilds')
+        # guild.banner = upload_image(data['splash'], 'guilds')
 
         guild = guild.save()
 
@@ -149,7 +156,9 @@ class GuildsCore(Controller):
 
         guild.delete()
 
-        members: List[Member] = Member.objects(Member.guild_id == guild_id).allow_filtering().all()
+        members: List[Member] = (
+            Member.objects(Member.guild_id == guild_id).allow_filtering().all()
+        )
 
         for member in members:
             member.delete()
@@ -170,8 +179,10 @@ class GuildsCore(Controller):
 
         for role in roles:
             role.delete()
-    
-        metas = GuildMeta.objects(GuildMeta.guild_id == guild_id).allow_filtering().all()
+
+        metas = (
+            GuildMeta.objects(GuildMeta.guild_id == guild_id).allow_filtering().all()
+        )
 
         for meta in metas:
             meta.delete()
@@ -223,9 +234,7 @@ class GuildsCore(Controller):
         vanity_code = request.query.get('utm_vanity')[0]
 
         try:
-            GuildInvite.objects(
-                GuildInvite.id == str(vanity_code)
-            ).get()
+            GuildInvite.objects(GuildInvite.id == str(vanity_code)).get()
         except:
             pass
         else:

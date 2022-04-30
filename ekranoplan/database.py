@@ -187,13 +187,16 @@ class Emoji(models.Model):
     guild_id = columns.BigInt(primary_key=True, partition_key=True)
     uri = columns.Text()
 
+
 # TODO: Embeds
 class Message(models.Model):
     __table_name__ = 'messages'
     __options__ = default_options
     channel_id = columns.BigInt(primary_key=True, partition_key=True)
     bucket_id = columns.Integer(primary_key=True, partition_key=True)
-    message_id = columns.BigInt(primary_key=True, partition_key=False, clustering_order='DESC')
+    message_id = columns.BigInt(
+        primary_key=True, partition_key=False, clustering_order='DESC'
+    )
     guild_id = columns.BigInt(primary_key=True)
     author_id = columns.BigInt()
     content = columns.Text(max_length=3000)
@@ -267,18 +270,23 @@ def to_dict(model: models.Model, _keep_email=False) -> dict:
 
             ret[name] = set_values
 
-        if name == 'id' or name.endswith('_id') and len(str(value)) > 14 and name != 'message_id':
+        if (
+            name == 'id'
+            or name.endswith('_id')
+            and len(str(value)) > 14
+            and name != 'message_id'
+        ):
             ret[name] = str(value)
-        
+
         if name == 'permissions':
             ret[name] = str(value)
-        
+
         if name == 'password':
             ret.pop(name)
-        
+
         if name == 'email' and not _keep_email:
             ret.pop(name)
-      
+
         if name == 'settings' and not _keep_email:
             ret.pop(name)
 

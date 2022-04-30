@@ -11,10 +11,7 @@ from ..utils import AuthHeader, jsonify
 class MemberController(Controller):
     @get('/guilds/{int:guild_id}/members/{int:member_id}')
     async def get_member(self, guild_id: int, member_id: int, auth: AuthHeader):
-        validate_member(
-            token=auth.value,
-            guild_id=guild_id
-        )
+        validate_member(token=auth.value, guild_id=guild_id)
 
     # consistency
     @patch('/guilds/{int:guild_id}/members/@me')
@@ -41,7 +38,9 @@ class MemberController(Controller):
         return jsonify(to_dict(member))
 
     @patch('/guilds/{int:guild_id}/members/{int:member_id}/nick')
-    async def edit_member_nick(self, guild_id: int, member_id: int, auth: AuthHeader, request: Request):
+    async def edit_member_nick(
+        self, guild_id: int, member_id: int, auth: AuthHeader, request: Request
+    ):
         member, _ = validate_member(
             token=auth.value,
             guild_id=guild_id,
@@ -50,8 +49,7 @@ class MemberController(Controller):
         perms = get_member_permissions(member=member)
 
         member: Member = Member.objects(
-            Member.id == member_id,
-            Member.guild_id == guild_id
+            Member.id == member_id, Member.guild_id == guild_id
         ).get()
 
         data = await request.json(orjson.loads)
@@ -67,9 +65,7 @@ class MemberController(Controller):
                 raise Forbidden()
 
             member.roles = modify_member_roles(
-                guild_id=guild_id,
-                member=member,
-                changed_roles=list(data.pop('roles'))
+                guild_id=guild_id, member=member, changed_roles=list(data.pop('roles'))
             )
 
         member.save()

@@ -43,11 +43,7 @@ class ChannelCore(Controller):
 
         calc = GuildPermissions(permissions)
 
-        if (
-            not calc.manage_channels
-            and not member.owner
-            and not calc.administator
-        ):
+        if not calc.manage_channels and not member.owner and not calc.administator:
             raise Forbidden()
 
         data: dict = request.json(orjson.loads)

@@ -1,22 +1,24 @@
 import orjson
-
 from blacksheep import Request
-from blacksheep.server.controllers import Controller, get, put, patch
-
-from ..errors import BadData
-from ..database import GuildMeta, Meta, Note, User, to_dict
-from ..checks import validate_user, validate_member, channels_valid, validate_meta_guilds, guilds_valid
-from ..utils import AuthHeader, jsonify, VALID_THEMES
+from blacksheep.server.controllers import Controller, get, patch, put
 from cassandra.cqlengine import query
 
-class MetaController(Controller):
+from ..checks import (
+    channels_valid,
+    guilds_valid,
+    validate_member,
+    validate_meta_guilds,
+    validate_user,
+)
+from ..database import GuildMeta, Meta, Note, User, to_dict
+from ..errors import BadData
+from ..utils import VALID_THEMES, AuthHeader, jsonify
 
+
+class MetaController(Controller):
     @get('/users/@me/meta')
     async def get_meta(self, auth: AuthHeader):
-        me = validate_user(
-            token=auth.value,
-            stop_bots=True
-        )
+        me = validate_user(token=auth.value, stop_bots=True)
 
         meta = Meta.objects(
             Meta.user_id == me.id,
@@ -26,14 +28,9 @@ class MetaController(Controller):
 
     @patch('/users/@me/meta')
     async def edit_meta(self, auth: AuthHeader, request: Request):
-        me = validate_user(
-            token=auth.value,
-            stop_bots=True
-        )
+        me = validate_user(token=auth.value, stop_bots=True)
 
-        meta: Meta = Meta.objects(
-            Meta.user_id == me.id
-        ).get()
+        meta: Meta = Meta.objects(Meta.user_id == me.id).get()
 
         data = await request.json(orjson.loads)
 
@@ -60,30 +57,20 @@ class MetaController(Controller):
 
     @get('/users/@me/guilds/{int:guild_id}/meta')
     async def get_guild_meta(self, guild_id: int, auth: AuthHeader):
-        _, me = validate_member(
-            token=auth.value,
-            guild_id=guild_id,
-            stop_bots=True
-        )
+        _, me = validate_member(token=auth.value, guild_id=guild_id, stop_bots=True)
 
         meta = GuildMeta.objects(
-            GuildMeta.user_id == me.id,
-            GuildMeta.guild_id == guild_id
+            GuildMeta.user_id == me.id, GuildMeta.guild_id == guild_id
         ).get()
 
         return jsonify(to_dict(meta))
 
     @patch('/users/@me/guilds/{int:guild_id}/meta')
     async def edit_guild_meta(self, guild_id: int, auth: AuthHeader, request: Request):
-        _, me = validate_member(
-            token=auth.value,
-            guild_id=guild_id,
-            stop_bots=True
-        )
+        _, me = validate_member(token=auth.value, guild_id=guild_id, stop_bots=True)
 
         meta: GuildMeta = GuildMeta.objects(
-            GuildMeta.user_id == me.id,
-            GuildMeta.guild_id == guild_id
+            GuildMeta.user_id == me.id, GuildMeta.guild_id == guild_id
         ).get()
 
         data: dict = await request.json(orjson.loads)
@@ -114,9 +101,9 @@ class MetaController(Controller):
             ).get()
             note.content = content
             note = note.save()
-        except(query.DoesNotExist):
+        except (query.DoesNotExist):
             note = Note.create(
-                creator_id = me.id,
+                creator_id=me.id,
                 user_id=user_id,
                 content=content,
             )
@@ -125,17 +112,11 @@ class MetaController(Controller):
 
     @get('/users/@me/notes/{int:user_id}')
     async def get_note(self, user_id: int, auth: AuthHeader):
-        me = validate_user(
-            token=auth.value,
-            stop_bots=True
-        )
+        me = validate_user(token=auth.value, stop_bots=True)
 
         try:
-            note = Note.objects(
-                Note.creator_id == me.id,
-                Note.user_id == user_id
-            ).get()
-        except(query.DoesNotExist):
+            note = Note.objects(Note.creator_id == me.id, Note.user_id == user_id).get()
+        except (query.DoesNotExist):
             return jsonify([], 404)
 
         return jsonify(to_dict(note))

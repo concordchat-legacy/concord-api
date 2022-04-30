@@ -20,7 +20,7 @@ from ekranoplan.errors import BadData, Err, NotFound
 from ekranoplan.guilds import guilds, members
 from ekranoplan.messages import guild_messages
 from ekranoplan.randoms import factory
-from ekranoplan.users import users, meta
+from ekranoplan.users import meta, users
 from ekranoplan.utils import jsonify
 
 try:
@@ -49,7 +49,9 @@ async def favicon():
 @app.route('/invites/{str:invite_code}', methods=['GET'])
 async def get_guild_by_invite(invite_code: str):
     try:
-        invite: GuildInvite = GuildInvite.objects(GuildInvite.id == invite_code.lower()).get()
+        invite: GuildInvite = GuildInvite.objects(
+            GuildInvite.id == invite_code.lower()
+        ).get()
     except (DoesNotExist):
         raise NotFound()
 
@@ -113,15 +115,6 @@ app.exceptions_handlers.update(
     }
 )
 
-bps = [
-    admin_users,
-    users,
-    guilds,
-    guild_messages,
-    channels,
-    readstates,
-    members,
-    meta
-]
+bps = [admin_users, users, guilds, guild_messages, channels, readstates, members, meta]
 
 app.register_controllers(bps)
