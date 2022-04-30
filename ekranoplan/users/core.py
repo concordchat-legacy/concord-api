@@ -1,20 +1,21 @@
-import random
-import uuid
-from io import BytesIO
-
-import datauri
 import orjson
 from blacksheep import Request
-from blacksheep.server.controllers import Controller, get, patch, post
-from cassandra.cqlengine import query
+from blacksheep.server.controllers import Controller, delete, get, patch, post
 
-from ..checks import validate_user
-from ..database import SettingsType, User, to_dict
+from ..checks import (
+    delete_channel,
+    validate_channel,
+    validate_member,
+    verify_channel_position,
+    verify_parent_id,
+    verify_permission_overwrite,
+)
+from ..database import Guild, GuildChannel, PermissionOverWrites, Role, to_dict
 from ..errors import BadData, Forbidden, NotFound
-from ..randoms import factory, get_hash, verify_hash
-from ..tokens import create_token
-from ..utils import AuthHeader, jsonify
-from ..valkyrie import upload
+from ..flags import GuildPermissions
+from ..randoms import factory
+from ..redis_manager import channel_event
+from ..utils import NONMESSAGEABLE, AuthHeader, jsonify
 
 
 class CoreUsers(Controller):
@@ -74,30 +75,11 @@ class CoreUsers(Controller):
         if locale not in ['en_US']:
             raise BadData()
 
-        pfp_id = ''
-        banner_id = ''
-
         if data.get('avatar'):
-            duri = datauri.DataURI(data.pop('avatar'))
-
-            if not str(duri.mimetype.startswith('image/')) or str(
-                duri.mimetype
-            ) not in ['image/png', 'image/jpeg', 'image/gif']:
-                ...
-            else:
-                pfp_id = str(uuid.uuid1()) + '.' + duri.mimetype.split('/')[1]
-                upload(pfp_id, 'users', BytesIO(duri.data), str(duri.mimetype))
+            pfp_id = upload_image(data['avatar'], 'users')
 
         if data.get('banner'):
-            duri = datauri.DataURI(data.pop('banner'))
-
-            if not str(duri.mimetype.startswith('image/')) or str(
-                duri.mimetype
-            ) not in ['image/png', 'image/jpeg', 'image/gif']:
-                ...
-            else:
-                banner_id = str(uuid.uuid1()) + '.' + duri.mimetype.split('/')[1]
-                upload(banner_id, 'users', BytesIO(duri.data), str(duri.mimetype))
+            banner_id = upload_image(data['banner'], 'users')
 
         user: User = User.create(
             id=factory().formulate(),
@@ -125,7 +107,6 @@ class CoreUsers(Controller):
 
     @patch('/users/@me')
     async def edit_me(self, auth: AuthHeader, request: Request):
-        # TODO: Edit Avatar and Banner
         me = validate_user(auth.value, stop_bots=True)
 
         data: dict = await request.json(orjson.loads)
@@ -149,28 +130,10 @@ class CoreUsers(Controller):
             me.discriminator = d
 
         if data.get('avatar'):
-            duri = datauri.DataURI(data.pop('avatar'))
-
-            if not str(duri.mimetype.startswith('image/')) or str(
-                duri.mimetype
-            ) not in ['image/png', 'image/jpeg', 'image/gif']:
-                ...
-            else:
-                pfp_id = str(uuid.uuid1()) + '.' + duri.mimetype.split('/')[1]
-                upload(pfp_id, 'users', BytesIO(duri.data), str(duri.mimetype))
-                me.avatar = pfp_id
+            me.avatar = upload_image(data['avatar'], 'users') if data['avatar'] != '' else ''
 
         if data.get('banner'):
-            duri = datauri.DataURI(data.pop('banner'))
-
-            if not str(duri.mimetype.startswith('image/')) or str(
-                duri.mimetype
-            ) not in ['image/png', 'image/jpeg', 'image/gif']:
-                ...
-            else:
-                banner_id = str(uuid.uuid1()) + '.' + duri.mimetype.split('/')[1]
-                upload(banner_id, 'users', BytesIO(duri.data), str(duri.mimetype))
-                me.banner = banner_id
+            me.banner = upload_image(data['banner'], 'users') if data['banner'] != '' else ''
 
         me = me.save()
 

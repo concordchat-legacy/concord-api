@@ -19,6 +19,7 @@ from ..database import (
     UserType,
     to_dict,
 )
+from ..checks import upload_image
 from ..errors import BadData, Conflict, Forbidden
 from ..randoms import factory
 from ..redis_manager import guild_event
@@ -40,6 +41,7 @@ class GuildsCore(Controller):
         guild_id = factory().formulate()
         me_usertype = UserType(**dict(me.items()))
 
+
         inserted_data = {
             'id': guild_id,
             'name': str(data['name'])[:40],
@@ -48,6 +50,9 @@ class GuildsCore(Controller):
             'nsfw': bool(data.get('nsfw', False)),
             'perferred_locale': me['locale'],
         }
+
+        if data.get('icon'):
+            inserted_data["icon"] = upload_image(str(data['icon']), 'guilds')
 
         original_member = {
             'id': me['id'],
@@ -111,7 +116,6 @@ class GuildsCore(Controller):
         data: dict = await request.json(orjson.loads)
         guild: Guild = Guild.objects(Guild.id == guild_id).get()
 
-        # TODO: Icon, Banner, Splash
         if data.get('name'):
             guild.name = str(data.pop('name'))[:40]
 
@@ -120,6 +124,16 @@ class GuildsCore(Controller):
 
         if data.get('nsfw'):
             guild.nsfw = bool(data.pop('nsfw'))
+
+        if data.get('icon'):
+            guild.icon = upload_image(data['icon'], 'guilds')
+
+        # TODO: Check if the user is a donator and let them change this.
+        # if data.get('banner'):
+            # guild.banner = upload_image(data['banner'], 'guilds')
+
+        # if data.get('splash'):
+            # guild.banner = upload_image(data['splash'], 'guilds')
 
         guild = guild.save()
 
