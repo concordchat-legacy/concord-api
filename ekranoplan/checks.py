@@ -1,4 +1,4 @@
-from typing import List, Union, Literal
+from typing import List, Union
 
 from cassandra.cqlengine import query
 
@@ -333,7 +333,7 @@ def modify_member_roles(guild_id: int, member: Member, changed_roles: list):
 
     return set(changed_roles)
 
-def upload_image(image: str, location: Literal['users', 'guilds']) -> str:
+def upload_image(image: str, location: str) -> str:
     duri = datauri.DataURI(image)
 
     if not str(duri.mimetype.startswith('image/')) or str(
