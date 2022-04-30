@@ -164,7 +164,7 @@ def search_messages(
                     Message.bucket_id == bucket,
                 )
                 .limit(limit)
-                .order_by('id')
+                .order_by('-message_id')
             )
 
             msgs = msgs.all()
