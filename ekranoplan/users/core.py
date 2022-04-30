@@ -1,20 +1,21 @@
-import random
-import uuid
-from io import BytesIO
-
-import datauri
 import orjson
 from blacksheep import Request
-from blacksheep.server.controllers import Controller, get, patch, post
-from cassandra.cqlengine import query
+from blacksheep.server.controllers import Controller, delete, get, patch, post
 
-from ..checks import validate_user, upload_image
-from ..database import SettingsType, User, to_dict
+from ..checks import (
+    delete_channel,
+    validate_channel,
+    validate_member,
+    verify_channel_position,
+    verify_parent_id,
+    verify_permission_overwrite,
+)
+from ..database import Guild, GuildChannel, PermissionOverWrites, Role, to_dict
 from ..errors import BadData, Forbidden, NotFound
-from ..randoms import factory, get_hash, verify_hash
-from ..tokens import create_token
-from ..utils import AuthHeader, jsonify
-from ..valkyrie import upload
+from ..flags import GuildPermissions
+from ..randoms import factory
+from ..redis_manager import channel_event
+from ..utils import NONMESSAGEABLE, AuthHeader, jsonify
 
 
 class CoreUsers(Controller):
