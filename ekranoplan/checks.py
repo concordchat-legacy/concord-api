@@ -1,10 +1,9 @@
-from typing import List, Union
-
-from cassandra.cqlengine import query
-
 import uuid
 from io import BytesIO
+from typing import List, Union
+
 import datauri
+from cassandra.cqlengine import query
 
 from .database import (
     ChannelSlowMode,

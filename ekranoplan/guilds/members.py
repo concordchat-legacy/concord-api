@@ -1,11 +1,11 @@
 import orjson
 from blacksheep import Request
-from blacksheep.server.controllers import Controller, get, post, patch
+from blacksheep.server.controllers import Controller, get, patch, post
 
-from ..errors import Forbidden
+from ..checks import get_member_permissions, modify_member_roles, validate_member
 from ..database import Member, to_dict
+from ..errors import Forbidden
 from ..utils import AuthHeader, jsonify
-from ..checks import validate_member, get_member_permissions, modify_member_roles
 
 
 class MemberController(Controller):

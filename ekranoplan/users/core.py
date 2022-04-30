@@ -1,21 +1,16 @@
+import random
+
 import orjson
 from blacksheep import Request
-from blacksheep.server.controllers import Controller, delete, get, patch, post
+from blacksheep.server.controllers import Controller, get, patch, post
+from cassandra.cqlengine import query
 
-from ..checks import (
-    delete_channel,
-    validate_channel,
-    validate_member,
-    verify_channel_position,
-    verify_parent_id,
-    verify_permission_overwrite,
-)
-from ..database import Guild, GuildChannel, PermissionOverWrites, Role, to_dict
+from ..checks import upload_image, validate_user
+from ..database import SettingsType, User, to_dict
 from ..errors import BadData, Forbidden, NotFound
-from ..flags import GuildPermissions
-from ..randoms import factory
-from ..redis_manager import channel_event
-from ..utils import NONMESSAGEABLE, AuthHeader, jsonify
+from ..randoms import factory, get_hash, verify_hash
+from ..tokens import create_token
+from ..utils import AuthHeader, jsonify
 
 
 class CoreUsers(Controller):
@@ -130,10 +125,10 @@ class CoreUsers(Controller):
             me.discriminator = d
 
         if data.get('avatar'):
-            me.avatar = upload_image(data['avatar'], 'users') if data['avatar'] != '' else ''
+            me.avatar = upload_image(str(data['avatar']), 'users') if data['avatar'] != '' else ''
 
         if data.get('banner'):
-            me.banner = upload_image(data['banner'], 'users') if data['banner'] != '' else ''
+            me.banner = upload_image(str(data['banner']), 'users') if data['banner'] != '' else ''
 
         me = me.save()
 
