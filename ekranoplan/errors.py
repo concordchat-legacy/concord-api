@@ -36,4 +36,4 @@ class NotFound(Err):
 
 class Conflict(Err):
     resp_type = 409
-    resp_name = 'Conflict'
+    resp_message = 'Conflict'

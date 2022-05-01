@@ -20,6 +20,7 @@ from ..database import (
     GuildInvite,
     GuildMeta,
     Member,
+    Meta,
     Role,
     _get_date,
     to_dict,
@@ -193,6 +194,8 @@ class GuildsCore(Controller):
         )
 
         for member in members:
+            meta: Meta = Meta.objects(Meta.user_id == member.id).get()
+            meta.guild_placements.remove(guild_id)
             member.delete()
 
         delete_all_channels(guild_id=guild_id)

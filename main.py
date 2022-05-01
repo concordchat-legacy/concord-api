@@ -19,7 +19,7 @@ from ekranoplan.channels import channels, readstates
 from ekranoplan.checks import add_guild_meta, audit, validate_user
 from ekranoplan.database import Guild, GuildInvite, Member, connect, to_dict
 from ekranoplan.errors import BadData, Conflict, Err, NotFound
-from ekranoplan.guilds import guilds, members
+from ekranoplan.guilds import guilds, members, audits
 from ekranoplan.messages import guild_messages
 from ekranoplan.randoms import factory
 from ekranoplan.redis_manager import member_event
@@ -152,6 +152,6 @@ app.exceptions_handlers.update(
     }
 )
 
-bps = [admin_users, users, guilds, guild_messages, channels, readstates, members, meta]
+bps = [admin_users, users, guilds, guild_messages, channels, readstates, members, meta, audits]
 
 app.register_controllers(bps)
