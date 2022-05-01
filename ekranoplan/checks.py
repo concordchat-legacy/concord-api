@@ -6,21 +6,22 @@ import datauri
 from cassandra.cqlengine import query
 
 from .database import (
+    Audit,
     ChannelSlowMode,
     Guild,
     GuildChannel,
+    GuildMeta,
     Member,
     Message,
     Meta,
     PermissionOverWrites,
     Role,
     User,
-    GuildMeta,
     to_dict,
 )
 from .errors import BadData, Conflict, Forbidden, NotFound
 from .flags import GuildPermissions, UserFlags
-from .randoms import get_bucket
+from .randoms import factory, get_bucket
 from .redis_manager import channel_event
 from .tokens import verify_token
 from .valkyrie import upload
@@ -404,3 +405,24 @@ def get_channel_overwrites(channel_id: int, as_dict=False):
         o = to_dict(o)
 
     return o
+
+
+def audit(
+    action_name: str,
+    guild_id: int,
+    postmortem: str,
+    audited: int = 0,
+    object_id: int = 0,
+    user_id: int = 0,
+):
+    audit: Audit = Audit.create(
+        guild_id=guild_id,
+        audited=audited,
+        auditor=user_id,
+        type=action_name,
+        object_id=object_id,
+        postmortem=postmortem,
+        audit_id=factory().formulate(),
+    )
+
+    return audit

@@ -32,6 +32,14 @@ VALID_LOCALES = [
     'en_US',
     'en_UK',
 ]
+SCIENCE_TYPES = [
+    'APP_OPENED',
+    'GUILD_OPENED',
+    'GUILD_CHANNEL_OPENED',
+    'MESSAGE_CREATED',
+    'GUILD_CREATED',
+    'SETTINGS_PANEL_OPEN',
+]
 
 
 class AuthHeader(FromHeader[str]):

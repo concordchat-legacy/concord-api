@@ -44,8 +44,7 @@ class GuildPermissions:
         self.manage_channels = has(1 << 4)
         self.manage_guild = has(1 << 5)
         self.add_reactions = has(1 << 6)
-        # TODO: Audit Log
-        # self.view_audit_log = has(1 << 7)
+        self.view_audit_log = has(1 << 7)
 
         # NOTE: Voice, although not out yet.
         # self.priority_speaker = has(1 << 8)

@@ -5,17 +5,19 @@ from blacksheep.server.controllers import Controller, get, patch
 from ..checks import get_member_permissions, modify_member_roles, validate_member
 from ..database import Member, to_dict
 from ..errors import Forbidden, NotFound
+from ..redis_manager import member_event
 from ..utils import AuthHeader, jsonify
 
 
 class MemberController(Controller):
-
     @get('/guilds/{int:guild_id}/members/{int:member_id}')
     async def get_member(self, guild_id: int, member_id: int, auth: AuthHeader):
         _, _ = validate_member(token=auth.value, guild_id=guild_id)
 
         try:
-            ret = Member.objects(Member.id == member_id, Member.guild_id == guild_id).get()
+            ret = Member.objects(
+                Member.id == member_id, Member.guild_id == guild_id
+            ).get()
         except:
             raise NotFound()
 
@@ -55,6 +57,8 @@ class MemberController(Controller):
 
         member = member.save()
 
+        await member_event('UPDATE', member.id, guild_id=guild_id, data=to_dict(member))
+
         return jsonify(to_dict(member))
 
     @patch('/guilds/{int:guild_id}/members/{int:member_id}/nick')
@@ -88,6 +92,8 @@ class MemberController(Controller):
                 guild_id=guild_id, member=member, changed_roles=list(data.pop('roles'))
             )
 
-        member.save()
+        member = member.save()
+
+        await member_event('UPDATE', member.id, guild_id=guild_id, data=to_dict(member))
 
         return jsonify(to_dict(member))

@@ -246,6 +246,31 @@ class Note(models.Model):
     content = columns.Text(max_length=900, default='')
 
 
+class Audit(models.Model):
+    __table_name__ = 'audits'
+    # let audits live for 4 months.
+    __options__ = {'default_time_to_live': 10520000}
+    # the guild this audit happened at.
+    guild_id = columns.BigInt(primary_key=True, partition_key=True)
+    # the user audited.
+    audited = columns.BigInt(primary_key=True)
+    # bot which audited this event, 0 means it was audited by the system.
+    auditor = columns.BigInt(default=0)
+    # the type of the audit.
+    type = columns.Text()
+    # the object id effected, i.e. message ids
+    object_id = columns.BigInt(default=0)
+    # the bot or systems postmortem.
+    # this is set to 6000 mostly since I can't add a data field
+    # so bots have to use the reason field instead, this should be large or
+    # extendible on the client and should support markdown.
+    postmortem = columns.Text(max_length=6000)
+    # the snowflake id of this audit.
+    audit_id = columns.BigInt()
+    # when this was audited
+    audited_at = columns.DateTime(default=_get_date)
+
+
 def to_dict(model: models.Model, _keep_email=False) -> dict:
     initial: dict[str, Any] = model.items()
     ret = dict(initial)

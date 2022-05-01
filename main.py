@@ -2,7 +2,8 @@ import secrets
 import traceback
 
 import dotenv
-from blacksheep import Application, not_found, Request
+import orjson
+from blacksheep import Application, Request, not_found
 from blacksheep.exceptions import (
     BadRequest,
     BadRequestFormat,
@@ -12,18 +13,18 @@ from blacksheep.exceptions import (
 )
 from blacksheep_prometheus import PrometheusMiddleware, metrics
 from cassandra.cqlengine.query import DoesNotExist
-import orjson
 
 from ekranoplan.admin import admin_users
 from ekranoplan.channels import channels, readstates
+from ekranoplan.checks import add_guild_meta, audit, validate_user
 from ekranoplan.database import Guild, GuildInvite, Member, connect, to_dict
 from ekranoplan.errors import BadData, Conflict, Err, NotFound
 from ekranoplan.guilds import guilds, members
 from ekranoplan.messages import guild_messages
 from ekranoplan.randoms import factory
+from ekranoplan.redis_manager import member_event
 from ekranoplan.users import meta, users
 from ekranoplan.utils import jsonify
-from ekranoplan.checks import validate_user, add_guild_meta
 
 try:
     import uvloop  # type: ignore
@@ -74,22 +75,27 @@ async def get_guild_by_invite(invite_code: str, request: Request):
     me = validate_user(auth, stop_bots=True)
 
     try:
-        Member.objects(
-            Member.id == me.id,
-            Member.guild_id == guild.id
-        ).get()
+        Member.objects(Member.id == me.id, Member.guild_id == guild.id).get()
     except:
         pass
     else:
         raise Conflict()
 
-    member = Member.create(
-        id=me.id,
-        guild_id=guild.id
-    )
+    member: Member = Member.create(id=me.id, guild_id=guild.id)
     add_guild_meta(me.id, guild.id)
 
+    await member_event('JOIN', member.id, guild_id=guild.id, data=to_dict(member))
+
+    audit(
+        'MEMBER_JOIN',
+        guild_id=guild.id,
+        postmortem=f'# User `{me.username}/{str(member.id)}` Joined `{guild.name}`/`{str(guild.id)}` At `{str(member.joined_at)}`\n\n- Using `{invite_code}`',
+        audited=member.id,
+        object_id=member.id,
+    )
+
     return jsonify(to_dict(member))
+
 
 @app.on_start
 async def on_start(application: Application):

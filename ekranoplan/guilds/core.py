@@ -1,3 +1,4 @@
+from copy import copy
 from typing import List
 
 import orjson
@@ -6,6 +7,7 @@ from blacksheep.server.controllers import Controller, delete, get, patch, post, 
 
 from ..checks import (
     add_guild_meta,
+    audit,
     delete_all_channels,
     get_member_permissions,
     upload_image,
@@ -19,6 +21,7 @@ from ..database import (
     GuildMeta,
     Member,
     Role,
+    _get_date,
     to_dict,
 )
 from ..errors import BadData, Conflict, Forbidden
@@ -103,7 +106,9 @@ class GuildsCore(Controller):
     @patch('/guilds/{int:guild_id}')
     async def edit_guild(self, guild_id: int, auth: AuthHeader, request: Request):
         # TODO: Maybe bots should be able to access this?
-        member, _ = validate_member(token=auth.value, guild_id=guild_id, stop_bots=True)
+        member, me = validate_member(
+            token=auth.value, guild_id=guild_id, stop_bots=True
+        )
 
         perms = get_member_permissions(member)
 
@@ -131,13 +136,40 @@ class GuildsCore(Controller):
 
         # if data.get('splash'):
         # guild.banner = upload_image(data['splash'], 'guilds')
+        old_guild = copy(guild)
 
         guild = guild.save()
+
+        pm = f'# User `{me.username}`/`{str(me.id)}` Modified the Guild on `{str(_get_date())}`\n\n'
+        if guild.name != old_guild.name:
+            pm += f'- The new name is `{guild.name}`, old name is `{old_guild.name}`\n'
+
+        if guild.description != old_guild.description:
+            pm += f'- The new description is `{guild.description}`, old description is `{old_guild.description}`\n'
+
+        if guild.nsfw != old_guild.nsfw:
+            if guild.nsfw is True:
+                pm += f'- The Guild is now `nsfw`\n'
+            else:
+                pm += f'- The Guild is now not `nsfw`\n'
+
+        if guild.icon != old_guild.icon:
+            pm += (
+                f'- The new Guild Icon is {guild.icon}, old one was {old_guild.icon}\n'
+            )
 
         await guild_event(
             'EDIT',
             guild.id,
             data=to_dict(guild),
+        )
+
+        audit(
+            'GUILD_UPDATE',
+            guild_id=guild_id,
+            postmortem=pm,
+            audited=guild_id,
+            object_id=guild_id,
         )
 
         return jsonify(to_dict(guild))
@@ -222,7 +254,9 @@ class GuildsCore(Controller):
     async def claim_guild_vanity(
         self, guild_id: int, auth: AuthHeader, request: Request
     ):
-        member, _ = validate_member(token=auth.value, guild_id=guild_id, stop_bots=True)
+        member, me = validate_member(
+            token=auth.value, guild_id=guild_id, stop_bots=True
+        )
 
         perms = get_member_permissions(member=member)
 
@@ -253,6 +287,7 @@ class GuildsCore(Controller):
             guild_id=guild_id,
             creator_id=0,
         )
+        old_guild = copy(guild)
 
         guild = guild.save()
 
@@ -260,6 +295,17 @@ class GuildsCore(Controller):
             'VANITY_UPDATE',
             guild_id=guild.id,
             data={'vanity_url': guild.vanity_url},
+        )
+
+        pm = f'# User {me.username}/{str(member.id)} Changed the Vanity\n\n'
+        pm += f'- The new Vanity is {guild.vanity_url}, old Vanity was {old_guild.vanity_url}'
+
+        audit(
+            'VANITY_UPDATE',
+            guild_id=guild.id,
+            postmortem=pm,
+            audited=guild.id,
+            object_id=guild.id,
         )
 
         return jsonify(to_dict(guild), 201)
