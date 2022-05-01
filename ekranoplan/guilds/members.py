@@ -1,6 +1,6 @@
 import orjson
 from blacksheep import Request
-from blacksheep.server.controllers import Controller, get, patch, post
+from blacksheep.server.controllers import Controller, get, patch
 
 from ..checks import get_member_permissions, modify_member_roles, validate_member
 from ..database import Member, to_dict
@@ -9,7 +9,8 @@ from ..utils import AuthHeader, jsonify
 
 
 class MemberController(Controller):
-    @get('/guilds/{int:guild_id}/members/{int:member_id}')
+
+    # @get('/guilds/{int:guild_id}/members/{int:member_id}')
     async def get_member(self, guild_id: int, member_id: int, auth: AuthHeader):
         validate_member(token=auth.value, guild_id=guild_id)
 

@@ -2,7 +2,7 @@ import secrets
 import traceback
 
 import dotenv
-from blacksheep import Application, not_found
+from blacksheep import Application, not_found, Request
 from blacksheep.exceptions import (
     BadRequest,
     BadRequestFormat,
@@ -12,16 +12,18 @@ from blacksheep.exceptions import (
 )
 from blacksheep_prometheus import PrometheusMiddleware, metrics
 from cassandra.cqlengine.query import DoesNotExist
+import orjson
 
 from ekranoplan.admin import admin_users
 from ekranoplan.channels import channels, readstates
-from ekranoplan.database import Guild, GuildInvite, connect, to_dict
-from ekranoplan.errors import BadData, Err, NotFound
+from ekranoplan.database import Guild, GuildInvite, Member, connect, to_dict
+from ekranoplan.errors import BadData, Conflict, Err, NotFound
 from ekranoplan.guilds import guilds, members
 from ekranoplan.messages import guild_messages
 from ekranoplan.randoms import factory
 from ekranoplan.users import meta, users
 from ekranoplan.utils import jsonify
+from ekranoplan.checks import validate_user, add_guild_meta
 
 try:
     import uvloop  # type: ignore
@@ -47,7 +49,7 @@ async def favicon():
 
 
 @app.route('/invites/{str:invite_code}', methods=['GET'])
-async def get_guild_by_invite(invite_code: str):
+async def get_guild_by_invite(invite_code: str, request: Request):
     try:
         invite: GuildInvite = GuildInvite.objects(
             GuildInvite.id == invite_code.lower()
@@ -55,10 +57,34 @@ async def get_guild_by_invite(invite_code: str):
     except (DoesNotExist):
         raise NotFound()
 
+    accept = bool(await request.json(orjson.loads).get('accept', False))
+
     guild: Guild = Guild.objects(Guild.id == invite.guild_id).get()
 
-    return jsonify(to_dict(guild))
+    if not accept:
+        return jsonify(to_dict(guild))
 
+    auth = request.get_single_header(b'Authorization').decode()
+
+    me = validate_user(auth, stop_bots=True)
+
+    try:
+        Member.objects(
+            Member.id == me.id,
+            Member.guild_id == guild.id
+        ).get()
+    except:
+        pass
+    else:
+        raise Conflict()
+
+    member = Member.create(
+        id=me.id,
+        guild_id=guild.id
+    )
+    add_guild_meta(me.id, guild.id)
+
+    return jsonify(to_dict(member))
 
 @app.on_start
 async def on_start(application: Application):

@@ -89,7 +89,6 @@ class GuildsCore(Controller):
 
         guild['members'] = member
         guild['channels'] = channels
-        GuildMeta.create(user_id=me.id, guild_id=guild_id)
         add_guild_meta(user_id=me.id, guild_id=guild_id)
 
         await guild_event(

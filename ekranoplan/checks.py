@@ -15,6 +15,7 @@ from .database import (
     PermissionOverWrites,
     Role,
     User,
+    GuildMeta,
     to_dict,
 )
 from .errors import BadData, Conflict, Forbidden, NotFound
@@ -391,7 +392,7 @@ def add_guild_meta(user_id: int, guild_id: int):
 
     meta = meta.save()
 
-    return meta
+    GuildMeta.create(user_id=user_id, guild_id=guild_id)
 
 
 def get_channel_overwrites(channel_id: int, as_dict=False):

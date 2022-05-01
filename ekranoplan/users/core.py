@@ -57,7 +57,7 @@ class CoreUsers(Controller):
         email = data['email']
         password = await get_hash(str(data.pop('password')))
         flags = 1 << 0
-        bio = str(data.get('bio')) or ''
+        bio = str(data.get('bio') or '')
         locale = str(data.get('locale') or 'en_US')
         referrer = request.query.get('utm_source') or ''
         pronouns = str(data.get('pronouns') or '')
