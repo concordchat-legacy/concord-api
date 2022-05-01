@@ -271,6 +271,18 @@ class Audit(models.Model):
     audited_at = columns.DateTime(default=_get_date)
 
 
+# class Relationship(models.Model):
+    __table_name__ = 'relationships'
+    __options__ = default_options
+    # types:
+    # 0: Pending
+    # 1: Accepted
+    # 2: Blocked
+    type = columns.Integer(default=0)
+    receiver = columns.BigInt()
+    sender = columns.BigInt()
+
+
 def to_dict(model: models.Model, _keep_email=False) -> dict:
     initial: dict[str, Any] = model.items()
     ret = dict(initial)

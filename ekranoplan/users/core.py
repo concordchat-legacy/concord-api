@@ -5,7 +5,7 @@ from blacksheep import Request
 from blacksheep.server.controllers import Controller, get, patch, post
 from cassandra.cqlengine import query
 
-from ..checks import upload_image, validate_user
+from ..checks import upload_image, validate_user, verify_email
 from ..database import Meta, User, to_dict
 from ..errors import BadData, Forbidden, NotFound
 from ..randoms import factory, get_hash, verify_hash
@@ -54,7 +54,7 @@ class CoreUsers(Controller):
         # TODO: Implement this better
         discrim = random.randint(1, 9999)
         discrim = int('%04d' % discrim)
-        email = data['email']
+        email = verify_email(str(data['email']))
         password = await get_hash(str(data.pop('password')))
         flags = 1 << 0
         bio = str(data.get('bio') or '')
@@ -114,7 +114,7 @@ class CoreUsers(Controller):
             me.pronouns = str(data['pronouns'])
 
         if data.get('email'):
-            me.email = str(data['email'])
+            me.email = verify_email(str(data['email']))
 
         if data.get('password'):
             me.password = await get_hash(str(data['password']))
