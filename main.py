@@ -59,7 +59,10 @@ async def get_guild_by_invite(invite_code: str, request: Request):
 
     data = await request.json(orjson.loads)
 
-    accept = bool(data.get('accept', False))
+    if data is not None:
+        accept = bool(data.get('accept', False))
+    else:
+        accept = False
 
     guild: Guild = Guild.objects(Guild.id == invite.guild_id).get()
 
