@@ -4,15 +4,34 @@ from blacksheep.server.controllers import Controller, get, patch
 
 from ..checks import get_member_permissions, modify_member_roles, validate_member
 from ..database import Member, to_dict
-from ..errors import Forbidden
+from ..errors import Forbidden, NotFound
 from ..utils import AuthHeader, jsonify
 
 
 class MemberController(Controller):
 
-    # @get('/guilds/{int:guild_id}/members/{int:member_id}')
+    @get('/guilds/{int:guild_id}/members/{int:member_id}')
     async def get_member(self, guild_id: int, member_id: int, auth: AuthHeader):
-        validate_member(token=auth.value, guild_id=guild_id)
+        _, _ = validate_member(token=auth.value, guild_id=guild_id)
+
+        try:
+            ret = Member.objects(Member.id == member_id, Member.guild_id == guild_id).get()
+        except:
+            raise NotFound()
+
+        return jsonify(to_dict(ret))
+
+    @get('/guilds/{int:guild_id}/members')
+    async def get_members(self, guild_id: int, auth: AuthHeader):
+        _, _ = validate_member(token=auth.value, guild_id=guild_id)
+
+        members = Member.objects(Member.guild_id == guild_id).all()
+        ret = []
+
+        for member in members:
+            ret.append(to_dict(member))
+
+        return jsonify(ret)
 
     # consistency
     @patch('/guilds/{int:guild_id}/members/@me')
