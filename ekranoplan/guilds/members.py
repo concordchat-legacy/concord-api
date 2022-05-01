@@ -25,7 +25,7 @@ class MemberController(Controller):
     async def get_members(self, guild_id: int, auth: AuthHeader):
         _, _ = validate_member(token=auth.value, guild_id=guild_id)
 
-        members = Member.objects(Member.guild_id == guild_id).all()
+        members = Member.objects(Member.guild_id == guild_id).allow_filtering().all()
         ret = []
 
         for member in members:
