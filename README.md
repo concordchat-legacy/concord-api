@@ -9,7 +9,7 @@ Privacy-focused, scalable, and blazingly fast REST API for concord.
 
 # Design Philosophy
 You may be asking multiple questions, like "why is this in python?" or "why not use rust?"
-Answers to those exact questions are stated, [here]
+Answers to those exact questions are stated, [here](https://gist.github.com/VincentRPS/dd02deaacdbc0fb3b52090aa338c658e)
 
 
 # Abuse Protection
