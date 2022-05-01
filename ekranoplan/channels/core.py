@@ -1,16 +1,17 @@
 from typing import List
+
 import orjson
 from blacksheep import Request
 from blacksheep.server.controllers import Controller, delete, get, patch, post
 
 from ..checks import (
     delete_channel,
+    get_channel_overwrites,
     validate_channel,
     validate_member,
     verify_channel_position,
     verify_parent_id,
     verify_permission_overwrite,
-    get_channel_overwrites
 )
 from ..database import Guild, GuildChannel, PermissionOverWrites, Role, to_dict
 from ..errors import BadData, Forbidden, NotFound
@@ -125,7 +126,7 @@ class ChannelCore(Controller):
             data={'channel_id': channel.id, 'guild_id': guild_id},
         )
 
-        return jsonify({}, 203)
+        return jsonify({}, 204)
 
     @patch('/guilds/{int:guild_id}/channels/{int:channel_id}')
     async def edit_channel(
@@ -174,12 +175,14 @@ class ChannelCore(Controller):
                         break
 
                 if not found:
-                    _overwrites.append(PermissionOverWrites.create(
-                        channel_id=channel_id,
-                        user_id=user_id,
-                        allow=allow,
-                        deny=deny
-                    ))
+                    _overwrites.append(
+                        PermissionOverWrites.create(
+                            channel_id=channel_id,
+                            user_id=user_id,
+                            allow=allow,
+                            deny=deny,
+                        )
+                    )
 
         if data.get('topic'):
             channel.topic = str(data.pop('topic'))[:1024]

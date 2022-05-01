@@ -5,12 +5,12 @@ from blacksheep import Request
 from blacksheep.server.controllers import Controller, delete, get, patch, post, put
 
 from ..checks import (
+    add_guild_meta,
     delete_all_channels,
     get_member_permissions,
     upload_image,
     validate_member,
     validate_user,
-    add_guild_meta
 )
 from ..database import (
     Guild,
@@ -104,9 +104,7 @@ class GuildsCore(Controller):
     @patch('/guilds/{int:guild_id}')
     async def edit_guild(self, guild_id: int, auth: AuthHeader, request: Request):
         # TODO: Maybe bots should be able to access this?
-        member, _ = validate_member(
-            token=auth.value, guild_id=guild_id, stop_bots=True
-        )
+        member, _ = validate_member(token=auth.value, guild_id=guild_id, stop_bots=True)
 
         perms = get_member_permissions(member)
 
@@ -192,7 +190,7 @@ class GuildsCore(Controller):
 
         await guild_event('DELETE', guild_id=guild_id, data={'guild_id': guild.id})
 
-        return jsonify({}, 203)
+        return jsonify({}, 204)
 
     @get('/guilds/{int:guild_id}')
     async def get_guild(self, guild_id: int, auth: AuthHeader):

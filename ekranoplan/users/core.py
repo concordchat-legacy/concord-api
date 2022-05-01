@@ -6,7 +6,7 @@ from blacksheep.server.controllers import Controller, get, patch, post
 from cassandra.cqlengine import query
 
 from ..checks import upload_image, validate_user
-from ..database import User, Meta, to_dict
+from ..database import Meta, User, to_dict
 from ..errors import BadData, Forbidden, NotFound
 from ..randoms import factory, get_hash, verify_hash
 from ..tokens import create_token

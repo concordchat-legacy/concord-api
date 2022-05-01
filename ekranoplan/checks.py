@@ -101,7 +101,7 @@ def validate_channel(
         try:
             overwrite: PermissionOverWrites = PermissionOverWrites.objects(
                 PermissionOverWrites.channel_id == channel_id,
-                PermissionOverWrites.user_id == member.id
+                PermissionOverWrites.user_id == member.id,
             ).get()
             user_found = True
             allow_permissions = GuildPermissions(overwrite.allow)
@@ -383,16 +383,16 @@ def validate_meta_guilds(guild_ids: list, user_id: int):
         if guild_id not in guild_ids:
             raise BadData()
 
+
 def add_guild_meta(user_id: int, guild_id: int):
-    meta: Meta = Meta.objects(
-        Meta.user_id == user_id
-    ).get()
+    meta: Meta = Meta.objects(Meta.user_id == user_id).get()
 
     meta.guild_placements.append(guild_id)
-    
+
     meta = meta.save()
 
     return meta
+
 
 def get_channel_overwrites(channel_id: int, as_dict=False):
     o = PermissionOverWrites.objects(
