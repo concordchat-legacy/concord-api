@@ -57,7 +57,9 @@ async def get_guild_by_invite(invite_code: str, request: Request):
     except (DoesNotExist):
         raise NotFound()
 
-    accept = bool(await request.json(orjson.loads).get('accept', False))
+    data = await request.json(orjson.loads)
+
+    accept = bool(data.get('accept', False))
 
     guild: Guild = Guild.objects(Guild.id == invite.guild_id).get()
 
