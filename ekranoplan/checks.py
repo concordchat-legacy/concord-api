@@ -11,6 +11,7 @@ from .database import (
     GuildChannel,
     Member,
     Message,
+    Meta,
     PermissionOverWrites,
     Role,
     User,
@@ -97,15 +98,16 @@ def validate_channel(
         if member.owner:
             return member, user, channel, None
 
-        user_found = False
-        for overwrite in channel.permission_overwrites:
-            assert isinstance(overwrite, PermissionOverWrites)
-
-            if overwrite.id == user.id:
-                user_found = True
-                allow_permissions = GuildPermissions(overwrite.allow)
-                disallow_permissions = GuildPermissions(overwrite.deny)
-                break
+        try:
+            overwrite: PermissionOverWrites = PermissionOverWrites.objects(
+                PermissionOverWrites.channel_id == channel_id,
+                PermissionOverWrites.user_id == member.id
+            ).get()
+            user_found = True
+            allow_permissions = GuildPermissions(overwrite.allow)
+            disallow_permissions = GuildPermissions(overwrite.deny)
+        except:
+            user_found = False
 
         if not user_found:
             if list(member.roles) == []:
@@ -158,18 +160,14 @@ def search_messages(
     collected_messages = []
     if message_id is None:
         for bucket in range(current_bucket + 1):
-            msgs = (
+            if bucket == 0:
+                continue
+            collected_messages.append(
                 Message.objects(
                     Message.channel_id == channel_id,
                     Message.bucket_id == bucket,
-                )
-                .limit(limit)
-                .order_by('-message_id')
+                ).all()
             )
-
-            msgs = msgs.all()
-
-            collected_messages.append(msgs)
 
             if len(collected_messages) > limit:
                 collected_messages = collected_messages[limit:]
@@ -265,7 +263,7 @@ def get_cat_channels(category: GuildChannel, _add_one: bool = False):
 
 def verify_permission_overwrite(d: dict):
     data = {
-        'id': d['id'],
+        'user_id': d['user_id'],
         'allow': str(d['allow']) if d['allow'] is not None else '0',
         'deny': str(d['deny']) if d['deny'] is not None else '0',
     }
@@ -384,3 +382,24 @@ def validate_meta_guilds(guild_ids: list, user_id: int):
     for guild_id in joined_guilds:
         if guild_id not in guild_ids:
             raise BadData()
+
+def add_guild_meta(user_id: int, guild_id: int):
+    meta: Meta = Meta.objects(
+        Meta.user_id == user_id
+    ).get()
+
+    meta.guild_placements.append(guild_id)
+    
+    meta = meta.save()
+
+    return meta
+
+def get_channel_overwrites(channel_id: int, as_dict=False):
+    o = PermissionOverWrites.objects(
+        PermissionOverWrites.channel_id == channel_id
+    ).all()
+
+    if as_dict:
+        o = to_dict(o)
+
+    return o

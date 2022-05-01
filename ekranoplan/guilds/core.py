@@ -10,6 +10,7 @@ from ..checks import (
     upload_image,
     validate_member,
     validate_user,
+    add_guild_meta
 )
 from ..database import (
     Guild,
@@ -89,6 +90,7 @@ class GuildsCore(Controller):
         guild['members'] = member
         guild['channels'] = channels
         GuildMeta.create(user_id=me.id, guild_id=guild_id)
+        add_guild_meta(user_id=me.id, guild_id=guild_id)
 
         await guild_event(
             None,
@@ -102,7 +104,7 @@ class GuildsCore(Controller):
     @patch('/guilds/{int:guild_id}')
     async def edit_guild(self, guild_id: int, auth: AuthHeader, request: Request):
         # TODO: Maybe bots should be able to access this?
-        member, user = validate_member(
+        member, _ = validate_member(
             token=auth.value, guild_id=guild_id, stop_bots=True
         )
 
@@ -241,13 +243,13 @@ class GuildsCore(Controller):
         else:
             raise Conflict()
 
-        if guild.vanity_url:
+        if guild.vanity_url != '':
             GuildInvite.objects(
-                GuildInvite.id == guild.vanity_url,
+                GuildInvite.id == guild.vanity_url.lower(),
                 GuildInvite.guild_id == guild.id,
             ).get().delete()
 
-        guild.vanity_url = str(vanity_code)
+        guild.vanity_url = str(vanity_code).lower()
 
         GuildInvite.create(
             id=str(vanity_code).lower(),

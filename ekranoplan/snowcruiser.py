@@ -9,7 +9,7 @@ class SnowflakeFactory:
         self._incrementation = 0
 
     def formulate(self) -> int:
-        current_ms = time.time_ns() // 1000000
+        current_ms = int(time.time() * 1000)
         epoch = current_ms - self._epoch << 22
 
         epoch |= (threading.current_thread().ident % 32) << 17

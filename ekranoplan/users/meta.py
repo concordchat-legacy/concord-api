@@ -22,7 +22,7 @@ class MetaController(Controller):
 
         meta = Meta.objects(
             Meta.user_id == me.id,
-        )
+        ).get()
 
         return jsonify(to_dict(meta))
 

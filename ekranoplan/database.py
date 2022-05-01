@@ -140,8 +140,11 @@ class Member(models.Model):
 ## NOTE: Channels/Messages, etc
 
 
-class PermissionOverWrites(usertype.UserType):
-    id = columns.BigInt()
+class PermissionOverWrites(models.Model):
+    __table_name__ = 'permission_overwrites'
+    __options__ = default_options
+    channel_id = columns.BigInt(primary_key=True)
+    user_id = columns.BigInt()
     type = columns.Integer(default=0)
     allow = columns.BigInt()
     deny = columns.BigInt()
@@ -154,7 +157,6 @@ class GuildChannel(models.Model):
     guild_id = columns.BigInt(primary_key=True, partition_key=True)
     type = columns.Integer(default=0)
     position = columns.Integer()
-    permission_overwrites = columns.Set(columns.UserDefinedType(PermissionOverWrites))
     name = columns.Text(max_length=45)
     topic = columns.Text(max_length=1024, default='')
     slowmode_timeout = columns.Integer(default=0)
@@ -163,6 +165,7 @@ class GuildChannel(models.Model):
 
 class ChannelSlowMode(models.Model):
     __table_name__ = 'channel_slowmode'
+    __options__ = default_options
     id = columns.BigInt(primary_key=True, partition_key=True)
     channel_id = columns.BigInt(primary_key=True, partition_key=True)
 
@@ -174,10 +177,12 @@ class GuildChannelPin(models.Model):
     message_id = columns.BigInt()
 
 
-class Reaction(usertype.UserType):
-    count = columns.Integer()
-    # TODO: Implement Emojis
-    emoji_id = columns.BigInt()
+class Reaction(models.Model):
+    __table_name__ = 'reactions'
+    __options__ = default_options
+    message_id = columns.BigInt(primary_key=True)
+    user_id = columns.BigInt()
+    emoji = columns.Text()
 
 
 class Emoji(models.Model):
@@ -205,7 +210,6 @@ class Message(models.Model):
     tts = columns.Boolean(default=False)
     mentions_everyone = columns.Boolean(default=False)
     mentioned_users = columns.Set(columns.BigInt)
-    reactions = columns.List(columns.UserDefinedType(Reaction))
     pinned = columns.Boolean(default=False)
     referenced_message_id = columns.BigInt()
 
@@ -236,6 +240,7 @@ class GuildMeta(models.Model):
 
 class Note(models.Model):
     __table_name__ = 'notes'
+    __options__ = default_options
     creator_id = columns.BigInt(primary_key=True, partition_key=True)
     user_id = columns.BigInt(primary_key=True)
     content = columns.Text(max_length=900, default='')
@@ -305,10 +310,6 @@ if __name__ == '__main__':
 
     # migrate old data
 
-    # NOTE: Types
-    management.sync_type('airbus', PermissionOverWrites)
-    management.sync_type('airbus', Reaction)
-
     # NOTE: Tables
     management.sync_table(User)
     management.sync_table(Guild)
@@ -324,3 +325,5 @@ if __name__ == '__main__':
     management.sync_table(Meta)
     management.sync_table(GuildMeta)
     management.sync_table(Note)
+    management.sync_table(Reaction)
+    management.sync_table(PermissionOverWrites)

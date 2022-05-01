@@ -89,7 +89,7 @@ async def verify_hash(hashed_password: str, given_password: str) -> bool:
 
 def get_bucket(sf: int):
     timestamp = sf >> 22
-    return int(timestamp / BUCKET_SIZE)
+    return timestamp // BUCKET_SIZE
 
 
 def random_timemade():
@@ -114,3 +114,4 @@ if __name__ == '__main__':
     pwdd = asyncio.run(verify_hash(pwd, '12345'))
     print(pwdd)
     print(code())
+    print(get_bucket(8601405069216906))

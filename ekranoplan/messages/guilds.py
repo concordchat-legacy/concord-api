@@ -33,6 +33,10 @@ class GuildMessages(Controller):
 
         msg = search_messages(channel_id=channel.id, message_id=message_id)
 
+        if msg.author_id is None:
+            msg.delete()
+            return jsonify('', 404)
+
         return jsonify(to_dict(msg))
 
     @get(
@@ -63,8 +67,9 @@ class GuildMessages(Controller):
         _msgs = search_messages(channel_id=channel.id, limit=limit)
         msgs = []
 
-        for msg in _msgs:
-            msgs.append(to_dict(msg))
+        for msgobj in _msgs:
+            for msg in msgobj:
+                msgs.append(to_dict(msg))
 
         return jsonify(msgs)
 

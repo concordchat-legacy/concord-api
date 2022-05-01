@@ -61,6 +61,8 @@ class CoreUsers(Controller):
         locale = str(data.get('locale') or 'en_US')
         referrer = request.query.get('utm_source') or ''
         pronouns = str(data.get('pronouns') or '')
+        pfp_id = ''
+        banner_id = ''
 
         if not isinstance(referrer, str) and not isinstance(referrer, list):
             referrer = str(referrer)
@@ -75,7 +77,7 @@ class CoreUsers(Controller):
 
         if data.get('banner'):
             banner_id = upload_image(str(data['banner']), 'users')
-            
+
         user_id = factory().formulate()
 
         user: User = User.create(

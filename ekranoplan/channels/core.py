@@ -1,3 +1,4 @@
+from typing import List
 import orjson
 from blacksheep import Request
 from blacksheep.server.controllers import Controller, delete, get, patch, post
@@ -9,6 +10,7 @@ from ..checks import (
     verify_channel_position,
     verify_parent_id,
     verify_permission_overwrite,
+    get_channel_overwrites
 )
 from ..database import Guild, GuildChannel, PermissionOverWrites, Role, to_dict
 from ..errors import BadData, Forbidden, NotFound
@@ -94,16 +96,17 @@ class ChannelCore(Controller):
 
         channel: GuildChannel = GuildChannel.create(**kwargs)
         d = to_dict(channel)
+        d['permission_overwrites'] = []
 
         await channel_event(
             'CREATE',
-            to_dict(channel),
-            to_dict(channel),
+            d,
+            d,
             guild_id=guild_id,
             is_message=False,
         )
 
-        return jsonify(d)
+        return jsonify(d, 201)
 
     @delete('/guilds/{int:guild_id}/channels/{int:channel_id}')
     async def delete_channel(self, guild_id: int, channel_id: int, auth: AuthHeader):
@@ -136,6 +139,8 @@ class ChannelCore(Controller):
         )
 
         data: dict = await request.json(orjson.loads)
+        _overwrites = get_channel_overwrites(channel_id=channel_id)
+        overwrites = []
 
         if data.get('name'):
             channel.name = str(data.pop('name'))[:45]
@@ -148,12 +153,33 @@ class ChannelCore(Controller):
 
         if data.get('permission_overwrites'):
             permission_overwrites = list(data.pop('permission_overwrites'))
-            overwrites = []
+            poverwrites = []
             for overwrite in permission_overwrites:
-                overwrites.append(
-                    PermissionOverWrites(**verify_permission_overwrite(dict(overwrite)))
-                )
-            # channel.permission_overwrites = set(overwrites)
+                poverwrites.append(verify_permission_overwrite(dict(overwrite)))
+
+            for overwrite in poverwrites:
+                allow = overwrite['allow']
+                deny = overwrite['deny']
+                user_id = overwrite['user_id']
+
+                found = False
+                for overwrite in _overwrites:
+                    if overwrite.user_id == user_id:
+                        found = True
+                        overwrite.allow = allow
+                        overwrite.deny = deny
+                        new_overwrite = overwrite.save()
+                        _overwrites.remove(overwrite)
+                        _overwrites.append(new_overwrite)
+                        break
+
+                if not found:
+                    _overwrites.append(PermissionOverWrites.create(
+                        channel_id=channel_id,
+                        user_id=user_id,
+                        allow=allow,
+                        deny=deny
+                    ))
 
         if data.get('topic'):
             channel.topic = str(data.pop('topic'))[:1024]
@@ -172,15 +198,19 @@ class ChannelCore(Controller):
             channel.parent_id = parent.id
 
         channel = channel.save()
+        data = to_dict(channel)
+        for overwrite in _overwrites:
+            overwrites.append(to_dict(overwrite))
+        data['permission_overwrites'] = overwrites
 
         await channel_event(
             'EDIT',
-            to_dict(channel),
-            to_dict(channel),
+            data,
+            data,
             guild_id=guild_id,
         )
 
-        return jsonify(to_dict(channel))
+        return jsonify(data)
 
     @get(
         '/guilds/{int:guild_id}/channels/{int:channel_id}',
@@ -194,5 +224,9 @@ class ChannelCore(Controller):
                 permission='view_channels',
             )
         )[2]
+        overwrites = get_channel_overwrites(channel_id=channel_id, as_dict=True)
 
-        return jsonify(to_dict(channel))
+        channel = to_dict(channel)
+        channel['permission_overwrites'] = overwrites
+
+        return jsonify()
