@@ -277,12 +277,6 @@ class GuildsCore(Controller):
         else:
             raise Conflict()
 
-        if guild.vanity_url != '':
-            GuildInvite.objects(
-                GuildInvite.id == guild.vanity_url.lower(),
-                GuildInvite.guild_id == guild.id,
-            ).get().delete()
-
         guild.vanity_url = str(vanity_code).lower()
 
         GuildInvite.create(
@@ -299,6 +293,12 @@ class GuildsCore(Controller):
             guild_id=guild.id,
             data={'vanity_url': guild.vanity_url},
         )
+
+        if guild.vanity_url != '':
+            GuildInvite.objects(
+                GuildInvite.id == guild.vanity_url.lower(),
+                GuildInvite.guild_id == guild.id,
+            ).get().delete()
 
         pm = f'# User {me.username}/{str(member.id)} Changed the Vanity\n\n'
         pm += f'- The new Vanity is {guild.vanity_url}, old Vanity was {old_guild.vanity_url}'
