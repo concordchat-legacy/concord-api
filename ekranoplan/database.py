@@ -335,6 +335,9 @@ def to_dict(model: models.Model, _keep_email=False) -> dict:
             ret.pop('message_id')
             ret['id'] = str(value)
 
+        if name == 'bucket_id':
+            ret.pop('bucket_id')
+
     return ret
 
 
