@@ -159,6 +159,11 @@ class GuildsCore(Controller):
                 f'- The new Guild Icon is {guild.icon}, old one was {old_guild.icon}\n'
             )
 
+        if guild.splash != old_guild.splash:
+            pm += (
+                f'- The new Guild Splash is {guild.splash}, old one was {old_guild.splash}\n'
+            )
+
         await guild_event(
             'EDIT',
             guild.id,
