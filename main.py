@@ -18,8 +18,8 @@ from ekranoplan.admin import admin_users
 from ekranoplan.channels import channels, readstates
 from ekranoplan.checks import add_guild_meta, audit, validate_user
 from ekranoplan.database import Guild, GuildInvite, Member, connect, to_dict
-from ekranoplan.errors import BadData, Conflict, Err, NotFound
-from ekranoplan.guilds import guilds, members, audits
+from ekranoplan.errors import BadData, Conflict, Err, Forbidden, NotFound
+from ekranoplan.guilds import audits, guilds, members
 from ekranoplan.messages import guild_messages
 from ekranoplan.randoms import factory
 from ekranoplan.redis_manager import member_event
@@ -73,6 +73,11 @@ async def get_guild_by_invite(invite_code: str, request: Request):
     auth = request.get_single_header(b'Authorization').decode()
 
     me = validate_user(auth, stop_bots=True)
+
+    mems = Member.objects(Member.id == me.id).all()
+
+    if len(mems) == 300:
+        raise Forbidden()
 
     try:
         Member.objects(Member.id == me.id, Member.guild_id == guild.id).get()
@@ -152,6 +157,16 @@ app.exceptions_handlers.update(
     }
 )
 
-bps = [admin_users, users, guilds, guild_messages, channels, readstates, members, meta, audits]
+bps = [
+    admin_users,
+    users,
+    guilds,
+    guild_messages,
+    channels,
+    readstates,
+    members,
+    meta,
+    audits,
+]
 
 app.register_controllers(bps)

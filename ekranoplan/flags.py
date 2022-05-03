@@ -79,6 +79,7 @@ class GuildPermissions:
         # self.manage_events = has(1 << 30)
 
         self.manage_channel_pins = has(1 << 31)
+        self.create_audits = has(1 << 32)
 
 
 if __name__ == '__main__':

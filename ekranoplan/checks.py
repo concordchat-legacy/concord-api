@@ -427,6 +427,7 @@ def audit(
 
     return audit
 
+
 def verify_email(email: str):
     try:
         User.objects(User.email == email).allow_filtering().get()

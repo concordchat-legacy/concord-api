@@ -270,8 +270,7 @@ class Audit(models.Model):
     # when this was audited
     audited_at = columns.DateTime(default=_get_date)
 
-
-# class Relationship(models.Model):
+    # class Relationship(models.Model):
     __table_name__ = 'relationships'
     __options__ = default_options
     # types:
