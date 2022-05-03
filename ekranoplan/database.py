@@ -204,7 +204,7 @@ class Message(models.Model):
     )
     guild_id = columns.BigInt()
     author_id = columns.BigInt()
-    content = columns.Text(max_length=3000)
+    content = columns.Text(max_length=5000)
     created_at = columns.DateTime(default=_get_date)
     last_edited = columns.DateTime(default=_get_date)
     tts = columns.Boolean(default=False)

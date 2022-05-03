@@ -123,7 +123,7 @@ class GuildMessages(Controller):
             'bucket_id': get_bucket(channel_id),
             'guild_id': guild_id,
             'author_id': me.id,
-            'content': str(d['content']),
+            'content': str(d['content'])[:5000],
             'mentions_everyone': mentions_everyone,
             'referenced_message_id': referenced_message or 0,
         }
@@ -196,7 +196,7 @@ class GuildMessages(Controller):
         d: dict = await request.json(orjson.loads)
 
         if d.get('content'):
-            msg.content = str(d.pop('content'))
+            msg.content = str(d.pop('content'))[:5000]
 
         msg.last_edited = _get_date()
         old_msg = copy(msg)
