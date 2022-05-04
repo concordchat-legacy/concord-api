@@ -299,7 +299,7 @@ class Audit(models.Model):
 class Analytic(models.Model):
     __table_name__ = 'analytics'
     __options__ = default_options
-    user_id = columns.BigInt()
+    user_id = columns.BigInt(primary_key=True)
     client_name = columns.Text(max_length=100)
     type = columns.Text()
     proposed_at = columns.DateTime(default=_get_date)
