@@ -32,8 +32,12 @@ class CoreUsers(Controller):
     async def get_me(self, auth: AuthHeader):
         me = validate_user(auth.value)
 
-        if me.locale == 'en_US':
-            me.locale = 'en_US'
+        if me.locale == 'EN_US' or me.locale == 'en_US':
+            me.locale = 'en-US'
+            me.save()
+
+        elif me.locale == 'en_UK':
+            me.locale = 'en-GB'
             me.save()
 
         me = to_dict(me, True)
@@ -60,6 +64,7 @@ class CoreUsers(Controller):
 
         elif user.locale == 'en_UK':
             user.locale = 'en-GB'
+            user.save()
 
         return jsonify(ret)
 

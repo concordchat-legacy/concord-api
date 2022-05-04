@@ -320,6 +320,7 @@ def to_dict(model: models.Model, _keep_email=False) -> dict:
                 User.id == model.id,
             ).get()
         )
+        ret.pop('guild_id')
 
     for name, value in initial:
         if isinstance(value, (usertype.UserType, models.Model)):
