@@ -1,3 +1,16 @@
+# Copyright 2021 Redux, Inc.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 import datetime
 import os
 from typing import Any
@@ -281,6 +294,20 @@ class Audit(models.Model):
     type = columns.Integer(default=0)
     receiver = columns.BigInt()
     sender = columns.BigInt()
+
+
+class Analytic(models.Model):
+    __table_name__ = 'analytics'
+    __options__ = default_options
+    user_id = columns.BigInt()
+    client_name = columns.Text(max_length=100)
+    type = columns.Text()
+    proposed_at = columns.DateTime(default=_get_date)
+    proposed_guild_id = columns.BigInt(default=0)
+    proposed_user_id = columns.BigInt(default=0)
+    proposed_channel_id = columns.BigInt(default=0)
+    proposed_pane_opened = columns.Text(max_length=50)
+    proposed_pane_closed = columns.Text(max_length=50)
 
 
 def to_dict(model: models.Model, _keep_email=False) -> dict:

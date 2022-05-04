@@ -3,7 +3,6 @@ import traceback
 
 import dotenv
 import orjson
-from email_validator import EmailSyntaxError
 from blacksheep import Application, Request, not_found
 from blacksheep.exceptions import (
     BadRequest,
@@ -14,6 +13,7 @@ from blacksheep.exceptions import (
 )
 from blacksheep_prometheus import PrometheusMiddleware, metrics
 from cassandra.cqlengine.query import DoesNotExist
+from email_validator import EmailSyntaxError
 
 from ekranoplan.admin import admin_users
 from ekranoplan.channels import channels, readstates
@@ -159,7 +159,7 @@ app.exceptions_handlers.update(
         BadRequest: _bad_data,
         BadRequestFormat: _bad_data,
         DoesNotExist: _bad_data,
-        EmailSyntaxError: email_err
+        EmailSyntaxError: email_err,
     }
 )
 
