@@ -79,6 +79,7 @@ class User(models.Model):
     bot = columns.Boolean(default=False)
     referrer = columns.Text(default='')
     pronouns = columns.Text(default='')
+    verification_code = columns.Integer()
 
 
 # NOTE: Guilds
@@ -337,6 +338,9 @@ def to_dict(model: models.Model, _keep_email=False) -> dict:
 
         if name == 'bucket_id':
             ret.pop('bucket_id')
+
+        if name == 'verification_code':
+            ret.pop('verification_code')
 
     return ret
 

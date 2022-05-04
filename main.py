@@ -3,6 +3,7 @@ import traceback
 
 import dotenv
 import orjson
+from email_validator import EmailSyntaxError
 from blacksheep import Application, Request, not_found
 from blacksheep.exceptions import (
     BadRequest,
@@ -142,6 +143,10 @@ async def _not_found(app, req, err: Exception):
     return jsonify({'code': 0, 'message': '404: Not Found'}, 404)
 
 
+async def email_err(app, req, err: Exception):
+    return jsonify({'code': 'email_validation_error', 'message': f'{str(err)}'})
+
+
 app.exceptions_handlers.update(
     {
         Err: _default_error_handler,
@@ -154,6 +159,7 @@ app.exceptions_handlers.update(
         BadRequest: _bad_data,
         BadRequestFormat: _bad_data,
         DoesNotExist: _bad_data,
+        EmailSyntaxError: email_err
     }
 )
 

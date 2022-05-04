@@ -1,9 +1,13 @@
+import os
+import smtplib
 import uuid
+from email.mime import multipart, text
 from io import BytesIO
 from typing import List, Union
 
 import datauri
 from cassandra.cqlengine import query
+from dotenv import load_dotenv
 
 from .database import (
     Audit,
@@ -25,6 +29,8 @@ from .randoms import factory, get_bucket
 from .redis_manager import channel_event
 from .tokens import verify_token
 from .valkyrie import upload
+
+load_dotenv()
 
 
 def validate_user(token: str, stop_bots: bool = False) -> User:
@@ -435,3 +441,29 @@ def verify_email(email: str):
         return email
     else:
         raise Conflict()
+
+
+def send_verification(email: str, username: str, code: int):
+    body = f'Hey {username},\n Thanks for registering an account on Redux! We\'re just here to verify this is you, in your client fill in the code `{str(code)}`.'
+
+    # create the email
+    audit = multipart.MIMEMultipart()
+    audit['From'] = os.getenv('VERIFICATION_EMAIL')
+    audit['To'] = email
+    audit['Subject'] = 'Verify Email Address for Redux'
+    audit.attach(text.MIMEText(body, _charset='utf-8'))
+
+    # setup connection
+    conn = smtplib.SMTP(
+        os.getenv('SMTP_ADDRESS'),
+        587,
+    )
+    conn.starttls()
+
+    # login & send email
+    conn.login(
+        os.getenv('VERIFICATION_EMAIL'), os.getenv('VERIFICATION_EMAIL_PASSWORD')
+    )
+    conn.sendmail(os.getenv('VERIFICATION_EMAIL'), email, audit.as_string())
+    # logout
+    conn.quit()

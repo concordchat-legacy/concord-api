@@ -12,3 +12,4 @@ blacksheep==1.2.5
 blacksheep-prometheus==0.1.6
 boto3==1.22.3
 python-datauri==1.1.0
+email-validator==1.2.1

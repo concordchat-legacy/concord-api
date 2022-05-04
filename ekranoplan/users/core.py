@@ -4,8 +4,9 @@ import orjson
 from blacksheep import Request
 from blacksheep.server.controllers import Controller, get, patch, post
 from cassandra.cqlengine import query
+from email_validator import validate_email
 
-from ..checks import upload_image, validate_user, verify_email
+from ..checks import send_verification, upload_image, validate_user, verify_email
 from ..database import Meta, User, to_dict
 from ..errors import BadData, Forbidden, NotFound
 from ..randoms import factory, get_hash, verify_hash
@@ -40,9 +41,12 @@ class CoreUsers(Controller):
         if user.bot:
             ret['pronouns'] = 'Attack Helicopter/AttkHeli'
 
-        if user.locale == 'EN_US':
-            user.locale = 'en_US'
+        if user.locale == 'EN_US' or user.locale == 'en_US':
+            user.locale = 'en-US'
             user.save()
+
+        elif user.locale == 'en_UK':
+            user.locale = 'en-GB'
 
         return jsonify(ret)
 
@@ -54,7 +58,9 @@ class CoreUsers(Controller):
         # TODO: Implement this better
         discrim = random.randint(1, 9999)
         discrim = int('%04d' % discrim)
-        email = verify_email(str(data['email']))
+        email = validate_email(
+            verify_email(str(data['email'])), check_deliverability=True
+        ).email
         password = await get_hash(str(data.pop('password')))
         flags = 1 << 0
         bio = str(data.get('bio') or '')
@@ -63,6 +69,7 @@ class CoreUsers(Controller):
         pronouns = str(data.get('pronouns') or '')
         pfp_id = ''
         banner_id = ''
+        verification_code = random.randint(10000, 90000)
 
         if not isinstance(referrer, str) and not isinstance(referrer, list):
             referrer = str(referrer)
@@ -93,11 +100,14 @@ class CoreUsers(Controller):
             pronouns=pronouns,
             avatar=pfp_id,
             banner=banner_id,
+            verification_code=verification_code,
         )
         Meta.create(user_id=user_id)
 
         resp = to_dict(user, True)
         resp['token'] = create_token(user_id=user.id, user_password=user.password)
+
+        send_verification(email=email, username=username, code=verification_code)
 
         return jsonify(resp, 201)
 
@@ -106,6 +116,7 @@ class CoreUsers(Controller):
         me = validate_user(auth.value, stop_bots=True)
 
         data: dict = await request.json(orjson.loads)
+        SEND_NEW_CODE = False
 
         if data.get('username'):
             me.username = str(data['username'])
@@ -114,7 +125,12 @@ class CoreUsers(Controller):
             me.pronouns = str(data['pronouns'])
 
         if data.get('email'):
-            me.email = verify_email(str(data['email']))
+            me.email = validate_email(
+                verify_email(str(data['email'])), check_deliverability=True
+            ).email
+            me.verified = False
+            me.verification_code = random.randint(10000, 90000)
+            SEND_NEW_CODE = True
 
         if data.get('password'):
             me.password = await get_hash(str(data['password']))
@@ -142,6 +158,11 @@ class CoreUsers(Controller):
         me = me.save()
 
         ret = to_dict(me, True)
+
+        if SEND_NEW_CODE:
+            send_verification(
+                email=me.email, username=me.username, code=me.verification_code
+            )
 
         return jsonify(ret)
 
