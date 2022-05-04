@@ -122,7 +122,7 @@ class Guild(models.Model):
     owner_id = columns.BigInt(primary_key=True)
     nsfw = columns.Boolean(default=False)
     large = columns.Boolean(primary_key=True, default=False)
-    perferred_locale = columns.Text(default='en_US')
+    perferred_locale = columns.Text(default='en-US')
     permissions = columns.BigInt(default=default_permissions)
     splash = columns.Text(default='')
     features = columns.Set(columns.Text)
@@ -313,6 +313,13 @@ class Analytic(models.Model):
 def to_dict(model: models.Model, _keep_email=False) -> dict:
     initial: dict[str, Any] = model.items()
     ret = dict(initial)
+
+    if type(model).__name__ == 'Member':
+        ret['user'] = to_dict(
+            User.objects(
+                User.id == model.id,
+            ).get()
+        )
 
     for name, value in initial:
         if isinstance(value, (usertype.UserType, models.Model)):
