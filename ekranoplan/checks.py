@@ -457,7 +457,7 @@ def verify_email(email: str):
 
 
 def send_verification(email: str, username: str, code: int):
-    body = f'Hey {username},\n Thanks for registering an account on Concord! We\'re just here to verify this is you, in your client fill in the code `{str(code)}`.'
+    body = f'Hey {username},\nThanks for registering an account on Concord! We\'re just here to verify this is you, in your client fill in the code:\n\n{str(code)}'
 
     # create the email
     audit = multipart.MIMEMultipart()
