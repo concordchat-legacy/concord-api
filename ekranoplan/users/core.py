@@ -202,7 +202,7 @@ class CoreUsers(Controller):
         if me.verified:
             raise Conflict()
 
-        code = int(request.query.get('utm_verification'))
+        code = int(request.query.get('utm_verification')[0])
 
         if code != me.verification_code:
             raise BadData()
