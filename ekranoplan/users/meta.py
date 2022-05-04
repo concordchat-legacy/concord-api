@@ -117,6 +117,6 @@ class MetaController(Controller):
         try:
             note = Note.objects(Note.creator_id == me.id, Note.user_id == user_id).get()
         except (query.DoesNotExist):
-            return jsonify([], 404)
+            return jsonify('', 404)
 
         return jsonify(to_dict(note))

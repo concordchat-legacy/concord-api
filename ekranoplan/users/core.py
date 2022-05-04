@@ -40,7 +40,7 @@ class CoreUsers(Controller):
         if user.bot:
             ret['pronouns'] = 'Attack Helicopter/AttkHeli'
 
-        if user.locale == 'en_US':
+        if user.locale == 'EN_US':
             user.locale = 'en_US'
             user.save()
 

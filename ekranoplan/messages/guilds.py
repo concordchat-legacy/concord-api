@@ -270,7 +270,7 @@ class GuildMessages(Controller):
 
         msg.delete()
 
-        r = jsonify([])
+        r = jsonify('')
         r.status_code = 204
 
         await channel_event(
@@ -398,7 +398,7 @@ class GuildMessages(Controller):
         pin.delete()
         msg.save()
 
-        r = jsonify([], 204)
+        r = jsonify('', 204)
 
         await channel_event(
             'UNPIN',
