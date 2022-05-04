@@ -310,6 +310,71 @@ class Analytic(models.Model):
     proposed_pane_closed = columns.Text(max_length=50)
 
 
+class Theme(models.Model):
+    __table_name__ = 'themes'
+    __options__ = default_options
+
+    # the themes unique identifier
+    id = columns.Integer(primary_key=True)
+    name = columns.Text()
+    # if this is a dark or light mode theme
+    mode = columns.Text(default='dark')
+    # if this theme should be shown on the store
+    public = columns.Boolean(default=False)
+    # the price of this theme, 0 means free.
+    price = columns.Integer(default=0)
+
+    # background, icon, font
+    icon_uri = columns.Text(default=':default:')
+    font = columns.Text(default=':default:')
+    bg_banner = columns.Text(default=':default:')
+
+    # color settings
+    bg_color = columns.Integer(default=0)
+    accent_color = columns.Integer(default=0)
+    guild_sidebar_color = columns.Integer(default=0)
+    channel_sidebar_color = columns.Integer(default=0)
+    hidden_channel_color = columns.Integer(default=0)
+    prompt_color = columns.Integer(default=0)
+    bot_badge_color = columns.Integer(default=0)
+    staff_badge_color = columns.Integer(default=0)
+    donator_badge_color = columns.Integer(default=0)
+    contributor_badge_color = columns.Integer(default=0)
+    bug_hunter_color = columns.Integer(default=0)
+    verified_color = columns.Integer(default=0)
+    likely_scammer_color = columns.Integer(default=0)
+    early_supporter_color = columns.Integer(default=0)
+    guild_banner_hidden_color = columns.Integer(default=0)
+    default_username_color = columns.Integer(default=0)
+    guild_icon_bg_color = columns.Integer(default=0)
+
+    # message colors
+    codeblock_background_color = columns.Integer(default=0)
+    mention_color = columns.Integer(default=0)
+    replied_message_img_icon = columns.Text(default=':default:')
+    message_selected_color = columns.Integer(default=0)
+    link_color = columns.Integer(default=0)
+
+    # activity colors
+    online_color = columns.Integer(default=0)
+    offline_color = columns.Integer(default=0)
+    dnd_color = columns.Integer(default=0)
+    busy_color = columns.Integer(default=0)
+
+    # etc
+    guild_crown_color = columns.Integer(default=0)
+    presence_default_color = columns.Integer(default=0)
+    presence_secondary_color = columns.Integer(default=0)
+    presence_icon = columns.Text(default=':default:')
+    default_user_avatar = columns.Text(default=':default:')
+
+    # channels
+    text_channel_icon = columns.Text(default=':default:')
+    private_channel_overlay = columns.Text(default=':default:')
+    voice_channel_icon = columns.Text(default=':default:')
+    locked_channel_overlay = columns.Text(default=':default:')
+
+
 def to_dict(model: models.Model, _keep_email=False) -> dict:
     initial: dict[str, Any] = model.items()
     ret = dict(initial)
