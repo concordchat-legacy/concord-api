@@ -22,7 +22,7 @@ To try and avoid DDoS Attacks we recommend using [cloudflare](https://cloudflare
 - Prerequisites
     - A Cassandra Database
     - A Redis Database
-    - A Amazon S3 Bucket named `cdn.concord.chat`
+    - A Amazon S3 Bucket named `cdn.redux.chat`
 
     Please run `ekranoplan/database.py` to setup the 
     cassandra database or scylla (make sure to have the "airbus" keyspace available).

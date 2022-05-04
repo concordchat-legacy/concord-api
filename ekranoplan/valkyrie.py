@@ -16,7 +16,7 @@ def upload(name: str, folder: str, obj: bytes, content_type: str):
 
     s3.upload_fileobj(
         obj,
-        'cdn.concord.chat',
+        'cdn.redux.chat',
         folder + '/' + name,
         ExtraArgs={
             'ContentType': content_type or 'binary/octet-stream',

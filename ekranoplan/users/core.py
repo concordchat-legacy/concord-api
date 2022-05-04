@@ -8,7 +8,7 @@ from email_validator import validate_email
 
 from ..checks import send_verification, upload_image, validate_user, verify_email
 from ..database import Meta, User, to_dict
-from ..errors import BadData, Forbidden, NotFound
+from ..errors import BadData, Conflict, Forbidden, NotFound
 from ..randoms import factory, get_hash, verify_hash
 from ..tokens import create_token
 from ..utils import VALID_LOCALES, AuthHeader, jsonify
@@ -181,3 +181,23 @@ class CoreUsers(Controller):
         token = create_token(me.id, me.password)
 
         return jsonify([token], 201)
+
+    @post('/users/@me/verify')
+    async def verify(self, auth: AuthHeader, request: Request):
+        me = validate_user(
+            token=auth.value,
+            stop_bots=True
+        )
+
+        if me.verified:
+            raise Conflict()
+
+        code = int(request.query.get('utm_verification'))
+
+        if code != me.verification_code:
+            raise BadData()
+
+        me.verified = True
+        me = me.save()
+
+        return jsonify(to_dict(me))
