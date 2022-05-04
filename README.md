@@ -1,5 +1,5 @@
 # Ekranoplan
-Privacy-focused, scalable, and blazingly fast REST API for redux.
+Privacy-focused, scalable, and blazingly fast REST API for Concord.
 
 # Stack
 
@@ -22,7 +22,7 @@ To try and avoid DDoS Attacks we recommend using [cloudflare](https://cloudflare
 - Prerequisites
     - A Cassandra Database
     - A Redis Database
-    - A Amazon S3 Bucket named `cdn.redux.chat`
+    - A Amazon S3 Bucket named `cdn.concord.chat`
 
     Please run `ekranoplan/database.py` to setup the 
     cassandra database or scylla (make sure to have the "airbus" keyspace available).

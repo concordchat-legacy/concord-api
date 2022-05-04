@@ -1,4 +1,4 @@
-# Copyright 2021 Redux, Inc.
+# Copyright 2021 Concord, Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -457,13 +457,13 @@ def verify_email(email: str):
 
 
 def send_verification(email: str, username: str, code: int):
-    body = f'Hey {username},\n Thanks for registering an account on Redux! We\'re just here to verify this is you, in your client fill in the code `{str(code)}`.'
+    body = f'Hey {username},\n Thanks for registering an account on Concord! We\'re just here to verify this is you, in your client fill in the code `{str(code)}`.'
 
     # create the email
     audit = multipart.MIMEMultipart()
     audit['From'] = os.getenv('VERIFICATION_EMAIL')
     audit['To'] = email
-    audit['Subject'] = 'Verify Email Address for Redux'
+    audit['Subject'] = 'Verify Email Address for Concord'
     audit.attach(text.MIMEText(body, _charset='utf-8'))
 
     # setup connection

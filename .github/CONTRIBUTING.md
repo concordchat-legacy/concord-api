@@ -14,9 +14,9 @@
 
 # Contributing
 When you contribute we gain the 
-never-ending right to use the changes you made inside Redux's or other host(s) systems 
+never-ending right to use the changes you made inside Concords or other host(s) systems 
 with no restrictions.
 
 You also agree that your changes will fall under our license(s) once your Pull Request(s) are merged.
 
-Once your code/changes are merged into our repository, all the above apply's alongside transfering ownership of your changes to Redux.
+Once your code/changes are merged into our repository, all the above apply's alongside transfering ownership of your changes to Concord.

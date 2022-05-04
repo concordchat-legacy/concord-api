@@ -1,4 +1,4 @@
-# Copyright 2021 Redux, Inc.
+# Copyright 2021 Concord, Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -29,7 +29,7 @@ def upload(name: str, folder: str, obj: bytes, content_type: str):
 
     s3.upload_fileobj(
         obj,
-        'cdn.redux.chat',
+        'cdn.concord.chat',
         folder + '/' + name,
         ExtraArgs={
             'ContentType': content_type or 'binary/octet-stream',
