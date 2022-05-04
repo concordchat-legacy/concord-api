@@ -42,8 +42,8 @@ VALID_GUILD_FEATURES = [
 ]
 VALID_THEMES = ['DARK', 'LIGHT']
 VALID_LOCALES = [
-    'en_US',
-    'en_UK',
+    'en-US',
+    'en-GB',
 ]
 SCIENCE_TYPES = [
     'app-opened',

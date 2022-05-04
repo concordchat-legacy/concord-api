@@ -84,7 +84,7 @@ class User(models.Model):
     flags = columns.Integer()
     avatar = columns.Text(default='')
     banner = columns.Text(default='')
-    locale = columns.Text(default='en_US')
+    locale = columns.Text(default='en-US')
     joined_at = columns.DateTime(default=_get_date)
     bio = columns.Text(max_length=4000)
     verified = columns.Boolean(default=False)
