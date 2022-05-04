@@ -15,6 +15,7 @@ from blacksheep_prometheus import PrometheusMiddleware, metrics
 from cassandra.cqlengine.query import DoesNotExist
 from email_validator import EmailSyntaxError
 
+from ekranoplan.public import public
 from ekranoplan.admin import admin_users
 from ekranoplan.channels import channels, readstates
 from ekranoplan.checks import add_guild_meta, audit, validate_user
@@ -173,6 +174,7 @@ bps = [
     members,
     meta,
     audits,
+    public,
 ]
 
 app.register_controllers(bps)
