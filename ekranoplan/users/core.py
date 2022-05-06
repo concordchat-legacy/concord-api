@@ -63,9 +63,7 @@ class CoreUsers(Controller):
         data: dict = await request.json(orjson.loads)
 
         username = data['username'][:40]
-        # TODO: Implement this better
-        discrim = random.randint(1, 9999)
-        discrim = int('%04d' % discrim)
+        discrim = random.randint(1000, 9999)
         email = validate_email(
             verify_email(str(data['email'])), check_deliverability=True
         ).email
