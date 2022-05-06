@@ -1,16 +1,5 @@
 # Copyright 2021 Concord, Inc.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# See LICENSE for more information.
 import datetime
 import os
 from typing import Any
@@ -242,6 +231,7 @@ class Meta(models.Model):
     theme = columns.Text(default='dark')
     guild_placements = columns.List(columns.BigInt)
     direct_message_ignored_guilds = columns.Set(columns.BigInt)
+    developer_mode = columns.Boolean(default=False)
 
 
 class GuildMeta(models.Model):
@@ -284,108 +274,33 @@ class Audit(models.Model):
     # when this was audited
     audited_at = columns.DateTime(default=_get_date)
 
-    # class Relationship(models.Model):
-    __table_name__ = 'relationships'
-    __options__ = default_options
-    # types:
-    # 0: Pending
-    # 1: Accepted
-    # 2: Blocked
-    type = columns.Integer(default=0)
-    receiver = columns.BigInt()
-    sender = columns.BigInt()
-
-
-class Analytic(models.Model):
-    __table_name__ = 'analytics'
-    __options__ = default_options
-    user_id = columns.BigInt(primary_key=True)
-    client_name = columns.Text(max_length=100)
-    type = columns.Text()
-    proposed_at = columns.DateTime(default=_get_date)
-    proposed_guild_id = columns.BigInt(default=0)
-    proposed_user_id = columns.BigInt(default=0)
-    proposed_channel_id = columns.BigInt(default=0)
-    proposed_pane_opened = columns.Text(max_length=50)
-    proposed_pane_closed = columns.Text(max_length=50)
-
-
-class Theme(models.Model):
-    __table_name__ = 'themes'
-    __options__ = default_options
-
-    # the themes unique identifier
-    id = columns.Integer(primary_key=True)
-    name = columns.Text()
-    # if this is a dark or light mode theme
-    mode = columns.Text(default='dark')
-    # if this theme should be shown on the store
-    public = columns.Boolean(default=False)
-    # the price of this theme, 0 means free.
-    price = columns.Integer(default=0)
-
-    # background, icon, font
-    icon_uri = columns.Text(default=':default:')
-    font = columns.Text(default=':default:')
-    bg_banner = columns.Text(default=':default:')
-
-    # color settings
-    bg_color = columns.Integer(default=0)
-    accent_color = columns.Integer(default=0)
-    guild_sidebar_color = columns.Integer(default=0)
-    channel_sidebar_color = columns.Integer(default=0)
-    hidden_channel_color = columns.Integer(default=0)
-    prompt_color = columns.Integer(default=0)
-    bot_badge_color = columns.Integer(default=0)
-    staff_badge_color = columns.Integer(default=0)
-    donator_badge_color = columns.Integer(default=0)
-    contributor_badge_color = columns.Integer(default=0)
-    bug_hunter_color = columns.Integer(default=0)
-    verified_color = columns.Integer(default=0)
-    likely_scammer_color = columns.Integer(default=0)
-    early_supporter_color = columns.Integer(default=0)
-    guild_banner_hidden_color = columns.Integer(default=0)
-    default_username_color = columns.Integer(default=0)
-    guild_icon_bg_color = columns.Integer(default=0)
-
-    # message colors
-    codeblock_background_color = columns.Integer(default=0)
-    mention_color = columns.Integer(default=0)
-    replied_message_img_icon = columns.Text(default=':default:')
-    message_selected_color = columns.Integer(default=0)
-    link_color = columns.Integer(default=0)
-
-    # activity colors
-    online_color = columns.Integer(default=0)
-    offline_color = columns.Integer(default=0)
-    dnd_color = columns.Integer(default=0)
-    busy_color = columns.Integer(default=0)
-
-    # etc
-    guild_crown_color = columns.Integer(default=0)
-    presence_default_color = columns.Integer(default=0)
-    presence_secondary_color = columns.Integer(default=0)
-    presence_icon = columns.Text(default=':default:')
-    default_user_avatar = columns.Text(default=':default:')
-
-    # channels
-    text_channel_icon = columns.Text(default=':default:')
-    private_channel_overlay = columns.Text(default=':default:')
-    voice_channel_icon = columns.Text(default=':default:')
-    locked_channel_overlay = columns.Text(default=':default:')
-
 
 def to_dict(model: models.Model, _keep_email=False) -> dict:
     initial: dict[str, Any] = model.items()
     ret = dict(initial)
 
     if type(model).__name__ == 'Member':
-        ret['user'] = to_dict(
-            User.objects(
-                User.id == model.id,
-            ).get()
-        )
-        ret.pop('guild_id')
+        try:
+            ret['user'] = to_dict(
+                User.objects(
+                    User.id == model.id,
+                ).get()
+            )
+        except:
+            # user was deleted
+            ret['user'] = None
+
+    if type(model).__name__ == 'Message':
+        try:
+            ret['author'] = to_dict(
+                User.objects(
+                    User.id == model.author_id
+                ).get()
+            )
+            ret.pop('author_id')
+        except:
+            # author was deleted
+            ret['author'] = None
 
     for name, value in initial:
         if isinstance(value, (usertype.UserType, models.Model)):
@@ -417,30 +332,35 @@ def to_dict(model: models.Model, _keep_email=False) -> dict:
             or name.endswith('_id')
             and len(str(value)) > 14
             and name != 'message_id'
+            and name != 'guild_id'
+            and name != 'bucket_id'
         ):
             ret[name] = str(value)
 
-        if name == 'permissions':
+        elif name == 'permissions':
             ret[name] = str(value)
 
-        if name == 'password':
+        elif name == 'password':
             ret.pop(name)
 
-        if name == 'email' and not _keep_email:
+        elif name == 'email' and not _keep_email:
             ret.pop(name)
 
-        if name == 'settings' and not _keep_email:
+        elif name == 'settings' and not _keep_email:
             ret.pop(name)
 
-        if name == 'message_id':
+        elif name == 'message_id':
             ret.pop('message_id')
             ret['id'] = str(value)
 
-        if name == 'bucket_id':
+        elif name == 'bucket_id':
             ret.pop('bucket_id')
 
-        if name == 'verification_code':
+        elif name == 'verification_code':
             ret.pop('verification_code')
+
+        elif name == 'guild_id':
+            ret.pop('guild_id')
 
     return ret
 
@@ -470,3 +390,4 @@ if __name__ == '__main__':
     management.sync_table(Note)
     management.sync_table(Reaction)
     management.sync_table(PermissionOverWrites)
+    management.sync_table(Audit)

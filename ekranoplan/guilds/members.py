@@ -1,16 +1,5 @@
 # Copyright 2021 Concord, Inc.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# See LICENSE for more information.
 import orjson
 from blacksheep import Request
 from blacksheep.server.controllers import Controller, get, patch
@@ -18,7 +7,7 @@ from blacksheep.server.controllers import Controller, get, patch
 from ..checks import get_member_permissions, modify_member_roles, validate_member
 from ..database import Member, to_dict
 from ..errors import Forbidden, NotFound
-from ..redis_manager import member_event
+from ..events import member_event
 from ..utils import AuthHeader, jsonify
 
 

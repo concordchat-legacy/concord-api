@@ -1,3 +1,5 @@
+# Copyright 2021 Concord, Inc.
+# See LICENSE for more information.
 import secrets
 import traceback
 
@@ -24,7 +26,7 @@ from ekranoplan.errors import BadData, Conflict, Err, Forbidden, NotFound
 from ekranoplan.guilds import audits, guilds, members
 from ekranoplan.messages import guild_messages
 from ekranoplan.randoms import factory
-from ekranoplan.redis_manager import member_event
+from ekranoplan.events import member_event
 from ekranoplan.users import meta, users
 from ekranoplan.utils import jsonify
 

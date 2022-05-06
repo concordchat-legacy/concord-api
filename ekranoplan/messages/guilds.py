@@ -1,16 +1,5 @@
 # Copyright 2021 Concord, Inc.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# See LICENSE for more information.
 from copy import copy
 
 import orjson
@@ -21,7 +10,7 @@ from ..checks import audit, search_messages, validate_channel, verify_slowmode
 from ..database import ChannelSlowMode, GuildChannelPin, Message, _get_date, to_dict
 from ..errors import BadData, Forbidden
 from ..randoms import factory, get_bucket
-from ..redis_manager import channel_event
+from ..events import channel_event
 from ..utils import NONMESSAGEABLE, AuthHeader, jsonify
 
 
