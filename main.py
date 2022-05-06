@@ -37,7 +37,7 @@ try:
 except:
     pass
 
-app = Application(show_error_details=True, debug=True)
+app = Application(show_error_details=Flase, debug=True)
 dotenv.load_dotenv()
 
 
