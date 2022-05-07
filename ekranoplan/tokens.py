@@ -1,4 +1,4 @@
-# Copyright 2021 Drogon, Inc.
+# Copyright 2021 Concord, Inc.
 # See LICENSE for more information.
 import base64
 import binascii
@@ -21,10 +21,10 @@ def verify_token(token: str):
     if token is None or not isinstance(token, str):
         raise Unauthorized()
 
-    if token.startswith('DrogonBot '):
-        token = token.replace('DrogonBot ', '')
-    elif token.startswith('DrogonUser '):
-        token = token.replace('DrogonUser ', '')
+    if token.startswith('ConcordBot '):
+        token = token.replace('ConcordBot ', '')
+    elif token.startswith('ConcordUser '):
+        token = token.replace('ConcordUser ', '')
 
     fragmented = token.split('.')
     user_id = fragmented[0]

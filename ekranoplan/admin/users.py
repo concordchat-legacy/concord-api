@@ -1,4 +1,4 @@
-# Copyright 2021 Drogon, Inc.
+# Copyright 2021 Concord, Inc.
 # See LICENSE for more information.
 from blacksheep import Request
 from blacksheep.server.controllers import Controller, post, put
