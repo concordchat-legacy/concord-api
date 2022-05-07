@@ -1,5 +1,5 @@
 # Ekranoplan
-Privacy-focused, scalable, and blazingly fast REST API for Concord.
+Privacy-focused, scalable, and blazingly fast REST API for Drogon.
 
 # Stack
 

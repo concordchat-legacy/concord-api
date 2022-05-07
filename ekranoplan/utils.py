@@ -1,4 +1,4 @@
-# Copyright 2021 Concord, Inc.
+# Copyright 2021 Drogon, Inc.
 # See LICENSE for more information.
 import orjson
 from blacksheep import Content, FromHeader, Response
@@ -29,7 +29,7 @@ VALID_GUILD_FEATURES = [
     'WELCOME_VERIFICATION',
     'FORM_CHANNELS',
 ]
-VALID_THEMES = ['DARK', 'LIGHT']
+VALID_THEMES = ['dark', 'light']
 VALID_LOCALES = [
     'en-US',
     'en-GB',

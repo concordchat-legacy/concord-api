@@ -1,4 +1,4 @@
-# Copyright 2021 Concord, Inc.
+# Copyright 2021 Drogon, Inc.
 # See LICENSE for more information.
 import os
 import random

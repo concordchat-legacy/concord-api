@@ -1,4 +1,4 @@
-# Copyright 2021 Concord, Inc.
+# Copyright 2021 Drogon, Inc.
 # See LICENSE for more information.
 import os
 import smtplib
@@ -446,13 +446,13 @@ def verify_email(email: str):
 
 
 def send_verification(email: str, username: str, code: int):
-    body = f'Hey {username},\nThanks for registering an account on Concord! We\'re just here to verify this is you, in your client fill in the code:\n\n{str(code)}'
+    body = f'Hey {username},\nThanks for registering an account on Drogon! We\'re just here to verify this is you, in your client fill in the code:\n\n{str(code)}'
 
     # create the email
     audit = multipart.MIMEMultipart()
     audit['From'] = os.getenv('VERIFICATION_EMAIL')
     audit['To'] = email
-    audit['Subject'] = 'Verify Email Address for Concord'
+    audit['Subject'] = 'Verify Email Address for Drogon'
     audit.attach(text.MIMEText(body, _charset='utf-8'))
 
     # setup connection
