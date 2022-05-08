@@ -125,6 +125,8 @@ class GuildInvite(models.Model):
     guild_id = columns.BigInt(primary_key=True)
     creator_id = columns.BigInt(primary_key=True)
     created_at = columns.DateTime(default=_get_date)
+    max_invited = columns.BigInt(default=0)
+    amount_invited = columns.BigInt(default=0)
 
 
 class Member(models.Model):
@@ -275,6 +277,18 @@ class Audit(models.Model):
     audited_at = columns.DateTime(default=_get_date)
 
 
+class Webhook(models.Model):
+    __table_name__ = 'webhooks'
+    __options__ = default_options
+    id = columns.BigInt(primary_key=True, partition_key=True)
+    channel_id = columns.BigInt(primary_key=True)
+    guild_id = columns.BigInt(primary_key=True)
+    creator_id = columns.BigInt()
+    name = columns.Text(max_length=100)
+    avatar = columns.Text()
+    token = columns.Text()
+
+
 def to_dict(model: models.Model, _keep_email=False) -> dict:
     initial: dict[str, Any] = model.items()
     ret = dict(initial)
@@ -301,6 +315,10 @@ def to_dict(model: models.Model, _keep_email=False) -> dict:
         except:
             # author was deleted
             ret['author'] = None
+
+    if type(model).__name__ == 'Webhook':
+        ret.pop('token')
+        ret.pop('guild_id')
 
     for name, value in initial:
         if isinstance(value, (usertype.UserType, models.Model)):

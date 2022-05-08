@@ -28,7 +28,7 @@ from ..database import (
     to_dict,
 )
 from ..errors import BadData, Conflict, Forbidden
-from ..randoms import factory
+from ..randoms import factory, code
 from ..events import guild_event
 from ..utils import AuthHeader, jsonify
 
@@ -257,6 +257,42 @@ class GuildsCore(Controller):
             guild_invites.append(to_dict(invite))
 
         return jsonify(guild_invites)
+
+    @post('/guilds/{int:guild_id}/invites')
+    async def create_invite(self, guild_id: int, auth: AuthHeader, request: Request):
+        m, _ = validate_member(
+            token=auth.value,
+            guild_id=guild_id
+        )
+
+        perms = get_member_permissions(m)
+
+        if not perms.create_invites and not perms.administator and not m.owner:
+            raise Forbidden()
+
+        data: dict = await request.json(orjson.loads)
+
+        if data is not None:
+            ttl = data.get('ttl')
+            max_users = data.get('max_users') or 0
+
+        if ttl:
+            ttl = int(ttl)
+
+        if max_users:
+            max_users = int(max_users)
+
+        invite: GuildInvite = GuildInvite.create(
+            id=code(),
+            guild_id=guild_id,
+            creator_id=m.id,
+            max_invited=max_users,
+        )
+
+        if ttl:
+            invite.ttl(ttl)
+
+        return to_dict(invite)
 
     @put('/guilds/{int:guild_id}/vanity')
     async def claim_guild_vanity(
