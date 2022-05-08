@@ -1,7 +1,7 @@
 FROM python:3.10.4-alpine
 
 # Used because of cchardet requiring GCC to work.
-RUN apk add --no-cache build-base
+RUN apk add --no-cache build-base libffi-dev
 
 WORKDIR /
 
