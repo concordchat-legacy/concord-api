@@ -3,3 +3,4 @@ tests/
 __pycache__/
 ekranoplan/static/google.json
 test.py
+.env.prod
