@@ -1,8 +1,9 @@
 FROM python:3.10.4-alpine
 
-FROM frolvlad/alpine-gcc:latest as builder
+# Used because of cchardet requiring GCC to work.
+FROM frolvlad/alpine-gcc:latest as gcc
 
-COPY --from=builder /root/sources/binary /usr/bin/
+COPY --from=gcc /root/sources/binary /usr/bin/
 
 WORKDIR /
 
