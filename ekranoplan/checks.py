@@ -176,7 +176,9 @@ def search_messages(
                 Message.objects(
                     Message.channel_id == channel_id,
                     Message.bucket_id == bucket,
-                ).all()
+                )
+                .order_by('message_id')
+                .all()
             )
 
             if len(collected_messages) > limit:
@@ -287,7 +289,7 @@ def verify_slowmode(user_id: int, channel_id: int):
             ChannelSlowMode.id == user_id, ChannelSlowMode.channel_id == channel_id
         ).get()
     except (query.DoesNotExist):
-        ...
+        return
     else:
         raise Conflict()
 

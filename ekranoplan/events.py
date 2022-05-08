@@ -2,21 +2,19 @@
 # See LICENSE for more information.
 import os
 
-import redis.asyncio as redis
 import dotenv
 import orjson
+from kafka import KafkaProducer
 
 dotenv.load_dotenv()
 
-pool = redis.ConnectionPool(
-    host=os.getenv('redis_uri'),
-    port=os.getenv('redis_port'),
-    password=os.getenv('redis_password'),
-    db=int(os.getenv('redis_db', 0)),
-    retry_on_timeout=True,
+producer = KafkaProducer(
+    bootstrap_servers=os.getenv('KAFKA_HOSTS'),
+    security_protocol='SASL_SSL',
+    sasl_mechanism='PLAIN',
+    sasl_plain_username=os.getenv('KAFKA_USERNAME'),
+    sasl_plain_password=os.getenv('KAFKA_PASSWORD'),
 )
-
-manager = redis.Redis(connection_pool=pool)
 
 # Possible Types
 # 1: User(s)
@@ -31,7 +29,7 @@ manager = redis.Redis(connection_pool=pool)
 async def user_event(name: str, user_id: int, data: dict):
     d = {'type': 1, 'name': name, 'user_id': user_id, 'data': data}
 
-    await manager.publish('gateway', orjson.dumps(d))
+    producer.send('users', orjson.dumps(d))
 
 
 async def guild_event(name: str, guild_id: int, data: dict, user_id: int = None):
@@ -43,7 +41,7 @@ async def guild_event(name: str, guild_id: int, data: dict, user_id: int = None)
         'data': data,
     }
 
-    await manager.publish('gateway', orjson.dumps(d))
+    producer.send('guilds', orjson.dumps(d))
 
 
 async def channel_event(
@@ -62,7 +60,7 @@ async def channel_event(
         'is_message': is_message,
     }
 
-    await manager.publish('gateway', orjson.dumps(d))
+    producer.send('channels', orjson.dumps(d))
 
 
 async def friend_request_event(name: str, user_id: int, receiver_id: int, data: dict):
@@ -74,7 +72,7 @@ async def friend_request_event(name: str, user_id: int, receiver_id: int, data: 
         'data': data,
     }
 
-    await manager.publish('gateway', orjson.dumps(d))
+    producer.send('friends', orjson.dumps(d))
 
 
 async def member_event(name: str, member_id: int, guild_id: int, data: dict):
@@ -86,23 +84,10 @@ async def member_event(name: str, member_id: int, guild_id: int, data: dict):
         'data': data,
     }
 
-    await manager.publish('gateway', orjson.dumps(d))
+    await producer.send('members', orjson.dumps(d))
 
 
 async def presence_event(name: str, user_id: int, data: dict):
     d = {'type': 7, 'name': name, 'user_id': user_id, 'data': data}
 
-    await manager.publish('gateway', orjson.dumps(d))
-
-if __name__ == '__main__':
-    import asyncio
-
-    loop = asyncio.new_event_loop()
-
-    loop.run_until_complete(user_event(
-        'UPDATE',
-        1234,
-        {
-            '1': 2
-        }
-    ))
+    await producer.send('presences', orjson.dumps(d))

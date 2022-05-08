@@ -232,4 +232,23 @@ class ChannelCore(Controller):
         channel = to_dict(channel)
         channel['permission_overwrites'] = overwrites
 
-        return jsonify()
+        return jsonify(channel)
+
+    @get(
+        '/guilds/{int:guild_id}/channels',
+    )
+    async def get_guild_channels(self, guild_id: int, auth: AuthHeader):
+        _, _ = validate_member(
+            token=auth.value,
+            guild_id=guild_id,
+        )
+
+        channels_ = GuildChannel.objects(
+            GuildChannel.guild_id == guild_id
+        ).all()
+        channels = []
+
+        for channel in channels_:
+            channels.append(to_dict(channel))
+
+        return jsonify(channels)

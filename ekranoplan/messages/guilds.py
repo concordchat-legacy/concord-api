@@ -159,10 +159,11 @@ class GuildMessages(Controller):
             is_message=True,
         )
 
-        slowmode: ChannelSlowMode = ChannelSlowMode.create(
-            id=member.id, channel_id=channel_id
-        )
-        slowmode.ttl(channel.slowmode_timeout)
+        if channel.slowmode_timeout != 0:
+            slowmode: ChannelSlowMode = ChannelSlowMode.create(
+                id=member.id, channel_id=channel_id
+            )
+            slowmode.ttl(channel.slowmode_timeout)
 
         return jsonify(to_dict(msg))
 

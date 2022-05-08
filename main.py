@@ -117,6 +117,12 @@ async def on_start(application: Application):
             'requests_in_progress',
         )
     )
+    # TODO: Fix TypeError's
+    #app.middlewares.append(
+        #RatelimitingMiddleware(
+        #    redis=manager
+        #)
+    #)
     app.router.add_get('/metrics', metrics)
     connect()
 
