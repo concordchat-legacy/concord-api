@@ -1,6 +1,5 @@
 # Copyright 2021 Concord, Inc.
 # See LICENSE for more information.
-import os
 import random
 
 import orjson
@@ -12,12 +11,16 @@ from email_validator import validate_email
 from ..checks import send_verification, upload_image, validate_user, verify_email
 from ..database import Meta, User, to_dict
 from ..errors import BadData, Conflict, Forbidden, NotFound
+from ..openapi import UserE, create_user, docs
+from ..openapi import get_me as getme
+from ..openapi import get_user as getu
 from ..randoms import factory, get_hash, verify_hash
 from ..tokens import create_token
 from ..utils import VALID_LOCALES, AuthHeader, jsonify
 
 
-class CoreUsers(Controller):
+class Users(Controller):
+    # @docs(getme)
     @get('/users/@me')
     async def get_me(self, auth: AuthHeader):
         me = validate_user(auth.value)
@@ -34,6 +37,7 @@ class CoreUsers(Controller):
 
         return jsonify(me)
 
+    # @docs(getu)
     @get('/users/{int:user_id}')
     async def get_user(self, user_id: int, auth: AuthHeader):
         validate_user(auth.value)
@@ -58,8 +62,9 @@ class CoreUsers(Controller):
 
         return jsonify(ret)
 
+    @docs(create_user)
     @post('/users')
-    async def register_user(self, request: Request):
+    async def register_user(self, request: Request) -> UserE:
         data: dict = await request.json(orjson.loads)
 
         username = data['username'][:40]

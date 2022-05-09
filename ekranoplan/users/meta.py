@@ -12,18 +12,20 @@ from ..checks import (
     validate_meta_guilds,
     validate_user,
 )
-from ..database import GuildMeta, Meta, Note, User, to_dict
+from ..database import GuildMeta
+from ..database import Meta as db
+from ..database import Note, User, to_dict
 from ..errors import BadData
 from ..utils import VALID_THEMES, AuthHeader, jsonify
 
 
-class MetaController(Controller):
+class Meta(Controller):
     @get('/users/@me/meta')
     async def get_meta(self, auth: AuthHeader):
         me = validate_user(token=auth.value, stop_bots=True)
 
-        meta = Meta.objects(
-            Meta.user_id == me.id,
+        meta = db.objects(
+            db.user_id == me.id,
         ).get()
 
         return jsonify(to_dict(meta))
@@ -32,7 +34,7 @@ class MetaController(Controller):
     async def edit_meta(self, auth: AuthHeader, request: Request):
         me = validate_user(token=auth.value, stop_bots=True)
 
-        meta: Meta = Meta.objects(Meta.user_id == me.id).get()
+        meta: db = db.objects(db.user_id == me.id).get()
 
         data = await request.json(orjson.loads)
 

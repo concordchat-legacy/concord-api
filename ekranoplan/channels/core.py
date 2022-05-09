@@ -15,13 +15,13 @@ from ..checks import (
 )
 from ..database import Guild, GuildChannel, PermissionOverWrites, Role, to_dict
 from ..errors import BadData, Forbidden, NotFound
+from ..events import channel_event
 from ..flags import GuildPermissions
 from ..randoms import factory
-from ..events import channel_event
 from ..utils import NONMESSAGEABLE, AuthHeader, jsonify
 
 
-class ChannelCore(Controller):
+class Channels(Controller):
     @post(
         '/guilds/{int:guild_id}/channels',
     )
@@ -243,9 +243,7 @@ class ChannelCore(Controller):
             guild_id=guild_id,
         )
 
-        channels_ = GuildChannel.objects(
-            GuildChannel.guild_id == guild_id
-        ).all()
+        channels_ = GuildChannel.objects(GuildChannel.guild_id == guild_id).all()
         channels = []
 
         for channel in channels_:

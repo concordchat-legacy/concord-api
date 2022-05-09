@@ -12,10 +12,8 @@ rollouts = {
     0: [i for i in range(CURVE)]
 }
 
-def can_use_feature(
-    guild_id: int,
-    rollout_id: int
-):
+
+def can_use_feature(guild_id: int, rollout_id: int):
     f = (guild_id >> 22) % CURVE
 
     a = rollouts[rollout_id]

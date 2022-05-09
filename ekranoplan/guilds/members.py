@@ -11,7 +11,7 @@ from ..events import member_event
 from ..utils import AuthHeader, jsonify
 
 
-class MemberController(Controller):
+class Members(Controller):
     @get('/guilds/{int:guild_id}/members/{int:member_id}')
     async def get_member(self, guild_id: int, member_id: int, auth: AuthHeader):
         _, _ = validate_member(token=auth.value, guild_id=guild_id)

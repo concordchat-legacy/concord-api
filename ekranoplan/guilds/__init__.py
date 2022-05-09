@@ -1,5 +1,5 @@
 # Copyright 2021 Concord, Inc.
 # See LICENSE for more information.
-from .audits import AuditLogger as audits
-from .core import GuildsCore as guilds
-from .members import MemberController as members
+from .audits import Audits as audits
+from .core import Guilds as guilds
+from .members import Members as members

@@ -17,16 +17,17 @@ from blacksheep_prometheus import PrometheusMiddleware, metrics
 from cassandra.cqlengine.query import DoesNotExist
 from email_validator import EmailSyntaxError
 
-from ekranoplan.public import public
 from ekranoplan.admin import admin_users
 from ekranoplan.channels import channels, readstates
 from ekranoplan.checks import add_guild_meta, audit, validate_user
 from ekranoplan.database import Guild, GuildInvite, Member, connect, to_dict
 from ekranoplan.errors import BadData, Conflict, Err, Forbidden, NotFound
+from ekranoplan.events import member_event
 from ekranoplan.guilds import audits, guilds, members
 from ekranoplan.messages import guild_messages
+from ekranoplan.openapi import docs
+from ekranoplan.public import public
 from ekranoplan.randoms import factory
-from ekranoplan.events import member_event
 from ekranoplan.users import meta, users
 from ekranoplan.utils import jsonify
 
@@ -118,11 +119,11 @@ async def on_start(application: Application):
         )
     )
     # TODO: Fix TypeError's
-    #app.middlewares.append(
-        #RatelimitingMiddleware(
-        #    redis=manager
-        #)
-    #)
+    # app.middlewares.append(
+    # RatelimitingMiddleware(
+    #    redis=manager
+    # )
+    # )
     app.router.add_get('/metrics', metrics)
     connect()
 
@@ -186,3 +187,4 @@ bps = [
 ]
 
 app.register_controllers(bps)
+docs.bind_app(app=app)

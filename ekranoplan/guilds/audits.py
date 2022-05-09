@@ -10,7 +10,7 @@ from ..errors import Forbidden, NotFound
 from ..utils import AuthHeader, jsonify
 
 
-class AuditLogger(Controller):
+class Audits(Controller):
     @get('/guilds/{int:guild_id}/audits')
     async def get_guild_audits(self, guild_id: int, auth: AuthHeader):
         member, _ = validate_member(token=auth.value, guild_id=guild_id)

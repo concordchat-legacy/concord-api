@@ -9,12 +9,12 @@ from blacksheep.server.controllers import Controller, delete, get, patch, post
 from ..checks import audit, search_messages, validate_channel, verify_slowmode
 from ..database import ChannelSlowMode, GuildChannelPin, Message, _get_date, to_dict
 from ..errors import BadData, Forbidden
-from ..randoms import factory, get_bucket
 from ..events import channel_event
+from ..randoms import factory, get_bucket
 from ..utils import NONMESSAGEABLE, AuthHeader, jsonify
 
 
-class GuildMessages(Controller):
+class Messages(Controller):
     @get(
         '/guilds/{int:guild_id}/channels/{int:channel_id}/messages/{int:message_id}',
     )

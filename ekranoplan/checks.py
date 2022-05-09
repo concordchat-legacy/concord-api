@@ -26,9 +26,9 @@ from .database import (
     to_dict,
 )
 from .errors import BadData, Conflict, Forbidden, NotFound
+from .events import channel_event
 from .flags import GuildPermissions, UserFlags
 from .randoms import factory, get_bucket
-from .events import channel_event
 from .tokens import verify_token
 from .valkyrie import upload
 

@@ -306,11 +306,7 @@ def to_dict(model: models.Model, _keep_email=False) -> dict:
 
     if type(model).__name__ == 'Message':
         try:
-            ret['author'] = to_dict(
-                User.objects(
-                    User.id == model.author_id
-                ).get()
-            )
+            ret['author'] = to_dict(User.objects(User.id == model.author_id).get())
             ret.pop('author_id')
         except:
             # author was deleted
@@ -340,6 +336,8 @@ def to_dict(model: models.Model, _keep_email=False) -> dict:
             for v in value:
                 if isinstance(v, usertype.UserType):
                     set_values.append(to_dict(v))
+                elif isinstance(v, int):
+                    set_values.append(str(v))
                 else:
                     set_values.append(v)
 
@@ -352,6 +350,7 @@ def to_dict(model: models.Model, _keep_email=False) -> dict:
             and name != 'message_id'
             and name != 'guild_id'
             and name != 'bucket_id'
+            or name == 'parent_id'
         ):
             ret[name] = str(value)
 

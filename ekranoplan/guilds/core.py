@@ -28,12 +28,12 @@ from ..database import (
     to_dict,
 )
 from ..errors import BadData, Conflict, Forbidden
-from ..randoms import factory, code
 from ..events import guild_event
+from ..randoms import code, factory
 from ..utils import AuthHeader, jsonify
 
 
-class GuildsCore(Controller):
+class Guilds(Controller):
     @post('/guilds')
     async def create_guild(self, auth: AuthHeader, request: Request):
         # TODO: Generate a channel: "general" and category: "General" with a welcome message
@@ -260,10 +260,7 @@ class GuildsCore(Controller):
 
     @post('/guilds/{int:guild_id}/invites')
     async def create_invite(self, guild_id: int, auth: AuthHeader, request: Request):
-        m, _ = validate_member(
-            token=auth.value,
-            guild_id=guild_id
-        )
+        m, _ = validate_member(token=auth.value, guild_id=guild_id)
 
         perms = get_member_permissions(m)
 
