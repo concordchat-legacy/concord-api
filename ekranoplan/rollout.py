@@ -3,18 +3,22 @@
 
 from .errors import NotFound
 
-# each guild is separated into one of these, based on its ID.
-# TODO: Raise when we get to ~100,000 Guilds.
-CURVE = 30
+# rollouts are separated inside of "buckets",
+# only a certain amount of buckets will get the chance to do a feature.
+curves = {
+    1: 10,
+    2: 20,
+    3: 40,
+    4: 80,
+    5: 160
+}
 
 rollouts = {
-    # completed rollout
-    0: [i for i in range(CURVE)]
 }
 
 
-def can_use_feature(guild_id: int, rollout_id: int):
-    f = (guild_id >> 22) % CURVE
+def can_use_feature(guild_id: int, rollout_id: int, curve_id: int):
+    f = (guild_id >> 22) % curves[curve_id]
 
     a = rollouts[rollout_id]
 

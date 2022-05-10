@@ -288,6 +288,11 @@ class Webhook(models.Model):
     avatar = columns.Text()
     token = columns.Text()
 
+class IgnoredBucket(models.Model):
+    __table_name__ = 'ignored_buckets'
+    channel_id = columns.BigInt(primary_key=True)
+    bucket_id = columns.Integer()
+
 
 def to_dict(model: models.Model, _keep_email=False) -> dict:
     initial: dict[str, Any] = model.items()
@@ -408,3 +413,4 @@ if __name__ == '__main__':
     management.sync_table(Reaction)
     management.sync_table(PermissionOverWrites)
     management.sync_table(Audit)
+    management.sync_table(IgnoredBucket)

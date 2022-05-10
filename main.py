@@ -25,7 +25,6 @@ from ekranoplan.errors import BadData, Conflict, Err, Forbidden, NotFound
 from ekranoplan.events import member_event
 from ekranoplan.guilds import audits, guilds, members
 from ekranoplan.messages import guild_messages
-from ekranoplan.openapi import docs
 from ekranoplan.public import public
 from ekranoplan.randoms import factory
 from ekranoplan.users import meta, users
@@ -187,4 +186,3 @@ bps = [
 ]
 
 app.register_controllers(bps)
-docs.bind_app(app=app)

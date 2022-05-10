@@ -23,6 +23,7 @@ from .database import (
     PermissionOverWrites,
     Role,
     User,
+    IgnoredBucket,
     to_dict,
 )
 from .errors import BadData, Conflict, Forbidden, NotFound
@@ -168,10 +169,22 @@ def search_messages(
 ) -> Union[List[Message], Message, None]:
     current_bucket = get_bucket(channel_id)
     collected_messages = []
+    _ignore_buckets = IgnoredBucket.objects(
+        IgnoredBucket.channel_id == channel_id
+    ).all()
+    pass_buckets = []
+
+    for bucket in _ignore_buckets:
+        pass_buckets.append(bucket.bucket_id)
+
     if message_id is None:
         for bucket in range(current_bucket + 1):
             if bucket == 0:
                 continue
+
+            if bucket in pass_buckets:
+                continue
+
             collected_messages.append(
                 Message.objects(
                     Message.channel_id == channel_id,
@@ -181,6 +194,12 @@ def search_messages(
                 .all()
             )
 
+            if collected_messages == []:
+                IgnoredBucket.create(
+                    channel_id=channel_id,
+                    bucket_id=bucket
+                )
+
             if len(collected_messages) > limit:
                 collected_messages = collected_messages[limit:]
                 break
@@ -188,6 +207,9 @@ def search_messages(
         return collected_messages
     else:
         for bucket in range(current_bucket + 1):
+            if bucket in pass_buckets:
+                continue
+
             pmsg = Message.objects(
                 Message.message_id == message_id,
                 Message.channel_id == channel_id,
