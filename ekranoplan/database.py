@@ -319,7 +319,19 @@ def to_dict(model: models.Model, _keep_email=False) -> dict:
 
     if type(model).__name__ == 'Webhook':
         ret.pop('token')
-        ret.pop('guild_id')
+
+    if type(model).__name__ == 'GuildChannel':
+        ls = PermissionOverWrites.objects(
+            PermissionOverWrites.channel_id == model.id
+        ).all()
+        overwrites = []
+
+        for obj in ls:
+            obj = to_dict(obj)
+            obj.pop('channel_id')
+            overwrites.append(obj)
+
+        ret['permission_overwrites'] = overwrites
 
     for name, value in initial:
         if isinstance(value, (usertype.UserType, models.Model)):
