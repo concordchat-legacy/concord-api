@@ -9,7 +9,7 @@ from cassandra.cqlengine import query
 from email_validator import validate_email
 
 from ..checks import send_verification, upload_image, validate_user, verify_email
-from ..database import Meta, User, to_dict
+from ..database import Meta, User, Member, Guild, to_dict
 from ..errors import BadData, Conflict, Forbidden, NotFound
 from ..randoms import factory, get_hash, verify_hash
 from ..tokens import create_token
@@ -203,3 +203,24 @@ class Users(Controller):
         me = me.save()
 
         return jsonify(to_dict(me))
+
+    @get('/users/@me/guilds')
+    async def get_guilds(self, auth: AuthHeader):
+        me = validate_user(
+            token=auth.value,
+            stop_bots=True
+        )
+
+        objs = Member.objects(Member.id == me.id).all()
+        guilds = []
+
+        for obj in objs:
+            guilds.append(
+                to_dict(
+                    Guild.objects(
+                        Guild.id == obj.guild_id
+                    ).get()
+                )
+            )
+
+        return jsonify(guilds)

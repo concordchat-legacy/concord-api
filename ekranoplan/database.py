@@ -7,6 +7,7 @@ from typing import Any
 import dotenv
 from cassandra.auth import PlainTextAuthProvider
 from cassandra.cqlengine import columns, connection, management, models, usertype
+from .utils import run_migrations
 
 dotenv.load_dotenv()
 
@@ -295,6 +296,8 @@ class IgnoredBucket(models.Model):
 
 
 def to_dict(model: models.Model, _keep_email=False) -> dict:
+    model = run_migrations(model)
+
     initial: dict[str, Any] = model.items()
     ret = dict(initial)
 
@@ -309,7 +312,17 @@ def to_dict(model: models.Model, _keep_email=False) -> dict:
             # user was deleted
             ret['user'] = None
 
-    if type(model).__name__ == 'Message':
+        try:
+            ret['guild'] = to_dict(
+                Guild.objects(
+                    Guild.id == model.guild_id,
+                ).get()
+            )
+        except:
+            # user was deleted
+            ret['guild'] = model.guild_id
+
+    elif type(model).__name__ == 'Message':
         try:
             ret['author'] = to_dict(User.objects(User.id == model.author_id).get())
             ret.pop('author_id')
@@ -317,10 +330,10 @@ def to_dict(model: models.Model, _keep_email=False) -> dict:
             # author was deleted
             ret['author'] = None
 
-    if type(model).__name__ == 'Webhook':
+    elif type(model).__name__ == 'Webhook':
         ret.pop('token')
 
-    if type(model).__name__ == 'GuildChannel':
+    elif type(model).__name__ == 'GuildChannel':
         ls = PermissionOverWrites.objects(
             PermissionOverWrites.channel_id == model.id
         ).all()

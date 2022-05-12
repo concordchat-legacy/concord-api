@@ -291,7 +291,7 @@ class Guilds(Controller):
 
         return to_dict(invite)
 
-    @put('/guilds/{int:guild_id}/vanity')
+    # @put('/guilds/{int:guild_id}/vanity')
     async def claim_guild_vanity(
         self, guild_id: int, auth: AuthHeader, request: Request
     ):

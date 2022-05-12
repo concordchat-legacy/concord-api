@@ -13,5 +13,3 @@ blacksheep-prometheus==0.1.6
 boto3==1.22.3
 python-datauri==1.1.0
 email-validator==1.2.1
-Blacksheep-RateLimiter==1.0.6
-kafka-python==2.0.2
