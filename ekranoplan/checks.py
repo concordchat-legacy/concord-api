@@ -17,13 +17,14 @@ from .database import (
     Guild,
     GuildChannel,
     GuildMeta,
+    IgnoredBucket,
     Member,
     Message,
     Meta,
     PermissionOverWrites,
+    Reaction,
     Role,
     User,
-    IgnoredBucket,
     to_dict,
 )
 from .errors import BadData, Conflict, Forbidden, NotFound
@@ -195,10 +196,7 @@ def search_messages(
             )
 
             if collected_messages == []:
-                IgnoredBucket.create(
-                    channel_id=channel_id,
-                    bucket_id=bucket
-                )
+                IgnoredBucket.create(channel_id=channel_id, bucket_id=bucket)
 
             if len(collected_messages) > limit:
                 collected_messages = collected_messages[limit:]
@@ -317,10 +315,16 @@ def verify_slowmode(user_id: int, channel_id: int):
 
 
 def delete_channel(channel: GuildChannel):
-    perm_overwrites = PermissionOverWrites.objects(PermissionOverWrites.channel_id == channel.id).all()
+    perm_overwrites = PermissionOverWrites.objects(
+        PermissionOverWrites.channel_id == channel.id
+    ).all()
 
     if channel.type in [1]:
         highest_bucket = get_bucket(channel.id)
+        ignored_buckets = IgnoredBucket.objects(IgnoredBucket.channel_id == channel.id).all()
+
+        for bucket in ignored_buckets:
+            bucket.delete()
 
         for bucket in range(highest_bucket + 1):
             msgs: List[Message] = Message.objects(
@@ -329,6 +333,11 @@ def delete_channel(channel: GuildChannel):
 
             for msg in msgs:
                 msg.delete()
+
+                reactions = Reaction.objects(Reaction.message_id == msg.id).all()
+
+                for reaction in reactions:
+                    reaction.delete()
 
     for overwrite in perm_overwrites:
         overwrite.delete()

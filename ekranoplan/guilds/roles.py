@@ -1,11 +1,12 @@
 # Copyright 2021 Concord, Inc.
 # See LICENSE for more information.
-from blacksheep.server.controllers import Controller, post, patch, get
+from blacksheep.server.controllers import Controller, get, patch, post
 
-from ..errors import NotFound
-from ..utils import jsonify, AuthHeader
-from ..database import Role, to_dict
 from ..checks import validate_member
+from ..database import Role, to_dict
+from ..errors import NotFound
+from ..utils import AuthHeader, jsonify
+
 
 class Roles(Controller):
     @post('/guilds/{int:guild_id}/roles')
@@ -18,16 +19,10 @@ class Roles(Controller):
 
     @get('/guilds/{int:guild_id}/roles/{int:role_id}')
     async def get_role(self, guild_id: int, role_id: int, auth: AuthHeader):
-        validate_member(
-            token=auth.value,
-            guild_id=guild_id
-        )
+        validate_member(token=auth.value, guild_id=guild_id)
 
         try:
-            roles = Role.objects(
-                Role.guild_id == guild_id,
-                Role.id == role_id
-            ).get()
+            roles = Role.objects(Role.guild_id == guild_id, Role.id == role_id).get()
         except:
             raise NotFound()
 
@@ -35,14 +30,9 @@ class Roles(Controller):
 
     @get('/guilds/{int:guild_id}/roles')
     async def get_roles(self, guild_id: int, auth: AuthHeader):
-        validate_member(
-            token=auth.value,
-            guild_id=guild_id
-        )
+        validate_member(token=auth.value, guild_id=guild_id)
 
-        _rs = Role.objects(
-            Role.guild_id == guild_id
-        ).all()
+        _rs = Role.objects(Role.guild_id == guild_id).all()
         roles = []
 
         for role in _rs:

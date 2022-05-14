@@ -5,16 +5,9 @@ from .errors import NotFound
 
 # rollouts are separated inside of "buckets",
 # only a certain amount of buckets will get the chance to do a feature.
-curves = {
-    1: 10,
-    2: 20,
-    3: 40,
-    4: 80,
-    5: 160
-}
+curves = {1: 10, 2: 20, 3: 40, 4: 80, 5: 160}
 
-rollouts = {
-}
+rollouts = {}
 
 
 def can_use_feature(guild_id: int, rollout_id: int, curve_id: int):

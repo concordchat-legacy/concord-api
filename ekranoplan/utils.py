@@ -34,11 +34,7 @@ VALID_LOCALES = [
     'en-US',
     'en-GB',
 ]
-DEPRECATED_LOCALES = [
-    'en_US',
-    'en_UK',
-    'EN_US'
-]
+DEPRECATED_LOCALES = ['en_US', 'en_UK', 'EN_US']
 SCIENCE_TYPES = [
     'app-opened',
     'guild-opened',
@@ -58,6 +54,7 @@ def jsonify(data: dict, status: int = 200) -> Response:
         headers=None,
         content=Content(b'application/json', orjson.dumps(data)),
     )
+
 
 def run_migrations(model):
     if type(model).__name__ == 'Guild':

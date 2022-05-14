@@ -2,9 +2,9 @@
 # See LICENSE for more information.
 import os
 
-import redis.asyncio as redis
 import dotenv
 import orjson
+import redis.asyncio as redis
 
 dotenv.load_dotenv()
 

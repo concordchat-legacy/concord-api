@@ -7,6 +7,7 @@ from typing import Any
 import dotenv
 from cassandra.auth import PlainTextAuthProvider
 from cassandra.cqlengine import columns, connection, management, models, usertype
+
 from .utils import run_migrations
 
 dotenv.load_dotenv()
@@ -290,6 +291,7 @@ class Webhook(models.Model):
     avatar = columns.Text()
     token = columns.Text()
 
+
 class IgnoredBucket(models.Model):
     __table_name__ = 'ignored_buckets'
     channel_id = columns.BigInt(primary_key=True)
@@ -415,7 +417,9 @@ def to_dict(model: models.Model, _keep_email=False) -> dict:
         elif name == 'channel_id':
             try:
                 id = ret.pop('channel_id')
-                ret['channel'] = to_dict(GuildChannel.get(GuildChannel.id == id).allow_filtering().get())
+                ret['channel'] = to_dict(
+                    GuildChannel.get(GuildChannel.id == id).allow_filtering().get()
+                )
             except:
                 ret['channel'] = None
 
