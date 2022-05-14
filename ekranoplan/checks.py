@@ -317,6 +317,8 @@ def verify_slowmode(user_id: int, channel_id: int):
 
 
 def delete_channel(channel: GuildChannel):
+    perm_overwrites = PermissionOverWrites.objects(PermissionOverWrites.channel_id == channel.id).all()
+
     if channel.type in [1]:
         highest_bucket = get_bucket(channel.id)
 
@@ -327,6 +329,10 @@ def delete_channel(channel: GuildChannel):
 
             for msg in msgs:
                 msg.delete()
+
+    for overwrite in perm_overwrites:
+        overwrite.delete()
+
     channel.delete()
 
 

@@ -409,7 +409,8 @@ def to_dict(model: models.Model, _keep_email=False) -> dict:
             ret.pop('verification_code')
 
         elif name == 'guild_id':
-            ret.pop('guild_id')
+            id = ret.pop('guild_id')
+            ret['guild'] = to_dict(Guild.objects(Guild.id == id).get())
 
         elif name == 'channel_id':
             try:
