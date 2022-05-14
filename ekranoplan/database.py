@@ -126,6 +126,7 @@ class GuildInvite(models.Model):
     guild_id = columns.BigInt(primary_key=True)
     creator_id = columns.BigInt(primary_key=True)
     created_at = columns.DateTime(default=_get_date)
+    channel_id = columns.BigInt(default=0)
     max_invited = columns.BigInt(default=0)
     amount_invited = columns.BigInt(default=0)
 
@@ -380,6 +381,7 @@ def to_dict(model: models.Model, _keep_email=False) -> dict:
             and name != 'message_id'
             and name != 'guild_id'
             and name != 'bucket_id'
+            and name != 'channel_id'
             or name == 'parent_id'
         ):
             ret[name] = str(value)
@@ -408,6 +410,13 @@ def to_dict(model: models.Model, _keep_email=False) -> dict:
 
         elif name == 'guild_id':
             ret.pop('guild_id')
+
+        elif name == 'channel_id':
+            try:
+                id = ret.pop('channel_id')
+                ret['channel'] = to_dict(GuildChannel.get(GuildChannel.id == id).allow_filtering().get())
+            except:
+                ret['channel'] = None
 
     return ret
 
