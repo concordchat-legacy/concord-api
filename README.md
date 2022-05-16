@@ -1,5 +1,5 @@
-# Ekranoplan
-Privacy-focused, scalable, and blazingly fast REST API for Concord.
+# Concore
+Privacy-focused, scalable, and blazingly fast API for Concord.
 
 # Stack
 
@@ -22,13 +22,12 @@ To try and avoid DDoS Attacks we recommend using [cloudflare](https://cloudflare
 - Prerequisites
     - A Cassandra Database
     - A Redis Database
-    - A Amazon S3 Bucket named `cdn.concord.chat`
 
     Please run `ekranoplan/database.py` to setup the 
-    cassandra database or scylla (make sure to have the "airbus" keyspace available).
+    cassandra or scylla database (make sure to have the "airbus" keyspace available).
     The redis database does not need any prior setup.
 
-    If your cassandra host has a db bundle please set `safe=true` in your `.env` 
+    If your db host has a ssl bundle, please set `safe=true` in your `.env` 
     and add the bundle as `bundle.zip` in `ekranoplan/static`.
 
 - Development
@@ -39,5 +38,4 @@ To try and avoid DDoS Attacks we recommend using [cloudflare](https://cloudflare
     
     When you deploy in production we recommend:
     
-    - Using Kubernetes or Docker
-    - Running `run.py` only
+    - Using Kubernetes
