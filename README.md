@@ -1,16 +1,11 @@
-# Concore
-Privacy-focused, scalable, and blazingly fast API for Concord.
+# Concord
+Opinionated, blazingly-fast backend API for Neoform.
 
 # Stack
 
 - [Uvicorn](https://uvicorn.org)
 - [Blacksheep](https://github.com/Neoteroi/BlackSheep)
 - [Cassandra](https://cassandra.apache.org)
-
-# Design Philosophy
-You may be asking multiple questions, like "why is this in python?" or "why not use rust?"
-Answers to those exact questions are stated, [here](https://gist.github.com/VincentRPS/dd02deaacdbc0fb3b52090aa338c658e)
-
 
 # Abuse Protection
 Ekranoplan has been made to allow as little abuse of the API as possible
