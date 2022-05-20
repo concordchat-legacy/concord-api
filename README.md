@@ -1,5 +1,5 @@
-# Concord
-Opinionated, blazingly-fast backend API for Neoform.
+# Concord API
+Opinionated, blazingly-fast backend API for Concord.
 
 # Stack
 
