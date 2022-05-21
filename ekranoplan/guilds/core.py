@@ -258,7 +258,7 @@ class Guilds(Controller):
 
         return jsonify(guild_invites)
 
-    @post('/guilds/{int:guild_id}/invites')
+    # @post('/guilds/{int:guild_id}/channels/{int:channel_id}/invites')
     async def create_invite(self, guild_id: int, auth: AuthHeader, request: Request):
         m, _ = validate_member(token=auth.value, guild_id=guild_id)
 

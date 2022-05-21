@@ -1,7 +1,14 @@
 # Copyright 2021 Concord, Inc.
 # See LICENSE for more information.
+import os
+import re
+
 import orjson
+import dotenv
+from imgproxy import ImgProxy
 from blacksheep import Content, FromHeader, Response
+
+dotenv.load_dotenv()
 
 NONMESSAGEABLE = [0]
 MESSAGEABLE = [1]
@@ -43,6 +50,9 @@ SCIENCE_TYPES = [
     'changelog-viewed',
 ]
 
+IMGPROXY_KEY = os.getenv('IMGPROXY_KEY')
+IMGPROXY_SALT = os.getenv('IMGPROXY_SALT')
+IMGPROXY_URL = os.getenv('IMGPROXY_URL', 'https://images-ext.concord.chat')
 
 class AuthHeader(FromHeader[str]):
     name = 'Authorization'
@@ -67,3 +77,10 @@ def run_migrations(model):
             model.save()
 
     return model
+
+NAME_FILTER = re.compile(r"^[^\u200BА-Яа-яΑ-Ωα-ω]+$")
+
+def proxy_img(url: str, w: int = 0, h: int = 0):
+    proxifier = ImgProxy(url, IMGPROXY_URL, key=IMGPROXY_KEY, salt=IMGPROXY_SALT, width=w, height=h)
+
+    return proxifier()

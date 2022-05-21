@@ -1,6 +1,7 @@
 # Copyright 2021 Concord, Inc.
 # See LICENSE for more information.
 import random
+import hashlib
 
 import orjson
 from blacksheep import Request
@@ -9,7 +10,7 @@ from cassandra.cqlengine import query
 from email_validator import validate_email
 
 from ..checks import send_verification, upload_image, validate_user, verify_email
-from ..database import Guild, Member, Meta, User, to_dict
+from ..database import Guild, Member, Meta, User, to_dict, Session
 from ..errors import BadData, Conflict, Forbidden, NotFound
 from ..randoms import factory, get_hash, verify_hash
 from ..tokens import create_token
@@ -23,11 +24,11 @@ class Users(Controller):
 
         if me.locale == 'EN_US' or me.locale == 'en_US':
             me.locale = 'en-US'
-            me.save()
+            me = me.save()
 
         elif me.locale == 'en_UK':
             me.locale = 'en-GB'
-            me.save()
+            me = me.save()
 
         me = to_dict(me, True)
 
@@ -42,18 +43,18 @@ class Users(Controller):
         except query.DoesNotExist:
             raise NotFound()
 
+        if user.locale == 'EN_US' or user.locale == 'en_US':
+            user.locale = 'en-US'
+            user = user.save()
+
+        elif user.locale == 'en_UK':
+            user.locale = 'en-GB'
+            user = user.save()
+
         ret = to_dict(user)
 
         if user.bot:
             ret['pronouns'] = 'Attack Helicopter/AttkHeli'
-
-        if user.locale == 'EN_US' or user.locale == 'en_US':
-            user.locale = 'en-US'
-            user.save()
-
-        elif user.locale == 'en_UK':
-            user.locale = 'en-GB'
-            user.save()
 
         return jsonify(ret)
 
@@ -215,3 +216,49 @@ class Users(Controller):
             guilds.append(to_dict(Guild.objects(Guild.id == obj.guild_id).get()))
 
         return jsonify(guilds)
+
+    @get('/users/@me/sessions')
+    async def get_session(self, request: Request):
+        ip = hashlib.sha512(request.client_ip.encode()).hexdigest()
+
+        try:
+            session = Session.objects(
+                Session.ip == ip
+            ).get()
+        except:
+            raise NotFound()
+
+        return to_dict(session)
+
+    @post('/users/@me/sessions')
+    async def create_session(self, request: Request):
+        ip = hashlib.sha512(request.client_ip.encode()).hexdigest()
+
+        try:
+            session = Session.objects(
+                Session.ip == ip
+            ).get()
+        except:
+            pass
+        else:
+            raise BadData()
+
+        data = await request.json(orjson.loads)
+        email, password = data['email'], data['password']
+
+        me = User.objects(User.email == str(email)).allow_filtering().get()
+
+        ok = await verify_hash(me.password, str(password))
+
+        if not ok:
+            raise Forbidden()
+
+        token = create_token(me.id, me.password)
+        ip = hashlib.sha512(request.client_ip.encode()).hexdigest()
+
+        session = Session.create(
+            ip=ip,
+            token=token
+        )
+
+        return to_dict(session)

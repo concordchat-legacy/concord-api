@@ -8,8 +8,6 @@ import dotenv
 from cassandra.auth import PlainTextAuthProvider
 from cassandra.cqlengine import columns, connection, management, models, usertype
 
-from .utils import run_migrations
-
 dotenv.load_dotenv()
 
 cloud = {'secure_connect_bundle': os.getcwd() + r'/ekranoplan/static/bundle.zip'}
@@ -81,7 +79,6 @@ class User(models.Model):
     verified = columns.Boolean(default=False)
     system = columns.Boolean(default=False)
     bot = columns.Boolean(default=False)
-    referrer = columns.Text(default='')
     pronouns = columns.Text(default='')
     verification_code = columns.Integer()
 
@@ -298,7 +295,16 @@ class IgnoredBucket(models.Model):
     bucket_id = columns.Integer()
 
 
+class Session(models.Model):
+    ip = columns.Text(primary_key=True)
+    token = columns.Text()
+    created_at = columns.DateTime(default=_get_date)
+
+
 def to_dict(model: models.Model, _keep_email=False) -> dict:
+    # avoid import errors
+    from .utils import run_migrations
+
     model = run_migrations(model)
 
     initial: dict[str, Any] = model.items()
@@ -422,6 +428,11 @@ def to_dict(model: models.Model, _keep_email=False) -> dict:
                 )
             except:
                 ret['channel'] = None
+
+        elif name == 'ip':
+            ret.pop('ip')
+
+    del run_migrations
 
     return ret
 
