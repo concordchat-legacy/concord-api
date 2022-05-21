@@ -296,6 +296,10 @@ class IgnoredBucket(models.Model):
 
 
 class Session(models.Model):
+    __table_name__ = 'sessions'
+    __options__ = {
+        'default_time_to_live': 31536000
+    }
     ip = columns.Text(primary_key=True)
     token = columns.Text()
     created_at = columns.DateTime(default=_get_date)
@@ -464,3 +468,4 @@ if __name__ == '__main__':
     management.sync_table(PermissionOverWrites)
     management.sync_table(Audit)
     management.sync_table(IgnoredBucket)
+    management.sync_table(Session)
