@@ -1,7 +1,6 @@
 # Copyright 2021 Concord, Inc.
 # See LICENSE for more information.
 import random
-import hashlib
 
 import orjson
 from blacksheep import Request
@@ -71,16 +70,10 @@ class Users(Controller):
         flags = 1 << 0
         bio = str(data.get('bio') or '')
         locale = str(data.get('locale') or 'en-US')
-        referrer = request.query.get('utm_source') or ''
         pronouns = str(data.get('pronouns') or '')
         pfp_id = ''
         banner_id = ''
         verification_code = random.randint(10000, 90000)
-
-        if not isinstance(referrer, str) and not isinstance(referrer, list):
-            referrer = str(referrer)
-        elif isinstance(referrer, list):
-            referrer = str(referrer[0])
 
         if locale not in VALID_LOCALES:
             raise BadData()
@@ -102,7 +95,6 @@ class Users(Controller):
             flags=flags,
             bio=bio[:4000],
             locale=locale,
-            referrer=referrer,
             pronouns=pronouns,
             avatar=pfp_id,
             banner=banner_id,
