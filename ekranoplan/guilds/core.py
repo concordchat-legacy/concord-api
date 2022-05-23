@@ -313,7 +313,7 @@ class Guilds(Controller):
                 raise BadData()
 
         try:
-            GuildInvite.objects(GuildInvite.id == str(vanity_code)).get()
+            GuildInvite.objects(GuildInvite.id == str(vanity_code).lower()).get()
         except:
             pass
         else:
