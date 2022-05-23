@@ -30,7 +30,7 @@ from ..database import (
 from ..errors import BadData, Conflict, Forbidden
 from ..events import guild_event
 from ..randoms import code, factory
-from ..utils import AuthHeader, jsonify
+from ..utils import VALID_WORDS, AuthHeader, jsonify
 
 
 class Guilds(Controller):
@@ -304,12 +304,7 @@ class Guilds(Controller):
         vanity_code = str(request.query.get('utm_vanity')[0])
 
         for word in vanity_code:
-            if (
-                word
-                not in 'a b c d e f g h i j k l m n o p q r s t u v w x y z A B C D E F G H I J K L M N O P Q R S T U V W X Y Z 1 2 3 4 5 6 7 8 9 0 -'.split(
-                    ' '
-                )
-            ):
+            if word not in VALID_WORDS:
                 raise BadData()
 
         try:
@@ -336,7 +331,7 @@ class Guilds(Controller):
             data={'vanity_url': guild.vanity_url},
         )
 
-        if guild.vanity_url != '':
+        if guild.vanity_url != '' and guild.vanity_url.lower() != vanity_code.lower():
             GuildInvite.objects(
                 GuildInvite.id == guild.vanity_url.lower(),
                 GuildInvite.guild_id == guild.id,
