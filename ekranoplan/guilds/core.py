@@ -258,7 +258,7 @@ class Guilds(Controller):
 
         return jsonify(guild_invites)
 
-    # @post('/guilds/{int:guild_id}/channels/{int:channel_id}/invites')
+    @post('/guilds/{int:guild_id}/channels/{int:channel_id}/invites')
     async def create_invite(self, guild_id: int, auth: AuthHeader, request: Request):
         m, _ = validate_member(token=auth.value, guild_id=guild_id)
 
@@ -275,9 +275,6 @@ class Guilds(Controller):
         if ttl:
             ttl = int(ttl)
 
-        if max_users:
-            max_users = int(max_users)
-
         invite: GuildInvite = GuildInvite.create(
             id=code(),
             guild_id=guild_id,
@@ -289,7 +286,7 @@ class Guilds(Controller):
 
         return to_dict(invite)
 
-    # @put('/guilds/{int:guild_id}/vanity')
+    @put('/guilds/{int:guild_id}/vanity')
     async def claim_guild_vanity(
         self, guild_id: int, auth: AuthHeader, request: Request
     ):
@@ -304,7 +301,11 @@ class Guilds(Controller):
 
         guild: Guild = Guild.objects(Guild.id == guild_id).get()
 
-        vanity_code = request.query.get('utm_vanity')[0]
+        vanity_code = str(request.query.get('utm_vanity')[0])
+
+        for word in vanity_code:
+            if word not in 'a b c d e f g h i j k l m n o p q r s t u v w x y z A B C D E F G H I J K L M N O P Q R S T U V W X Y Z 1 2 3 4 5 6 7 8 9 0 -'.split(' '):
+                raise BadData()
 
         try:
             GuildInvite.objects(GuildInvite.id == str(vanity_code)).get()
