@@ -1,6 +1,7 @@
 .env
 tests/
 __pycache__/
-ekranoplan/static/google.json
+ekranoplan/static/*
 test.py
 .env.prod
+!.gitkeep
