@@ -321,7 +321,9 @@ def delete_channel(channel: GuildChannel):
 
     if channel.type in [1]:
         highest_bucket = get_bucket(channel.id)
-        ignored_buckets = IgnoredBucket.objects(IgnoredBucket.channel_id == channel.id).all()
+        ignored_buckets = IgnoredBucket.objects(
+            IgnoredBucket.channel_id == channel.id
+        ).all()
 
         for bucket in ignored_buckets:
             bucket.delete()

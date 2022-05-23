@@ -7,17 +7,14 @@ from blacksheep.server.controllers import Controller, get, patch, post
 from ..checks import validate_member
 from ..database import Role, to_dict
 from ..errors import NotFound
-from ..utils import AuthHeader, jsonify
 from ..randoms import factory
+from ..utils import AuthHeader, jsonify
 
 
 class Roles(Controller):
     # @post('/guilds/{int:guild_id}/roles')
     async def create_role(self, guild_id: int, auth: AuthHeader, request: Request):
-        validate_member(
-            token=auth.value,
-            guild_id=guild_id
-        )
+        validate_member(token=auth.value, guild_id=guild_id)
 
         imp = {}
         imp['id'] = factory().formulate()

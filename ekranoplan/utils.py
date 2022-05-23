@@ -3,10 +3,10 @@
 import os
 import re
 
-import orjson
 import dotenv
-from imgproxy import ImgProxy
+import orjson
 from blacksheep import Content, FromHeader, Response
+from imgproxy import ImgProxy
 
 dotenv.load_dotenv()
 
@@ -54,6 +54,7 @@ IMGPROXY_KEY = os.getenv('IMGPROXY_KEY')
 IMGPROXY_SALT = os.getenv('IMGPROXY_SALT')
 IMGPROXY_URL = os.getenv('IMGPROXY_URL', 'https://images-ext.concord.chat')
 
+
 class AuthHeader(FromHeader[str]):
     name = 'Authorization'
 
@@ -78,9 +79,13 @@ def run_migrations(model):
 
     return model
 
+
 NAME_FILTER = re.compile(r"^[^\u200BА-Яа-яΑ-Ωα-ω]+$")
 
+
 def proxy_img(url: str, w: int = 0, h: int = 0):
-    proxifier = ImgProxy(url, IMGPROXY_URL, key=IMGPROXY_KEY, salt=IMGPROXY_SALT, width=w, height=h)
+    proxifier = ImgProxy(
+        url, IMGPROXY_URL, key=IMGPROXY_KEY, salt=IMGPROXY_SALT, width=w, height=h
+    )
 
     return proxifier()
