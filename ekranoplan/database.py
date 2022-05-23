@@ -125,8 +125,6 @@ class GuildInvite(models.Model):
     creator_id = columns.BigInt(primary_key=True)
     created_at = columns.DateTime(default=_get_date)
     channel_id = columns.BigInt(default=0)
-    max_invited = columns.BigInt(default=0)
-    amount_invited = columns.BigInt(default=0)
 
 
 class Member(models.Model):
@@ -187,7 +185,7 @@ class Reaction(models.Model):
     __options__ = default_options
     message_id = columns.BigInt(primary_key=True)
     user_id = columns.BigInt()
-    emoji = columns.Text()
+    emoji_id = columns.BigInt()
 
 
 class Emoji(models.Model):
@@ -195,7 +193,7 @@ class Emoji(models.Model):
     __options__ = default_options
     id = columns.BigInt(primary_key=True, partition_key=False)
     guild_id = columns.BigInt(primary_key=True, partition_key=True)
-    uri = columns.Text()
+    asset = columns.Text()
 
 
 # TODO: Embeds
@@ -293,16 +291,6 @@ class IgnoredBucket(models.Model):
     __table_name__ = 'ignored_buckets'
     channel_id = columns.BigInt(primary_key=True)
     bucket_id = columns.Integer()
-
-
-class Session(models.Model):
-    __table_name__ = 'sessions'
-    __options__ = {
-        'default_time_to_live': 31536000
-    }
-    ip = columns.Text(primary_key=True)
-    token = columns.Text()
-    created_at = columns.DateTime(default=_get_date)
 
 
 def to_dict(model: models.Model, _keep_email=False) -> dict:
@@ -468,4 +456,3 @@ if __name__ == '__main__':
     management.sync_table(PermissionOverWrites)
     management.sync_table(Audit)
     management.sync_table(IgnoredBucket)
-    management.sync_table(Session)

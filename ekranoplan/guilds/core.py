@@ -271,7 +271,6 @@ class Guilds(Controller):
 
         if data is not None:
             ttl = data.get('ttl')
-            max_users = data.get('max_users') or 0
 
         if ttl:
             ttl = int(ttl)
@@ -283,7 +282,6 @@ class Guilds(Controller):
             id=code(),
             guild_id=guild_id,
             creator_id=m.id,
-            max_invited=max_users,
         )
 
         if ttl:
