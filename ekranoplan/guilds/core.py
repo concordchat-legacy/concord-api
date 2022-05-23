@@ -319,7 +319,7 @@ class Guilds(Controller):
         else:
             raise Conflict()
 
-        guild.vanity_url = str(vanity_code).lower()
+        guild.vanity_url = str(vanity_code)
 
         GuildInvite.create(
             id=str(vanity_code).lower(),
