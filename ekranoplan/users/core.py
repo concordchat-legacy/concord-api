@@ -10,7 +10,7 @@ from cassandra.cqlengine import query
 from email_validator import validate_email
 
 from ..checks import send_verification, upload_image, validate_user, verify_email
-from ..database import Guild, Member, Meta, User, to_dict, Session
+from ..database import Guild, Member, Meta, User, to_dict
 from ..errors import BadData, Conflict, Forbidden, NotFound
 from ..randoms import factory, get_hash, verify_hash
 from ..tokens import create_token
