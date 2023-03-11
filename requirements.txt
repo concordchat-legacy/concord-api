@@ -1,7 +1,7 @@
 redis==4.2.2
 orjson==3.6.7
 Cython==0.29.28
-python-dotenv==0.20.0
+python-dotenv==0.21.1
 uvicorn[standard]==0.17.6
 cassandra-driver==3.25.0
 itsdangerous==2.1.2
