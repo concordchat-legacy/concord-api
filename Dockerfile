@@ -1,4 +1,4 @@
-FROM python:3.10.4-alpine
+FROM python:3.13.0-alpine
 
 # Used because of cchardet requiring GCC to work.
 RUN apk add --no-cache build-base libffi-dev
