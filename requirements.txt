@@ -2,7 +2,7 @@ redis==4.2.2
 orjson==3.6.7
 Cython==0.29.28
 python-dotenv==0.20.0
-uvicorn[standard]==0.17.6
+uvicorn[standard]==0.32.0
 cassandra-driver==3.25.0
 itsdangerous==2.1.2
 uvloop==0.16.0; platform_system!="Windows" # https://github.com/MagicStack/uvloop/issues/14
