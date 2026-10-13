@@ -1,4 +1,4 @@
-redis==4.2.2
+redis==4.4.4
 orjson==3.6.7
 Cython==0.29.28
 python-dotenv==0.20.0
